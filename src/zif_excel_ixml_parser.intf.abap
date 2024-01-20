@@ -8,7 +8,7 @@ INTERFACE zif_excel_ixml_parser
       !NAME type STRING default '*'
       !URI type STRING default ''
     returning
-      value(RVAL) type ABAP_BOOLEAN .
+      value(RVAL) type BOOLEAN .
 
   methods PARSE
     returning

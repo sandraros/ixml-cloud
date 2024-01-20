@@ -38,7 +38,7 @@ INTERFACE zif_excel_ixml_document
 
   methods FIND_FROM_NAME
     importing
-      !DEPTH type I default 0
+*      !DEPTH type I default 0
       !NAME type STRING
       !NAMESPACE type STRING default ''
     returning
@@ -46,7 +46,7 @@ INTERFACE zif_excel_ixml_document
 
   methods FIND_FROM_NAME_NS
     importing
-      !DEPTH type I default 0
+*      !DEPTH type I default 0
       !NAME type STRING
       !URI type STRING default ''
     returning
