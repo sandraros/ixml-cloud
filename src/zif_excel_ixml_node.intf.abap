@@ -1,71 +1,92 @@
 INTERFACE zif_excel_ixml_node
-  PUBLIC .
+  PUBLIC.
 
-  methods QUERY_INTERFACE
-    importing
-      !IID type I
-    returning
-      value(RVAL) type ref to IF_IXML_UNKNOWN .
+  INTERFACES zif_excel_ixml_unknown.
 
-  methods APPEND_CHILD
-    importing
-      !NEW_CHILD type ref to zif_excel_ixml_node
-    returning
-      value(RVAL) type I .
+  CONSTANTS co_node_attribute         TYPE i VALUE 8 ##NO_TEXT.
+  CONSTANTS co_node_attribute_decl    TYPE i VALUE 2097152 ##NO_TEXT.
+  CONSTANTS co_node_att_list_decl     TYPE i VALUE 1048576 ##NO_TEXT.
+  CONSTANTS co_node_cdata_section     TYPE i VALUE 32 ##NO_TEXT.
+  CONSTANTS co_node_comment           TYPE i VALUE 512 ##NO_TEXT.
+  CONSTANTS co_node_cond_dtd_section  TYPE i VALUE 131072 ##NO_TEXT.
+  CONSTANTS co_node_content_particle  TYPE i VALUE 524288 ##NO_TEXT.
+  CONSTANTS co_node_document          TYPE i VALUE 1 ##NO_TEXT.
+  CONSTANTS co_node_document_fragment TYPE i VALUE 2 ##NO_TEXT.
+  CONSTANTS co_node_document_type     TYPE i VALUE 65536 ##NO_TEXT.
+  CONSTANTS co_node_element           TYPE i VALUE 4 ##NO_TEXT.
+  CONSTANTS co_node_element_decl      TYPE i VALUE 262144 ##NO_TEXT.
+  CONSTANTS co_node_entity_decl       TYPE i VALUE 4194304 ##NO_TEXT.
+  CONSTANTS co_node_entity_ref        TYPE i VALUE 64 ##NO_TEXT.
+  CONSTANTS co_node_namespace_decl    TYPE i VALUE 16777216 ##NO_TEXT.
+  CONSTANTS co_node_notations_decl    TYPE i VALUE 8388608 ##NO_TEXT.
+  CONSTANTS co_node_pi_parsed         TYPE i VALUE 256 ##NO_TEXT.
+  CONSTANTS co_node_pi_unparsed       TYPE i VALUE 128 ##NO_TEXT.
+  CONSTANTS co_node_text              TYPE i VALUE 16 ##NO_TEXT.
+  CONSTANTS co_node_xxx               TYPE i VALUE 0 ##NO_TEXT.
 
-  methods CLONE
-    importing
-      !DEPTH type I default -1
-    returning
-      value(RVAL) type ref to zif_excel_ixml_node .
+  METHODS append_child
+    IMPORTING
+      !new_child TYPE REF TO zif_excel_ixml_node
+    RETURNING
+      VALUE(rval) TYPE i.
 
-  methods CREATE_ITERATOR
-    importing
-      !DEPTH type I default 0
-    returning
-      value(RVAL) type ref to zif_excel_IXML_NODE_ITERATOR .
+  METHODS clone
+    IMPORTING
+      !depth TYPE i DEFAULT -1
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node.
 
-  methods GET_ATTRIBUTES
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_NAMED_NODE_MAP .
+  METHODS create_iterator
+    IMPORTING
+      !depth TYPE i DEFAULT 0
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_iterator.
 
-  methods GET_CHILDREN
-    returning
-      value(RVAL) type ref to zif_excel_IXML_NODE_LIST .
+  METHODS get_attributes
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_named_node_map.
 
-  methods GET_FIRST_CHILD
-    returning
-      value(RVAL) type ref to zif_excel_IXML_NODE .
+  METHODS get_children
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_list.
 
-  methods GET_NAME
-    returning
-      value(RVAL) type STRING .
+  METHODS get_first_child
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node.
 
-  methods GET_NAMESPACE_PREFIX
-    returning
-      value(RVAL) type STRING .
+  METHODS get_name
+    RETURNING
+      VALUE(rval) TYPE string.
 
-  methods GET_NAMESPACE_URI
-    returning
-      value(RVAL) type STRING .
+  METHODS get_namespace_prefix
+    RETURNING
+      VALUE(rval) TYPE string.
 
-  methods GET_NEXT
-    returning
-      value(RVAL) type ref to zif_excel_ixml_node .
+  METHODS get_namespace_uri
+    RETURNING
+      VALUE(rval) TYPE string.
 
-  methods GET_VALUE
-    returning
-      value(RVAL) type STRING .
+  METHODS get_next
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node.
 
-  methods SET_NAMESPACE_PREFIX
-    importing
-      !PREFIX type STRING
-    returning
-      value(RVAL) type I .
+  METHODS get_type
+    RETURNING
+      VALUE(rval) TYPE i.
 
-  methods SET_VALUE
-    importing
-      !VALUE type STRING
-    returning
-      value(RVAL) type I .
+  METHODS get_value
+    RETURNING
+      VALUE(rval) TYPE string.
+
+  METHODS set_namespace_prefix
+    IMPORTING
+      !prefix TYPE string
+    RETURNING
+      VALUE(rval) TYPE i.
+
+  METHODS set_value
+    IMPORTING
+      !value TYPE string
+    RETURNING
+      VALUE(rval) TYPE i.
 ENDINTERFACE.

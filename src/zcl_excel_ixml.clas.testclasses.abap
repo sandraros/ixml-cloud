@@ -5,21 +5,25 @@ CLASS ltc_ixml DEFINITION
       DURATION SHORT
       RISK LEVEL HARMLESS.
   PRIVATE SECTION.
-    DATA rc         TYPE i.
-    DATA num_errors TYPE i.
-    DATA reason     TYPE string.
-    DATA: error TYPE REF TO if_ixml_parse_error,
-          lv_xstring       TYPE xstring,
-          lo_ixml          TYPE REF TO if_ixml,
-          lo_streamfactory TYPE REF TO if_ixml_stream_factory,
-          lo_istream       TYPE REF TO if_ixml_istream,
-          lo_parser        TYPE REF TO if_ixml_parser,
-          lo_element TYPE REF TO if_ixml_element,
-          lv_string TYPE string,
-          lo_document TYPE REF TO if_ixml_document.
+    DATA rc               TYPE i.
+    DATA num_errors       TYPE i.
+    DATA reason           TYPE string.
+    DATA error            TYPE REF TO if_ixml_parse_error.
+    DATA lv_xstring       TYPE xstring.
+    DATA lo_ixml          TYPE REF TO if_ixml.
+    DATA lo_streamfactory TYPE REF TO if_ixml_stream_factory.
+    DATA lo_istream       TYPE REF TO if_ixml_istream.
+    DATA lo_parser        TYPE REF TO if_ixml_parser.
+    DATA lo_element       TYPE REF TO if_ixml_element.
+    DATA lv_string        TYPE string.
+    DATA lo_document      TYPE REF TO if_ixml_document.
     METHODS end_tag_doesnt_match_begin_tag FOR TESTING RAISING cx_static_check.
     METHODS valid_most_simple_xml FOR TESTING RAISING cx_static_check.
     METHODS two_parsers FOR TESTING RAISING cx_static_check.
+    METHODS two_ixml_instances FOR TESTING RAISING cx_static_check.
+    METHODS two_ixml_stream_factories FOR TESTING RAISING cx_static_check.
+    METHODS two_ixml_encodings FOR TESTING RAISING cx_static_check.
+    METHODS get_children FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 
@@ -91,12 +95,6 @@ ENDCLASS.
 
 CLASS ltc_ixml IMPLEMENTATION.
   METHOD end_tag_doesnt_match_begin_tag.
-*    DATA lv_content       TYPE xstring.
-*    DATA lo_ixml          TYPE REF TO if_ixml.
-*    DATA lo_streamfactory TYPE REF TO if_ixml_stream_factory.
-*    DATA lo_istream       TYPE REF TO if_ixml_istream.
-*    DATA lo_parser        TYPE REF TO if_ixml_parser.
-
     lv_xstring = cl_abap_codepage=>convert_to( |<A></B>| ).
 
     lo_ixml = cl_ixml=>create( ).
@@ -106,10 +104,11 @@ CLASS ltc_ixml IMPLEMENTATION.
     lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
                                         istream        = lo_istream
                                         document       = lo_document ).
-    lo_parser->set_normalizing( abap_true ).
-    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+*    lo_parser->set_normalizing( abap_true ).
+*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
     rc = lo_parser->parse( ).
-    " RC = 196612
+    cl_abap_unit_assert=>assert_equals( act = rc
+                                        exp = lcl_ixml_factory=>ixml_mr-parser_error ).
     num_errors = lo_parser->num_errors( ).
     DO num_errors TIMES.
       error = lo_parser->get_error( index = sy-index - 1 ).
@@ -117,7 +116,66 @@ CLASS ltc_ixml IMPLEMENTATION.
     ENDDO.
   ENDMETHOD.
 
+  METHOD get_children.
+    lv_xstring = cl_abap_codepage=>convert_to( |<A attr="1">B</A>| ).
+
+    lo_ixml = cl_ixml=>create( ).
+    lo_streamfactory = lo_ixml->create_stream_factory( ).
+    lo_istream = lo_streamfactory->create_istream_xstring( lv_xstring ).
+    lo_document = lo_ixml->create_document( ).
+    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
+                                        istream        = lo_istream
+                                        document       = lo_document ).
+    rc = lo_parser->parse( ).
+    DATA(lo_children) = lo_document->get_root_element( )->get_children( ).
+    DATA(lv_length) = lo_children->get_length( ).
+    cl_abap_unit_assert=>assert_equals( act = lv_length
+                                        exp = 1 ).
+    DATA(lo_child) = lo_children->get_item( 0 ).
+    DATA(lv_type) = lo_child->get_type( ).
+    DATA(lv_name) = lo_child->get_name( ).
+    DATA(lv_value) = lo_child->get_value( ).
+    cl_abap_unit_assert=>assert_equals( act = lv_type
+                                        exp = if_ixml_node=>co_node_text ).
+    cl_abap_unit_assert=>assert_equals( act = lv_name
+                                        exp = '#text' ).
+    cl_abap_unit_assert=>assert_equals( act = lv_value
+                                        exp = 'B' ).
+  ENDMETHOD.
+
+  METHOD two_ixml_encodings.
+    DATA lo_encoding   TYPE REF TO if_ixml_encoding.
+    DATA lo_encoding_2 TYPE REF TO if_ixml_encoding.
+
+    lo_ixml = cl_ixml=>create( ).
+    lo_encoding = lo_ixml->create_encoding( byte_order    = if_ixml_encoding=>co_little_endian
+                                            character_set = 'UTF-8' ).
+    lo_encoding_2 = lo_ixml->create_encoding( byte_order    = if_ixml_encoding=>co_little_endian
+                                              character_set = 'UTF-8' ).
+    cl_abap_unit_assert=>assert_true( boolc( lo_encoding_2 <> lo_encoding ) ).
+  ENDMETHOD.
+
+  METHOD two_ixml_instances.
+    DATA lo_ixml_2 TYPE REF TO if_ixml.
+
+    lo_ixml = cl_ixml=>create( ).
+    lo_ixml_2 = cl_ixml=>create( ).
+    cl_abap_unit_assert=>assert_equals( act = lo_ixml_2
+                                        exp = lo_ixml ).
+  ENDMETHOD.
+
+  METHOD two_ixml_stream_factories.
+    DATA lo_streamfactory_2 TYPE REF TO if_ixml_stream_factory.
+
+    lo_ixml = cl_ixml=>create( ).
+    lo_streamfactory = lo_ixml->create_stream_factory( ).
+    lo_streamfactory_2 = lo_ixml->create_stream_factory( ).
+    cl_abap_unit_assert=>assert_true( boolc( lo_streamfactory_2 <> lo_streamfactory ) ).
+  ENDMETHOD.
+
   METHOD two_parsers.
+    DATA lo_istream_2 TYPE REF TO if_ixml_istream.
+
     lo_ixml = cl_ixml=>create( ).
     lo_document = lo_ixml->create_document( ).
     lo_streamfactory = lo_ixml->create_stream_factory( ).
@@ -131,8 +189,7 @@ CLASS ltc_ixml IMPLEMENTATION.
     lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
     rc = lo_parser->parse( ).
 
-    DATA lo_istream_2 TYPE REF TO if_ixml_istream.
-    DATA lo_parser_2  TYPE REF TO if_ixml_parser.
+    DATA lo_parser_2 TYPE REF TO if_ixml_parser.
     lv_string = '<A/>'.
     lo_istream_2 = lo_streamfactory->create_istream_string( lv_string ).
     lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
@@ -144,7 +201,8 @@ CLASS ltc_ixml IMPLEMENTATION.
     lv_string = lo_element->get_name( ).
 
     " The second parsing is ignored
-    cl_abap_unit_assert=>assert_equals( act = lv_string exp = 'B' ).
+    cl_abap_unit_assert=>assert_equals( act = lv_string
+                                        exp = 'B' ).
   ENDMETHOD.
 
   METHOD valid_most_simple_xml.
@@ -196,17 +254,6 @@ CLASS ltc_main IMPLEMENTATION.
     lo_parser->set_normalizing( abap_true ).
     lo_parser->set_validating( mode = zif_excel_ixml_parser=>co_no_validation ).
     lo_parser->parse( ).
-    " cl_abap_unit_assert=>assert_equals( ACT = ? EXP = ? MSG = ? ).
-
-*    DATA lv_content_2 TYPE string.
-*    DATA lo_istream_2 TYPE REF TO zif_excel_ixml_istream.
-*    DATA lo_parser_2  TYPE REF TO zif_excel_ixml_parser.
-*    lv_content_2 = '<A/>'.
-*    lo_istream_2 = lo_streamfactory->create_istream_string( lv_content_2 ).
-*    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
-*                                        istream        = lo_istream_2
-*                                        document       = document ).
-*    lo_parser->parse( ).
   ENDMETHOD.
 
   METHOD find_from_name_ns.

@@ -1,56 +1,52 @@
-class ZCL_EXCEL_IXML definition
-  public
-  final
-  create private .
+CLASS zcl_excel_ixml DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE.
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_EXCEL_IXML .
+    INTERFACES zif_excel_ixml.
 
-  class-methods CREATE
-    importing
-      !TYPE type I default 0
-    returning
-      value(RVAL) type ref to ZIF_EXCEL_IXML .
-      PROTECTED SECTION.
+    CLASS-METHODS create
+      IMPORTING
+        !type TYPE i DEFAULT 0
+      RETURNING
+        VALUE(rval) TYPE REF TO zif_excel_ixml.
+  PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-DATA singleton TYPE REF TO zif_excel_ixml.
 ENDCLASS.
 
 
-
-CLASS ZCL_EXCEL_IXML IMPLEMENTATION.
-
-
+CLASS zcl_excel_ixml IMPLEMENTATION.
   METHOD create.
-    rval = new zcl_excel_ixml( ).
+    IF singleton IS NOT BOUND.
+      singleton = lcl_ixml_factory=>get_singleton( ).
+    ENDIF.
+    rval = singleton.
   ENDMETHOD.
-
 
   METHOD zif_excel_ixml~create_document.
-    rval = NEW lcl_ixml_document( ).
+    rval = singleton->create_document( ).
   ENDMETHOD.
-
 
   METHOD zif_excel_ixml~create_encoding.
-    rval = new lcl_ixml_encoding( ).
-
+    rval = singleton->create_encoding( byte_order    = byte_order
+                                       character_set = character_set ).
   ENDMETHOD.
-
 
   METHOD zif_excel_ixml~create_parser.
-    rval = lcl_ixml_parser=>create(
-             document       = document
-             istream        = istream
-             stream_factory = stream_factory ).
+    rval = singleton->create_parser( document       = document
+                                     istream        = istream
+                                     stream_factory = stream_factory ).
   ENDMETHOD.
-
 
   METHOD zif_excel_ixml~create_renderer.
-    rval = new lcl_ixml_renderer( ).
+    rval = singleton->create_renderer( document = document
+                                       ostream  = ostream ).
   ENDMETHOD.
 
-
   METHOD zif_excel_ixml~create_stream_factory.
-    rval = new lcl_ixml_stream_factory( ).
+    rval = singleton->create_stream_factory( ).
   ENDMETHOD.
 ENDCLASS.

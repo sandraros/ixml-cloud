@@ -1,104 +1,104 @@
 INTERFACE zif_excel_ixml_element
-  PUBLIC .
+  PUBLIC.
 
-  interfaces zif_excel_IXML_NODE .
+  INTERFACES zif_excel_ixml_node.
 
-  aliases APPEND_CHILD
-    for zif_excel_IXML_NODE~APPEND_CHILD .
-  aliases CLONE
-    for zif_excel_IXML_NODE~CLONE .
-  aliases CREATE_ITERATOR
-    for zif_excel_IXML_NODE~CREATE_ITERATOR .
-  aliases GET_ATTRIBUTES
-    for zif_excel_IXML_NODE~GET_ATTRIBUTES .
-  aliases GET_CHILDREN
-    for zif_excel_IXML_NODE~GET_CHILDREN .
-  aliases GET_FIRST_CHILD
-    for zif_excel_IXML_NODE~GET_FIRST_CHILD .
-  aliases GET_NAME
-    for zif_excel_IXML_NODE~GET_NAME .
-  aliases GET_NEXT
-    for zif_excel_IXML_NODE~GET_NEXT .
-  aliases GET_VALUE
-    for zif_excel_IXML_NODE~GET_VALUE .
-  aliases SET_VALUE
-    for zif_excel_IXML_NODE~SET_VALUE .
+  ALIASES append_child
+    FOR zif_excel_ixml_node~append_child.
+  ALIASES clone
+    FOR zif_excel_ixml_node~clone.
+  ALIASES create_iterator
+    FOR zif_excel_ixml_node~create_iterator.
+  ALIASES get_attributes
+    FOR zif_excel_ixml_node~get_attributes.
+  ALIASES get_children
+    FOR zif_excel_ixml_node~get_children.
+  ALIASES get_first_child
+    FOR zif_excel_ixml_node~get_first_child.
+  ALIASES get_name
+    FOR zif_excel_ixml_node~get_name.
+  ALIASES get_next
+    FOR zif_excel_ixml_node~get_next.
+  ALIASES get_value
+    FOR zif_excel_ixml_node~get_value.
+  ALIASES set_value
+    FOR zif_excel_ixml_node~set_value.
 
-  methods FIND_FROM_NAME
-    importing
-      !DEPTH type I default 0
-      !NAME type STRING
-      !NAMESPACE type STRING default ''
-    returning
-      value(RVAL) type ref to zif_excel_ixml_element .
+  METHODS find_from_name
+    IMPORTING
+      !depth TYPE i DEFAULT 0
+      !name TYPE string
+      !namespace TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods FIND_FROM_NAME_NS
-    importing
-      !DEPTH type I default 0
-      !NAME type STRING
-      !URI type STRING default ''
-    returning
-      value(RVAL) type ref to zif_excel_ixml_element .
+  METHODS find_from_name_ns
+    IMPORTING
+      !depth TYPE i DEFAULT 0
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods GET_ATTRIBUTE
-    importing
-      !NAME type STRING
-      !NAMESPACE type STRING default ''
-    returning
-      value(RVAL) type STRING .
+  METHODS get_attribute
+    IMPORTING
+      !name TYPE string
+      !namespace TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE string.
 
-  methods GET_ATTRIBUTE_NODE_NS
-    importing
-      !NAME type STRING
-      !URI type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ATTRIBUTE .
+  METHODS get_attribute_node_ns
+    IMPORTING
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_attribute.
 
-  methods GET_ATTRIBUTE_NS
-    importing
-      !NAME type STRING
-      !URI type STRING default ''
-    returning
-      value(RVAL) type STRING .
+  METHODS get_attribute_ns
+    IMPORTING
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE string.
 
-  methods GET_ELEMENTS_BY_TAG_NAME
-    importing
-      !DEPTH type I default 0
-      !NAME type STRING
-      !NAMESPACE type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_NODE_COLLECTION .
+  METHODS get_elements_by_tag_name
+    IMPORTING
+      !depth TYPE i DEFAULT 0
+      !name TYPE string
+      !namespace TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
 
-  methods GET_ELEMENTS_BY_TAG_NAME_NS
-    importing
-      !DEPTH type I default 0
-      !NAME type STRING
-      !URI type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_NODE_COLLECTION .
+  METHODS get_elements_by_tag_name_ns
+    IMPORTING
+      !depth TYPE i DEFAULT 0
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
 
-  methods REMOVE_ATTRIBUTE_NS
-    importing
-      !NAME type STRING
-      !URI type STRING default ''
-    returning
-      value(RVAL) type I .
+  METHODS remove_attribute_ns
+    IMPORTING
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE i.
 
-  methods SET_ATTRIBUTE
-    importing
-      !NAME type STRING
-      !NAMESPACE type STRING default ''
-      !VALUE type STRING default ''
-    returning
-      value(RVAL) type I .
+  METHODS set_attribute
+    IMPORTING
+      !name TYPE string
+      !namespace TYPE string DEFAULT ''
+      !value TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE i.
 
-  methods SET_ATTRIBUTE_NS
-    importing
-      !NAME type STRING
-      !PREFIX type STRING default ''
-      !URI type STRING default ''
-      !VALUE type STRING default ''
-    returning
-      value(RVAL) type I .
+  METHODS set_attribute_ns
+    IMPORTING
+      !name TYPE string
+      !prefix TYPE string DEFAULT ''
+      !uri TYPE string DEFAULT ''
+      !value TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE i.
 
 ENDINTERFACE.
