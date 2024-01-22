@@ -27,8 +27,8 @@ ENDINTERFACE.
 
 
 CLASS lcl_ixml_unknown DEFINITION
-    CREATE PROTECTED
-    FRIENDS lcl_ixml_factory.
+    INHERITING FROM lcl_ixml_root_all
+    CREATE PROTECTED.
 
   PUBLIC SECTION.
 
@@ -43,7 +43,8 @@ ENDCLASS.
 
 CLASS lcl_ixml_node DEFINITION
     INHERITING FROM lcl_ixml_unknown
-    CREATE PROTECTED.
+    CREATE PROTECTED
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -60,7 +61,8 @@ ENDCLASS.
 
 CLASS lcl_ixml_attribute DEFINITION
     INHERITING FROM lcl_ixml_node
-    CREATE PROTECTED.
+    CREATE PROTECTED
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -71,7 +73,8 @@ ENDCLASS.
 
 CLASS lcl_ixml_character_data DEFINITION
     INHERITING FROM lcl_ixml_node
-    CREATE PROTECTED.
+    CREATE PROTECTED
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -83,24 +86,12 @@ ENDCLASS.
 CLASS lcl_ixml_document DEFINITION
     INHERITING FROM lcl_ixml_node
     CREATE PRIVATE
-    FRIENDS lcl_ixml_element
-            lcl_ixml_factory
-*            lcl_ixml_istream_string
-*            lcl_ixml_istream_xstring
-            lcl_ixml_node
-            lcl_ixml_node_collection
-            lcl_ixml_node_iterator
-            lcl_ixml_node_list
-*            lcl_ixml_ostream_string
-*            lcl_ixml_ostream_xstring
-            lcl_ixml_parser
-            lcl_ixml_renderer
-*            lcl_ixml_stream_factory
-            lcl_ixml_text.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
     INTERFACES zif_excel_ixml_document.
+
     METHODS get_node
       IMPORTING
         id          TYPE lcl_ixml_factory=>tv_node_id
@@ -153,30 +144,19 @@ ENDCLASS.
 CLASS lcl_ixml_element DEFINITION
     INHERITING FROM lcl_ixml_node
     CREATE PRIVATE
-    FRIENDS lcl_ixml_document.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
     INTERFACES zif_excel_ixml_element.
 
-*    CLASS-METHODS create
-*      IMPORTING
-*        document    TYPE REF TO lcl_ixml_document
-*        node_id     TYPE i
-*      RETURNING
-*        VALUE(rval) TYPE REF TO lcl_ixml_element.
-*
-*  PRIVATE SECTION.
-*
-*    DATA document TYPE REF TO lcl_ixml_document.
-*    DATA node_id  TYPE lcl_ixml_factory=>tv_node_id.
-
 ENDCLASS.
 
 
 CLASS lcl_ixml_encoding DEFINITION
+    INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_factory.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -231,15 +211,18 @@ ENDCLASS.
 CLASS lcl_ixml_named_node_map DEFINITION
     CREATE PRIVATE
     FRIENDS lcl_ixml_document.
+
   PUBLIC SECTION.
+
     INTERFACES zif_excel_ixml_named_node_map.
+
 ENDCLASS.
 
 
 CLASS lcl_ixml_node_collection DEFINITION
+    INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_document
-            lcl_ixml_node_iterator.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -254,8 +237,9 @@ ENDCLASS.
 
 
 CLASS lcl_ixml_node_iterator DEFINITION
+    INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_document.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -272,9 +256,9 @@ ENDCLASS.
 
 
 CLASS lcl_ixml_node_list DEFINITION
+    INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_document
-            lcl_ixml_node_iterator.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -311,8 +295,9 @@ ENDCLASS.
 
 
 CLASS lcl_ixml_parser DEFINITION
+    INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_factory.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -330,7 +315,7 @@ ENDCLASS.
 CLASS lcl_ixml_renderer DEFINITION
     INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_factory.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -345,8 +330,9 @@ ENDCLASS.
 
 
 CLASS lcl_ixml_stream DEFINITION
+    INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_factory.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -355,8 +341,9 @@ ENDCLASS.
 
 
 CLASS lcl_ixml_stream_factory DEFINITION
+    INHERITING FROM lcl_ixml_unknown
     CREATE PRIVATE
-    FRIENDS lcl_ixml_factory.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -367,8 +354,7 @@ ENDCLASS.
 CLASS lcl_ixml_text DEFINITION
     INHERITING FROM lcl_ixml_character_data
     CREATE PRIVATE
-    FRIENDS lcl_ixml_document
-            lcl_ixml_node.
+    FRIENDS lif_ixml_all_friends.
 
   PUBLIC SECTION.
 

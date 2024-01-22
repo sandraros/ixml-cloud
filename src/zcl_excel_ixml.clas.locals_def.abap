@@ -24,19 +24,32 @@ CLASS lcl_ixml_stream_factory DEFINITION DEFERRED.
 CLASS lcl_ixml_text DEFINITION DEFERRED.
 CLASS lcl_ixml_unknown DEFINITION DEFERRED.
 
+INTERFACE lif_ixml_all_friends.
+ENDINTERFACE.
+
+
+CLASS lcl_ixml_root_all DEFINITION.
+*    FRIENDS lif_ixml_all_friends.
+  PUBLIC SECTION.
+    INTERFACES lif_ixml_all_friends.
+ENDCLASS.
+
+
 CLASS lcl_ixml_factory DEFINITION
-    CREATE PRIVATE
+    INHERITING FROM lcl_ixml_root_all
+    CREATE PROTECTED
     FRIENDS zcl_excel_ixml.
 
   PUBLIC SECTION.
 
     INTERFACES zif_excel_ixml.
+*    INTERFACES lif_ixml_all_friends.
 
     TYPES tv_element_name_id TYPE i.
     TYPES tv_node_id         TYPE i.
     TYPES tv_node_type       TYPE i.
     TYPES tv_namespace_id    TYPE i.
-    TYPES tt_node_id         TYPE STANDARD TABLE OF tv_node_id with EMPTY KEY.
+    TYPES tt_node_id         TYPE STANDARD TABLE OF tv_node_id WITH EMPTY KEY.
     TYPES:
       BEGIN OF ts_node,
         id        TYPE tv_node_id,
