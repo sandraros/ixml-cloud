@@ -32,12 +32,35 @@ CLASS ltc_main DEFINITION
       DURATION SHORT
       RISK LEVEL HARMLESS.
   PRIVATE SECTION.
-    METHODS find_from_name_ns FOR TESTING RAISING cx_static_check.
 
-    DATA document TYPE REF TO zif_excel_ixml_document.
-    DATA element  TYPE REF TO zif_excel_ixml_element.
-    DATA value    TYPE string.
-    METHODS setup.
+    METHODS find_from_name_ns FOR TESTING RAISING cx_static_check.
+    METHODS append_child FOR TESTING RAISING cx_static_check.
+    METHODS create_element FOR TESTING RAISING cx_static_check.
+    METHODS create_simple_element FOR TESTING RAISING cx_static_check.
+    METHODS create_simple_element_ns FOR TESTING RAISING cx_static_check.
+    METHODS find_from_name FOR TESTING RAISING cx_static_check.
+    METHODS get_elements_by_tag_name FOR TESTING RAISING cx_static_check.
+    METHODS get_elements_by_tag_name_ns FOR TESTING RAISING cx_static_check.
+    METHODS get_first_child FOR TESTING RAISING cx_static_check.
+    METHODS get_root_element FOR TESTING RAISING cx_static_check.
+    METHODS set_encoding FOR TESTING RAISING cx_static_check.
+    METHODS set_namespace_prefix FOR TESTING RAISING cx_static_check.
+    METHODS set_standalone FOR TESTING RAISING cx_static_check.
+
+    DATA document         TYPE REF TO zif_excel_ixml_document.
+    DATA element          TYPE REF TO zif_excel_ixml_element.
+    DATA value            TYPE string.
+    DATA ixml          TYPE REF TO zif_excel_ixml.
+    DATA stream_factory TYPE REF TO zif_excel_ixml_stream_factory.
+    DATA: xml TYPE string.
+
+    METHODS parse
+      IMPORTING
+        xml_string TYPE csequence.
+
+    METHODS render
+        RETURNING
+        VALUE(rv_xml_string) TYPE string.
 
     " class-methods class_setup.
     " class-methods class_teardown.
@@ -232,23 +255,19 @@ ENDCLASS.
 
 
 CLASS ltc_main IMPLEMENTATION.
-  METHOD setup.
+  METHOD parse.
+    DATA lv_xstring TYPE xstring.
+    DATA lo_istream TYPE REF TO zif_excel_ixml_istream.
+    DATA lo_parser  TYPE REF TO zif_excel_ixml_parser.
+
     " code inspired from the method GET_IXML_FROM_ZIP_ARCHIVE of ZCL_EXCEL_READER_2007.
+    ixml = zcl_excel_ixml=>create( ).
+    document = ixml->create_document( ).
+    stream_factory = ixml->create_stream_factory( ).
 
-    DATA lo_ixml          TYPE REF TO zif_excel_ixml.
-    DATA lo_streamfactory TYPE REF TO zif_excel_ixml_stream_factory.
-    DATA lv_content       TYPE xstring.
-    DATA lo_istream       TYPE REF TO zif_excel_ixml_istream.
-    DATA lo_parser        TYPE REF TO zif_excel_ixml_parser.
-
-    lo_ixml = zcl_excel_ixml=>create( ).
-    document = lo_ixml->create_document( ).
-    lo_streamfactory = lo_ixml->create_stream_factory( ).
-
-    lv_content = cl_abap_codepage=>convert_to(
-                     |<root><elem/><a:elem xmlns:a="{ namespace-relationships }">A</a:elem></root>| ).
-    lo_istream = lo_streamfactory->create_istream_xstring( lv_content ).
-    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
+    lv_xstring = cl_abap_codepage=>convert_to( '<root>' && xml_string && '</root>' ).
+    lo_istream = stream_factory->create_istream_xstring( lv_xstring ).
+    lo_parser = ixml->create_parser( stream_factory = stream_factory
                                         istream        = lo_istream
                                         document       = document ).
     lo_parser->set_normalizing( abap_true ).
@@ -256,12 +275,76 @@ CLASS ltc_main IMPLEMENTATION.
     lo_parser->parse( ).
   ENDMETHOD.
 
+  METHOD render.
+    DATA lo_ostream  TYPE REF TO zif_excel_ixml_ostream.
+    DATA lo_renderer TYPE REF TO zif_excel_ixml_renderer.
+
+    lo_ostream = stream_factory->create_ostream_cstring( rv_xml_string ).
+    lo_renderer = ixml->create_renderer( ostream  = lo_ostream
+                                            document = document ).
+    xml = lo_renderer->render( ).
+  ENDMETHOD.
+
+  METHOD append_child.
+    parse( '' ).
+    DATA(lo_element) = document->create_element( name = 'A' ).
+    document->append_child( lo_element ).
+    render( ).
+    cl_abap_unit_assert=>assert_equals( act = xml exp = '' ).
+  ENDMETHOD.
+
+  METHOD create_element.
+*  element = document->create_element( ).
+*  element = document->
+  ENDMETHOD.
+
+  METHOD create_simple_element.
+*  element = document->create_simple_element( ).
+  ENDMETHOD.
+
+  METHOD create_simple_element_ns.
+*  element = document->create_simple_element_ns( ).
+  ENDMETHOD.
+
+  METHOD find_from_name.
+    element = document->find_from_name( name = 'elem' ).
+  ENDMETHOD.
+
   METHOD find_from_name_ns.
+    parse( |<elem/><a:elem xmlns:a="{ namespace-relationships }">A</a:elem>| ).
     element = document->find_from_name_ns( name = 'elem'
                                            uri  = namespace-relationships ).
     value = element->get_value( ).
     cl_abap_unit_assert=>assert_equals( act = value
                                         exp = 'A' ).
+  ENDMETHOD.
+
+  METHOD get_elements_by_tag_name.
+*  element = document->get_elements_by_tag_name( ).
+  ENDMETHOD.
+
+  METHOD get_elements_by_tag_name_ns.
+*  element = document->get_elements_by_tag_name_ns( ).
+  ENDMETHOD.
+
+  METHOD get_first_child.
+*  element = document->get_first_child( ).
+  ENDMETHOD.
+
+  METHOD get_root_element.
+*  element = document->get_root_element( ).
+  ENDMETHOD.
+
+  METHOD set_encoding.
+*  element = document->set_encoding( ).
+  ENDMETHOD.
+
+  METHOD set_namespace_prefix.
+*  element = document->set_namespace_prefix( ).
+  ENDMETHOD.
+
+  METHOD set_standalone.
+*  element = document->set_standalone( ).
   ENDMETHOD.
 ENDCLASS.
 

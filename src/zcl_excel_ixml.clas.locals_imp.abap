@@ -2,18 +2,6 @@
 *"* local helper classes, interface definitions and type
 *"* declarations
 
-*CLASS lcl_ixml_document DEFINITION DEFERRED.
-*CLASS lcl_ixml_element DEFINITION DEFERRED.
-*CLASS lcl_ixml_encoding DEFINITION DEFERRED.
-*CLASS lcl_ixml_istream_string DEFINITION DEFERRED.
-*CLASS lcl_ixml_istream_xstring DEFINITION DEFERRED.
-*CLASS lcl_ixml_ostream_string DEFINITION DEFERRED.
-*CLASS lcl_ixml_ostream_xstring DEFINITION DEFERRED.
-*CLASS lcl_ixml_parser DEFINITION DEFERRED.
-*CLASS lcl_ixml_renderer DEFINITION DEFERRED.
-*CLASS lcl_ixml_stream_factory DEFINITION DEFERRED.
-
-
 INTERFACE lif_ixml_istream.
   INTERFACES zif_excel_ixml_istream.
   DATA sxml_reader TYPE REF TO if_sxml_reader READ-ONLY.
@@ -418,6 +406,14 @@ ENDCLASS.
 
 CLASS lcl_ixml_document IMPLEMENTATION.
   METHOD append_child.
+    DATA ls_node      TYPE lcl_ixml_factory=>ts_node.
+    DATA lo_new_child TYPE REF TO lcl_ixml_node.
+
+    ls_node-id = lo_new_child->node_id.
+    lo_new_child ?= new_child.
+    ls_node-parent_id = node_id.
+    ls_node-type      = lo_new_child->type.
+    INSERT ls_node INTO TABLE nodes.
   ENDMETHOD.
 
   METHOD get_node.
@@ -614,6 +610,35 @@ CLASS lcl_ixml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~create_element.
+    DATA lr_namespace    TYPE REF TO lcl_ixml_factory=>ts_namespace.
+    DATA ls_namespace    TYPE lcl_ixml_factory=>ts_namespace.
+    DATA lr_element_name TYPE REF TO lcl_ixml_factory=>ts_element_name.
+    DATA ls_element_name TYPE lcl_ixml_factory=>ts_element_name.
+    DATA ls_element      TYPE lcl_ixml_factory=>ts_element.
+
+    READ TABLE namespaces WITH TABLE KEY by_uri COMPONENTS uri = namespace REFERENCE INTO lr_namespace.
+    IF sy-subrc <> 0.
+      ls_namespace-id  = lines( namespaces ) + 1.
+      ls_namespace-uri = namespace.
+      INSERT ls_namespace INTO TABLE namespaces REFERENCE INTO lr_namespace.
+    ENDIF.
+    READ TABLE element_names WITH TABLE KEY by_name COMPONENTS name         = name
+                                                               namespace_id = lr_namespace->id
+         REFERENCE INTO lr_element_name.
+    IF sy-subrc <> 0.
+      ls_element_name-id           = lines( element_names ).
+      ls_element_name-name         = name.
+      ls_element_name-namespace_id = lr_namespace->id.
+      INSERT ls_element_name INTO TABLE element_names REFERENCE INTO lr_element_name.
+    ENDIF.
+    ls_element-id      = lines( elements ) + 1.
+    ls_element-name_id = lr_element_name->id.
+    CREATE OBJECT ls_element-object.
+    ls_element-object->document = me.
+    ls_element-object->node_id  = 0. " TODO
+    ls_element-object->type     = zif_excel_ixml_node=>co_node_element.
+    INSERT ls_element INTO TABLE elements.
+    rval ?= ls_element-object.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~create_simple_element.
