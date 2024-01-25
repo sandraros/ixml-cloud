@@ -7,7 +7,7 @@ CLASS lcl_ixml_character_data DEFINITION DEFERRED.
 CLASS lcl_ixml_document DEFINITION DEFERRED.
 CLASS lcl_ixml_element DEFINITION DEFERRED.
 CLASS lcl_ixml_encoding DEFINITION DEFERRED.
-CLASS lcl_ixml_factory DEFINITION DEFERRED.
+CLASS lcl_ixml DEFINITION DEFERRED.
 CLASS lcl_ixml_istream_string DEFINITION DEFERRED.
 CLASS lcl_ixml_istream_xstring DEFINITION DEFERRED.
 CLASS lcl_ixml_named_node_map DEFINITION DEFERRED.
@@ -35,10 +35,11 @@ CLASS lcl_ixml_root_all DEFINITION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_factory DEFINITION
+CLASS lcl_ixml DEFINITION
     INHERITING FROM lcl_ixml_root_all
     CREATE PROTECTED
-    FRIENDS zcl_excel_ixml.
+    FRIENDS zcl_excel_ixml
+            lif_ixml_all_friends.
 
   PUBLIC SECTION.
 
@@ -196,8 +197,9 @@ CLASS lcl_ixml_factory DEFINITION
 
     CLASS-METHODS get_singleton
       RETURNING
-        VALUE(rval) TYPE REF TO lcl_ixml_factory.
+        VALUE(rval) TYPE REF TO lcl_ixml.
 
-    CLASS-DATA singleton TYPE REF TO lcl_ixml_factory.
+    CLASS-DATA singleton TYPE REF TO lcl_ixml.
+    CLASS-DATA no_node TYPE REF TO lcl_ixml_node.
 
 ENDCLASS.

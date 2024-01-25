@@ -15,7 +15,7 @@ INTERFACE zif_excel_ixml_document
       !NAME type STRING
       !NAMESPACE type STRING default ''
     returning
-      value(RVAL) type ref to zif_excel_ixml_document .
+      value(RVAL) type ref to zif_excel_ixml_element .
 
   methods CREATE_SIMPLE_ELEMENT
     importing
