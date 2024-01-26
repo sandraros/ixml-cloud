@@ -65,7 +65,9 @@ CLASS ltc_ixml_node DEFINITION
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
+
   PRIVATE SECTION.
+
     METHODS get_children FOR TESTING RAISING cx_static_check.
 
     DATA lv_type     TYPE i.
@@ -88,64 +90,101 @@ CLASS ltc_ixml_parser DEFINITION
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
+
   PRIVATE SECTION.
+
+    METHODS empty_xml FOR TESTING RAISING cx_static_check.
     METHODS end_tag_doesnt_match_begin_tag FOR TESTING RAISING cx_static_check.
     METHODS most_simple_valid_xml FOR TESTING RAISING cx_static_check.
-    METHODS two_parsers FOR TESTING RAISING cx_static_check.
     METHODS two_ixml_instances FOR TESTING RAISING cx_static_check.
     METHODS two_ixml_stream_factories FOR TESTING RAISING cx_static_check.
     METHODS two_ixml_encodings FOR TESTING RAISING cx_static_check.
-    METHODS empty_xml FOR TESTING RAISING cx_static_check.
+    METHODS two_parsers FOR TESTING RAISING cx_static_check.
 
-    DATA rc               TYPE i.
-    DATA num_errors       TYPE i.
-    DATA reason           TYPE string.
-    DATA error            TYPE REF TO if_ixml_parse_error.
-    DATA lv_xstring       TYPE xstring.
-    DATA lo_ixml          TYPE REF TO if_ixml.
-    DATA lo_streamfactory TYPE REF TO if_ixml_stream_factory.
-    DATA lo_istream       TYPE REF TO if_ixml_istream.
-    DATA lo_parser        TYPE REF TO if_ixml_parser.
-    DATA lo_element       TYPE REF TO if_ixml_element.
-    DATA lv_string        TYPE string.
-    DATA lo_document      TYPE REF TO if_ixml_document.
+    DATA rc             TYPE i.
+    DATA num_errors     TYPE i.
+    DATA reason         TYPE string.
+    DATA error          TYPE REF TO if_ixml_parse_error.
+    DATA xstring        TYPE xstring.
+    DATA ixml           TYPE REF TO if_ixml.
+    DATA stream_factory TYPE REF TO if_ixml_stream_factory.
+    DATA istream        TYPE REF TO if_ixml_istream.
+    DATA parser         TYPE REF TO if_ixml_parser.
+    DATA element        TYPE REF TO if_ixml_element.
+    DATA string         TYPE string.
+    DATA document       TYPE REF TO if_ixml_document.
 ENDCLASS.
 
 
-CLASS ltc_sxml_parser DEFINITION
+CLASS ltc_ixml_render DEFINITION
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
+
   PRIVATE SECTION.
-    DATA node        TYPE REF TO if_sxml_node.
-    DATA reader      TYPE REF TO if_sxml_reader.
-    DATA xstring     TYPE xstring.
-    DATA parse_error TYPE REF TO cx_sxml_parse_error.
-    DATA error_rtti  TYPE REF TO cl_abap_typedescr.
-    METHODS object_oriented_parsing FOR TESTING.
+
+    METHODS most_simple_valid_xml FOR TESTING RAISING cx_static_check.
+
+    DATA rc             TYPE i.
+    DATA num_errors     TYPE i.
+    DATA reason         TYPE string.
+    DATA error          TYPE REF TO if_ixml_parse_error.
+    DATA xstring        TYPE xstring.
+    DATA ixml           TYPE REF TO if_ixml.
+    DATA stream_factory TYPE REF TO if_ixml_stream_factory.
+    DATA ostream        TYPE REF TO if_ixml_ostream.
+    DATA renderer       TYPE REF TO if_ixml_renderer.
+    DATA element        TYPE REF TO if_ixml_element.
+    DATA string         TYPE string.
+    DATA document       TYPE REF TO if_ixml_document.
+ENDCLASS.
+
+
+CLASS ltc_sxml_reader DEFINITION
+      FOR TESTING
+      DURATION SHORT
+      RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+
     METHODS empty_object_oriented_parsing FOR TESTING.
-    METHODS token_based_parsing FOR TESTING.
     METHODS empty_token_based_parsing FOR TESTING.
     METHODS empty_xml FOR TESTING RAISING cx_static_check.
     METHODS invalid_xml FOR TESTING RAISING cx_static_check.
     METHODS invalid_xml_eof_reached FOR TESTING RAISING cx_static_check.
     METHODS invalid_xml_not_wellformed FOR TESTING RAISING cx_static_check.
-ENDCLASS.
+    METHODS object_oriented_parsing FOR TESTING.
+    METHODS token_based_parsing FOR TESTING.
 
-
-CLASS ltc_sxml_render DEFINITION
-      FOR TESTING
-      DURATION SHORT
-      RISK LEVEL HARMLESS.
-  PRIVATE SECTION.
     DATA node        TYPE REF TO if_sxml_node.
     DATA reader      TYPE REF TO if_sxml_reader.
     DATA xstring     TYPE xstring.
     DATA parse_error TYPE REF TO cx_sxml_parse_error.
     DATA error_rtti  TYPE REF TO cl_abap_typedescr.
-    METHODS most_simple_valid_xml FOR TESTING.
-    METHODS get_value_raw FOR TESTING RAISING cx_static_check.
-    METHODS get_attribute_value FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+
+
+CLASS ltc_sxml_writer DEFINITION
+      FOR TESTING
+      DURATION SHORT
+      RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+
+    METHODS most_simple_valid_xml FOR TESTING RAISING cx_static_check.
+    METHODS object_oriented_rendering FOR TESTING RAISING cx_static_check.
+    METHODS token_based_rendering FOR TESTING RAISING cx_static_check.
+
+    DATA node          TYPE REF TO if_sxml_node.
+    DATA open_element  TYPE REF TO if_sxml_open_element.
+    DATA writer        TYPE REF TO if_sxml_writer.
+    DATA string_writer TYPE REF TO cl_sxml_string_writer.
+    DATA string        TYPE string.
+    DATA xstring       TYPE xstring.
+    DATA parse_error   TYPE REF TO cx_sxml_parse_error.
+    DATA error_rtti    TYPE REF TO cl_abap_typedescr.
+    DATA value_node    TYPE REF TO if_sxml_value_node.
+    DATA close_element TYPE REF TO if_sxml_close_element.
 ENDCLASS.
 
 
@@ -199,7 +238,7 @@ CLASS ltc_isxml_document IMPLEMENTATION.
   METHOD find_from_name_ns.
     lth_isxml=>parse( |<elem/><a:elem xmlns:a="{ namespace-relationships }">A</a:elem>| ).
     lth_isxml=>element = lth_isxml=>document->find_from_name_ns( name = 'elem'
-                                           uri  = namespace-relationships ).
+                                                                 uri  = namespace-relationships ).
     lth_isxml=>value = lth_isxml=>element->get_value( ).
     cl_abap_unit_assert=>assert_equals( act = lth_isxml=>value
                                         exp = 'A' ).
@@ -288,133 +327,191 @@ ENDCLASS.
 
 
 CLASS ltc_ixml_parser IMPLEMENTATION.
-  METHOD end_tag_doesnt_match_begin_tag.
-    lv_xstring = cl_abap_codepage=>convert_to( |<A></B>| ).
-
-    lo_ixml = cl_ixml=>create( ).
-    lo_streamfactory = lo_ixml->create_stream_factory( ).
-    lo_istream = lo_streamfactory->create_istream_xstring( lv_xstring ).
-    lo_document = lo_ixml->create_document( ).
-    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
-                                        istream        = lo_istream
-                                        document       = lo_document ).
-    rc = lo_parser->parse( ).
+  METHOD empty_xml.
+    ixml = cl_ixml=>create( ).
+    stream_factory = ixml->create_stream_factory( ).
+    xstring = VALUE #( ).
+    istream = stream_factory->create_istream_xstring( xstring ).
+    document = ixml->create_document( ).
+    parser = ixml->create_parser( stream_factory = stream_factory
+                                  istream        = istream
+                                  document       = document ).
+    rc = parser->parse( ).
     cl_abap_unit_assert=>assert_equals( act = rc
                                         exp = lcl_ixml=>ixml_mr-parser_error ).
-    num_errors = lo_parser->num_errors( ).
+    num_errors = parser->num_errors( ).
     cl_abap_unit_assert=>assert_equals( act = num_errors
                                         exp = 1 ).
-    error = lo_parser->get_error( index = 0 ).
+    error = parser->get_error( index = 0 ).
+    reason = error->get_reason( ).
+    cl_abap_unit_assert=>assert_equals( act = reason
+                                        exp = `unexpected end-of-file` ).
+  ENDMETHOD.
+
+  METHOD end_tag_doesnt_match_begin_tag.
+    xstring = cl_abap_codepage=>convert_to( |<A></B>| ).
+
+    ixml = cl_ixml=>create( ).
+    stream_factory = ixml->create_stream_factory( ).
+    istream = stream_factory->create_istream_xstring( xstring ).
+    document = ixml->create_document( ).
+    parser = ixml->create_parser( stream_factory = stream_factory
+                                  istream        = istream
+                                  document       = document ).
+    rc = parser->parse( ).
+    cl_abap_unit_assert=>assert_equals( act = rc
+                                        exp = lcl_ixml=>ixml_mr-parser_error ).
+    num_errors = parser->num_errors( ).
+    cl_abap_unit_assert=>assert_equals( act = num_errors
+                                        exp = 1 ).
+    error = parser->get_error( index = 0 ).
     reason = error->get_reason( ).
     cl_abap_unit_assert=>assert_equals( act = reason
                                         exp = `end tag 'B' does not match begin tag 'A'` ).
+  ENDMETHOD.
+
+  METHOD most_simple_valid_xml.
+    ixml = cl_ixml=>create( ).
+    stream_factory = ixml->create_stream_factory( ).
+    xstring = cl_abap_codepage=>convert_to( |<A/>| ).
+    istream = stream_factory->create_istream_xstring( xstring ).
+    document = ixml->create_document( ).
+    parser = ixml->create_parser( stream_factory = stream_factory
+                                  istream        = istream
+                                  document       = document ).
+    parser->set_normalizing( abap_true ).
+    parser->set_validating( mode = zif_excel_ixml_parser=>co_no_validation ).
+    rc = parser->parse( ).
+    cl_abap_unit_assert=>assert_equals( act = rc
+                                        exp = lcl_ixml=>ixml_mr-dom_ok ).
+    num_errors = parser->num_errors( ).
+    cl_abap_unit_assert=>assert_equals( act = num_errors
+                                        exp = 0 ).
   ENDMETHOD.
 
   METHOD two_ixml_encodings.
     DATA lo_encoding   TYPE REF TO if_ixml_encoding.
     DATA lo_encoding_2 TYPE REF TO if_ixml_encoding.
 
-    lo_ixml = cl_ixml=>create( ).
-    lo_encoding = lo_ixml->create_encoding( byte_order    = if_ixml_encoding=>co_little_endian
-                                            character_set = 'UTF-8' ).
-    lo_encoding_2 = lo_ixml->create_encoding( byte_order    = if_ixml_encoding=>co_little_endian
-                                              character_set = 'UTF-8' ).
+    ixml = cl_ixml=>create( ).
+    lo_encoding = ixml->create_encoding( byte_order    = if_ixml_encoding=>co_little_endian
+                                         character_set = 'UTF-8' ).
+    lo_encoding_2 = ixml->create_encoding( byte_order    = if_ixml_encoding=>co_little_endian
+                                           character_set = 'UTF-8' ).
     cl_abap_unit_assert=>assert_true( boolc( lo_encoding_2 <> lo_encoding ) ).
   ENDMETHOD.
 
   METHOD two_ixml_instances.
     DATA lo_ixml_2 TYPE REF TO if_ixml.
 
-    lo_ixml = cl_ixml=>create( ).
+    ixml = cl_ixml=>create( ).
     lo_ixml_2 = cl_ixml=>create( ).
     cl_abap_unit_assert=>assert_equals( act = lo_ixml_2
-                                        exp = lo_ixml ).
+                                        exp = ixml ).
   ENDMETHOD.
 
   METHOD two_ixml_stream_factories.
     DATA lo_streamfactory_2 TYPE REF TO if_ixml_stream_factory.
 
-    lo_ixml = cl_ixml=>create( ).
-    lo_streamfactory = lo_ixml->create_stream_factory( ).
-    lo_streamfactory_2 = lo_ixml->create_stream_factory( ).
-    cl_abap_unit_assert=>assert_true( boolc( lo_streamfactory_2 <> lo_streamfactory ) ).
+    ixml = cl_ixml=>create( ).
+    stream_factory = ixml->create_stream_factory( ).
+    lo_streamfactory_2 = ixml->create_stream_factory( ).
+    cl_abap_unit_assert=>assert_true( boolc( lo_streamfactory_2 <> stream_factory ) ).
   ENDMETHOD.
 
   METHOD two_parsers.
     DATA lo_istream_2 TYPE REF TO if_ixml_istream.
+    DATA lo_parser_2  TYPE REF TO if_ixml_parser.
 
-    lo_ixml = cl_ixml=>create( ).
-    lo_document = lo_ixml->create_document( ).
-    lo_streamfactory = lo_ixml->create_stream_factory( ).
+    ixml = cl_ixml=>create( ).
+    document = ixml->create_document( ).
+    stream_factory = ixml->create_stream_factory( ).
 
-    lv_xstring = cl_abap_codepage=>convert_to( |<B/>| ).
-    lo_istream = lo_streamfactory->create_istream_xstring( lv_xstring ).
-    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
-                                        istream        = lo_istream
-                                        document       = lo_document ).
-    lo_parser->set_normalizing( abap_true ).
-    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
-    rc = lo_parser->parse( ).
+    xstring = cl_abap_codepage=>convert_to( |<B/>| ).
+    istream = stream_factory->create_istream_xstring( xstring ).
+    parser = ixml->create_parser( stream_factory = stream_factory
+                                  istream        = istream
+                                  document       = document ).
+    parser->set_normalizing( abap_true ).
+    parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+    rc = parser->parse( ).
 
-    DATA lo_parser_2 TYPE REF TO if_ixml_parser.
-    lv_string = '<A/>'.
-    lo_istream_2 = lo_streamfactory->create_istream_string( lv_string ).
-    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
-                                        istream        = lo_istream_2
-                                        document       = lo_document ).
-    rc = lo_parser->parse( ).
+    string = '<A/>'.
+    lo_istream_2 = stream_factory->create_istream_string( string ).
+    parser = ixml->create_parser( stream_factory = stream_factory
+                                  istream        = lo_istream_2
+                                  document       = document ).
+    rc = parser->parse( ).
 
-    lo_element = lo_document->get_root_element( ).
-    lv_string = lo_element->get_name( ).
+    element = document->get_root_element( ).
+    string = element->get_name( ).
 
     " The second parsing is ignored
-    cl_abap_unit_assert=>assert_equals( act = lv_string
+    cl_abap_unit_assert=>assert_equals( act = string
                                         exp = 'B' ).
-  ENDMETHOD.
-
-  METHOD most_simple_valid_xml.
-    lo_ixml = cl_ixml=>create( ).
-    lo_streamfactory = lo_ixml->create_stream_factory( ).
-    lv_xstring = cl_abap_codepage=>convert_to( |<A/>| ).
-    lo_istream = lo_streamfactory->create_istream_xstring( lv_xstring ).
-    lo_document = lo_ixml->create_document( ).
-    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
-                                        istream        = lo_istream
-                                        document       = lo_document ).
-    lo_parser->set_normalizing( abap_true ).
-    lo_parser->set_validating( mode = zif_excel_ixml_parser=>co_no_validation ).
-    rc = lo_parser->parse( ).
-    cl_abap_unit_assert=>assert_equals( act = rc
-                                        exp = lcl_ixml=>ixml_mr-dom_ok ).
-    num_errors = lo_parser->num_errors( ).
-    cl_abap_unit_assert=>assert_equals( act = num_errors
-                                        exp = 0 ).
-  ENDMETHOD.
-
-  METHOD empty_xml.
-    lo_ixml = cl_ixml=>create( ).
-    lo_streamfactory = lo_ixml->create_stream_factory( ).
-    lv_xstring = VALUE #( ).
-    lo_istream = lo_streamfactory->create_istream_xstring( lv_xstring ).
-    lo_document = lo_ixml->create_document( ).
-    lo_parser = lo_ixml->create_parser( stream_factory = lo_streamfactory
-                                        istream        = lo_istream
-                                        document       = lo_document ).
-    rc = lo_parser->parse( ).
-    cl_abap_unit_assert=>assert_equals( act = rc
-                                        exp = lcl_ixml=>ixml_mr-parser_error ).
-    num_errors = lo_parser->num_errors( ).
-    cl_abap_unit_assert=>assert_equals( act = num_errors
-                                        exp = 1 ).
-    error = lo_parser->get_error( index = 0 ).
-    reason = error->get_reason( ).
-    cl_abap_unit_assert=>assert_equals( act = reason
-                                        exp = `unexpected end-of-file` ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS ltc_sxml_parser IMPLEMENTATION.
+CLASS ltc_ixml_render IMPLEMENTATION.
+  METHOD most_simple_valid_xml.
+    ixml = cl_ixml=>create( ).
+    document = ixml->create_document( ).
+    element = document->create_simple_element( name   = 'ROOT'
+                                               parent = document ).
+    stream_factory = ixml->create_stream_factory( ).
+    ostream = stream_factory->create_ostream_xstring( xstring ).
+    renderer = ixml->create_renderer( ostream  = ostream
+                                      document = document ).
+    document->set_declaration( abap_false ).
+    rc = renderer->render( ).
+    cl_abap_unit_assert=>assert_equals( act = cl_abap_codepage=>convert_from( xstring )
+                                        exp = '<ROOT/>' ).
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS ltc_sxml_reader IMPLEMENTATION.
+  METHOD empty_object_oriented_parsing.
+    DATA(xstring) = cl_abap_codepage=>convert_to( '<ROOTNODE/>' ).
+    DATA(reader) = cl_sxml_string_reader=>create( xstring ).
+    DATA(node) = reader->read_next_node( ).
+    cl_abap_unit_assert=>assert_bound( node ).
+    cl_abap_unit_assert=>assert_equals( act = node->type
+                                        exp = node->co_nt_element_open ).
+    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
+    DATA(node_open) = CAST if_sxml_open_element( node ).
+    cl_abap_unit_assert=>assert_equals( act = node_open->qname
+                                        exp = VALUE qname( name = 'ROOTNODE' ) ).
+    node = reader->read_next_node( ).
+    cl_abap_unit_assert=>assert_bound( node ).
+    cl_abap_unit_assert=>assert_equals( act = node->type
+                                        exp = node->co_nt_element_close ).
+    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_close_element ) ).
+    node = reader->read_next_node( ).
+    cl_abap_unit_assert=>assert_not_bound( node ).
+  ENDMETHOD.
+
+  METHOD empty_token_based_parsing.
+    DATA(xstring) = cl_abap_codepage=>convert_to( '<ROOTNODE/>' ).
+    DATA(reader) = cl_sxml_string_reader=>create( xstring ).
+    cl_abap_unit_assert=>assert_equals( act = reader->node_type
+                                        exp = if_sxml_node=>co_nt_initial ).
+    reader->next_node( ).
+    cl_abap_unit_assert=>assert_equals( act = reader->node_type
+                                        exp = if_sxml_node=>co_nt_element_open ).
+    cl_abap_unit_assert=>assert_equals( act = reader->name
+                                        exp = 'ROOTNODE' ).
+    reader->next_node( ).
+    cl_abap_unit_assert=>assert_equals( act = reader->node_type
+                                        exp = if_sxml_node=>co_nt_element_close ).
+    cl_abap_unit_assert=>assert_equals( act = reader->name
+                                        exp = 'ROOTNODE' ).
+    reader->next_node( ).
+    cl_abap_unit_assert=>assert_equals( act = reader->node_type
+                                        exp = if_sxml_node=>co_nt_final ).
+  ENDMETHOD.
+
   METHOD empty_xml.
     DATA parse_error TYPE REF TO cx_sxml_parse_error.
 
@@ -518,26 +615,6 @@ CLASS ltc_sxml_parser IMPLEMENTATION.
                                         exp = CONV xstring( 'E0' ) ).
   ENDMETHOD.
 
-  METHOD empty_object_oriented_parsing.
-    DATA(xstring) = cl_abap_codepage=>convert_to( '<ROOTNODE/>' ).
-    DATA(reader) = cl_sxml_string_reader=>create( xstring ).
-    DATA(node) = reader->read_next_node( ).
-    cl_abap_unit_assert=>assert_bound( node ).
-    cl_abap_unit_assert=>assert_equals( act = node->type
-                                        exp = node->co_nt_element_open ).
-    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
-    DATA(node_open) = CAST if_sxml_open_element( node ).
-    cl_abap_unit_assert=>assert_equals( act = node_open->qname
-                                        exp = VALUE qname( name = 'ROOTNODE' ) ).
-    node = reader->read_next_node( ).
-    cl_abap_unit_assert=>assert_bound( node ).
-    cl_abap_unit_assert=>assert_equals( act = node->type
-                                        exp = node->co_nt_element_close ).
-    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_close_element ) ).
-    node = reader->read_next_node( ).
-    cl_abap_unit_assert=>assert_not_bound( node ).
-  ENDMETHOD.
-
   METHOD token_based_parsing.
     DATA(xstring) = cl_abap_codepage=>convert_to( '<ROOTNODE ATTR="UFE=">UFE=</ROOTNODE>' ).
     DATA(reader) = cl_sxml_string_reader=>create( xstring ).
@@ -591,66 +668,70 @@ CLASS ltc_sxml_parser IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = reader->node_type
                                         exp = if_sxml_node=>co_nt_final ).
   ENDMETHOD.
-
-  METHOD empty_token_based_parsing.
-    DATA(xstring) = cl_abap_codepage=>convert_to( '<ROOTNODE/>' ).
-    DATA(reader) = cl_sxml_string_reader=>create( xstring ).
-    cl_abap_unit_assert=>assert_equals( act = reader->node_type
-                                        exp = if_sxml_node=>co_nt_initial ).
-    reader->next_node( ).
-    cl_abap_unit_assert=>assert_equals( act = reader->node_type
-                                        exp = if_sxml_node=>co_nt_element_open ).
-    cl_abap_unit_assert=>assert_equals( act = reader->name
-                                        exp = 'ROOTNODE' ).
-    reader->next_node( ).
-    cl_abap_unit_assert=>assert_equals( act = reader->node_type
-                                        exp = if_sxml_node=>co_nt_element_close ).
-    cl_abap_unit_assert=>assert_equals( act = reader->name
-                                        exp = 'ROOTNODE' ).
-    reader->next_node( ).
-    cl_abap_unit_assert=>assert_equals( act = reader->node_type
-                                        exp = if_sxml_node=>co_nt_final ).
-  ENDMETHOD.
 ENDCLASS.
 
 
-CLASS ltc_sxml_render IMPLEMENTATION.
-  METHOD get_attribute_value.
-    DATA(xstring) = cl_abap_codepage=>convert_to( '<ROOT ATTR="Efe="/>' ).
-    DATA(reader) = cl_sxml_string_reader=>create( xstring ).
-
-    " Read ROOT
-    DATA(node) = reader->read_next_node( ).
-*    cl_abap_unit_assert=>assert_bound( node ).
-*    cl_abap_unit_assert=>assert_equals( act = node->type exp = node->co_nt_element_open ).
-*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
-    DATA(node_open) = CAST if_sxml_open_element( node ).
-*    cl_abap_unit_assert=>assert_equals( act = node_open->qname exp = VALUE qname( name = 'ROOTNODE' ) ).
-
-    DATA(node_attr) = node_open->get_attribute_value( 'ATTR' ).
-    cl_abap_unit_assert=>assert_bound( node_attr ).
-    cl_abap_unit_assert=>assert_equals( act = node_attr->type exp = node_attr->co_vt_text ).
-    cl_abap_unit_assert=>assert_equals( act = node_attr->get_value( ) exp = 'Efe=' ).
-    cl_abap_unit_assert=>assert_equals( act = node_attr->get_value_raw( ) exp = CONV xstring( 'E0' ) ).
-  ENDMETHOD.
-
-  METHOD get_value_raw.
-    DATA(xstring) = cl_abap_codepage=>convert_to( '<ROOT>Efe=</ROOT>' ).
-    DATA(reader) = cl_sxml_string_reader=>create( xstring ).
-
-    " Read ROOT
-    DATA(node) = reader->read_next_node( ).
-    " Read value
-    node = reader->read_next_node( ).
-*    cl_abap_unit_assert=>assert_bound( node ).
-    cl_abap_unit_assert=>assert_equals( act = node->type exp = node->co_nt_value ).
-*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_value ) ).
-    DATA(value_node) = CAST if_sxml_value_node( node ).
-*    cl_abap_unit_assert=>assert_equals( act = value_node->get_value( ) exp = 'Efe=' ).
-    cl_abap_unit_assert=>assert_equals( act = value_node->get_value_raw( ) exp = CONV xstring( 'E0' ) ).
-  ENDMETHOD.
-
+CLASS ltc_sxml_writer IMPLEMENTATION.
   METHOD most_simple_valid_xml.
+    writer = cl_sxml_string_writer=>create( ).
+    open_element = writer->new_open_element( 'A' ).
+    writer->write_node( open_element ).
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string_writer ?= writer.
+    xstring = string_writer->get_output( ).
+    string = cl_abap_codepage=>convert_from( xstring ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<A/>' ).
+  ENDMETHOD.
+
+  METHOD object_oriented_rendering.
+    " WRITE_NODE and NEW_* methods
+    " NB: NEW_* methods are static methods (i.e. it's valid: DATA(open_element) = cl_sxml_writer=>if_sxml_writer~new_open_element( 'ROOTNODE' ).)
+    writer = cl_sxml_string_writer=>create( ).
+    open_element = writer->new_open_element( 'ROOTNODE' ).
+    open_element->set_attribute( name  = 'ATTR'
+                                 value = '5' ).
+    writer->write_node( open_element ).
+    " WRITE_ATTRIBUTE and WRITE_ATTRIBUTE_RAW can also be used, but only after the WRITE_NODE of an element opening tag
+    writer->write_attribute( name  = 'ATTR2'
+                             value = 'A' ).
+    " WRITE_ATTRIBUTE_RAW writes in Base64
+    writer->write_attribute_raw( name  = 'ATTR3'
+                                 value = '5051' ).
+    value_node = writer->new_value( ).
+    value_node->set_value( 'HELLO' ).
+    writer->write_node( value_node ).
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string_writer ?= writer.
+    xstring = string_writer->get_output( ).
+    string = cl_abap_codepage=>convert_from( xstring ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<ROOTNODE ATTR="5" ATTR2="A" ATTR3="UFE=">HELLO</ROOTNODE>' ).
+  ENDMETHOD.
+
+  METHOD token_based_rendering.
+    writer = cl_sxml_string_writer=>create( ).
+    writer->open_element( 'ROOTNODE' ).
+    " WRITE_ATTRIBUTE and WRITE_ATTRIBUTE_RAW can be used only after OPEN_ELEMENT
+    writer->write_attribute( name  = 'ATTR'
+                             value = '5' ).
+    writer->write_attribute_raw( name  = 'ATTR2'
+                                 value = '5051' ).
+    writer->write_value( 'HELLO' ).
+    writer->open_element( 'NODE' ).
+    writer->write_value_raw( '5051' ).
+    writer->close_element( ).
+    writer->close_element( ).
+
+    string_writer ?= writer.
+    xstring = string_writer->get_output( ).
+    string = cl_abap_codepage=>convert_from( xstring ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<ROOTNODE ATTR="5" ATTR2="UFE=">HELLO<NODE>UFE=</NODE></ROOTNODE>' ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -682,11 +763,13 @@ CLASS lth_isxml IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render.
+    DATA lr_string TYPE REF TO string.
     DATA lo_ostream  TYPE REF TO zif_excel_ixml_ostream.
     DATA lo_renderer TYPE REF TO zif_excel_ixml_renderer.
 
     stream_factory = ixml->create_stream_factory( ).
-    lo_ostream = stream_factory->create_ostream_cstring( rv_result ).
+    GET REFERENCE OF rv_result into lr_string.
+    lo_ostream = stream_factory->create_ostream_cstring( lr_STRING ).
     lo_renderer = ixml->create_renderer( ostream  = lo_ostream
                                          document = document ).
     " Fills RV_RESULT

@@ -282,7 +282,7 @@ CLASS lcl_ixml_ostream_string DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        string      TYPE string
+        string      TYPE REF TO string
       RETURNING
         VALUE(rval) TYPE REF TO lcl_ixml_ostream_string.
 
@@ -303,7 +303,7 @@ CLASS lcl_ixml_ostream_xstring DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        xstring      TYPE xstring
+        xstring      TYPE REF TO xstring
       RETURNING
         VALUE(rval) TYPE REF TO lcl_ixml_ostream_xstring.
 
@@ -966,7 +966,7 @@ CLASS lcl_ixml_ostream_string IMPLEMENTATION.
   METHOD create.
 *    DATA xstring TYPE xstring.
     CREATE OBJECT rval TYPE lcl_ixml_ostream_string.
-    GET REFERENCE OF string INTO rval->ref_string.
+    rval->ref_string = string.
 *    xstring = cl_abap_codepage=>convert_to( string ).
     rval->lif_ixml_ostream~type        = 'C'.
     rval->lif_ixml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
@@ -977,7 +977,7 @@ ENDCLASS.
 CLASS lcl_ixml_ostream_xstring IMPLEMENTATION.
   METHOD create.
     CREATE OBJECT rval TYPE lcl_ixml_ostream_xstring.
-    GET REFERENCE OF xstring INTO rval->ref_xstring.
+    rval->ref_xstring = xstring.
     rval->lif_ixml_ostream~type        = 'X'.
     rval->lif_ixml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
   ENDMETHOD.
@@ -1070,60 +1070,70 @@ ENDCLASS.
 CLASS lcl_ixml_renderer IMPLEMENTATION.
   METHOD render_node.
     DATA lo_writer                    TYPE REF TO if_sxml_writer.
-    DATA lo_element                   TYPE REF TO lcl_ixml_element.
-    DATA lo_node                      TYPE REF TO lcl_ixml_node.
-    DATA lo_sxml_element              TYPE REF TO if_sxml_open_element.
-    DATA lo_attribute                 TYPE REF TO lcl_ixml_attribute.
-    DATA lo_text                      TYPE REF TO lcl_ixml_text.
+    DATA lo_isxml_element                   TYPE REF TO lcl_ixml_element.
+    DATA lo_isxml_node                      TYPE REF TO lcl_ixml_node.
+    DATA lo_sxml_open_element              TYPE REF TO if_sxml_open_element.
+    DATA lo_isxml_attribute                 TYPE REF TO lcl_ixml_attribute.
+    DATA lo_isxml_text                      TYPE REF TO lcl_ixml_text.
     DATA lo_sxml_value                TYPE REF TO if_sxml_value_node.
-    DATA lo_cast_sxml_string_writer   TYPE REF TO cl_sxml_string_writer.
-    DATA lv_xstring                   TYPE xstring.
-    DATA lo_cast_ixml_ostream_string  TYPE REF TO lcl_ixml_ostream_string.
-    DATA lo_cast_ixml_ostream_xstring TYPE REF TO lcl_ixml_ostream_xstring.
+    DATA lo_sxml_close_element TYPE REF TO if_sxml_close_element.
 
     lo_writer = ostream->sxml_writer.
 
     CASE io_node->type.
       WHEN zif_excel_ixml_node=>co_node_element.
-        lo_element ?= lo_node.
-        lo_sxml_element = lo_writer->new_open_element( name = lo_element->name ).
-        LOOP AT lo_element->attributes INTO lo_attribute.
-          lo_sxml_element->set_attribute( name  = lo_attribute->name
-                                          value = lo_attribute->value ).
+        lo_isxml_element ?= io_node.
+        lo_sxml_open_element = lo_writer->new_open_element( name = lo_isxml_element->name ).
+        LO_writer->write_node( lo_sxml_open_element ).
+
+        LOOP AT lo_isxml_element->attributes INTO lo_isxml_attribute.
+          lo_sxml_open_element->set_attribute( name  = lo_isxml_attribute->name
+                                          value = lo_isxml_attribute->value ).
         ENDLOOP.
+
       WHEN zif_excel_ixml_node=>co_node_text.
-        lo_text = CAST lcl_ixml_text( lo_node ).
+        lo_isxml_text ?= io_node.
         lo_sxml_value = lo_writer->new_value( ).
-        lo_sxml_value->set_value( lo_text->value ).
+        lo_sxml_value->set_value( lo_isxml_text->value ).
+        LO_writer->write_node( lo_sxml_value ).
     ENDCASE.
 
-    lo_node = io_node->first_child.
-    WHILE lo_node IS BOUND.
-      render_node( lo_node ).
-      lo_node = lo_node->next_sibling.
+    lo_isxml_node = io_node->first_child.
+    WHILE lo_isxml_node IS BOUND.
+      render_node( lo_isxml_node ).
+      lo_isxml_node = lo_isxml_node->next_sibling.
     ENDWHILE.
 
     CASE io_node->type.
       WHEN zif_excel_ixml_node=>co_node_element.
-        lo_writer->new_close_element( ).
-    ENDCASE.
-
-    CASE ostream->type.
-      WHEN 'C'.
-        lo_cast_sxml_string_writer ?= lo_writer.
-        lv_xstring = lo_cast_sxml_string_writer->get_output( ).
-        lo_cast_ixml_ostream_string ?= ostream.
-        lo_cast_ixml_ostream_string->ref_string->* = cl_abap_codepage=>convert_from( lv_xstring ).
-      WHEN 'X'.
-        lo_cast_sxml_string_writer ?= lo_writer.
-        lo_cast_ixml_ostream_xstring ?= ostream.
-        lo_cast_ixml_ostream_xstring->ref_xstring->* = lo_cast_sxml_string_writer->get_output( ).
+        lo_sxml_close_element = lo_writer->new_close_element( ).
+        LO_writer->write_node( lo_sxml_close_element ).
     ENDCASE.
     rv_rc = 0.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_renderer~render.
+    DATA lo_writer                    TYPE REF TO if_sxml_writer.
+    DATA lo_sxml_string_writer   TYPE REF TO cl_sxml_string_writer.
+    DATA lv_xstring                   TYPE xstring.
+    DATA lo_isxml_ostream_string  TYPE REF TO lcl_ixml_ostream_string.
+    DATA lo_isxml_ostream_xstring TYPE REF TO lcl_ixml_ostream_xstring.
+
+    lo_writer = ostream->sxml_writer.
+
     rval = render_node( document->first_child ).
+
+    CASE ostream->type.
+      WHEN 'C'.
+        lo_sxml_string_writer ?= lo_writer.
+        lv_xstring = lo_sxml_string_writer->get_output( ).
+        lo_isxml_ostream_string ?= ostream.
+        lo_isxml_ostream_string->ref_string->* = cl_abap_codepage=>convert_from( lv_xstring ).
+      WHEN 'X'.
+        lo_sxml_string_writer ?= lo_writer.
+        lo_isxml_ostream_xstring ?= ostream.
+        lo_isxml_ostream_xstring->ref_xstring->* = lo_sxml_string_writer->get_output( ).
+    ENDCASE.
   ENDMETHOD.
 ENDCLASS.
 

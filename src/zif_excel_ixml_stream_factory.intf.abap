@@ -1,28 +1,28 @@
 INTERFACE zif_excel_ixml_stream_factory
-  PUBLIC .
+  PUBLIC.
 
-  methods CREATE_ISTREAM_STRING
-    importing
-      !STRING type STRING
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ISTREAM .
+  METHODS create_istream_string
+    IMPORTING
+      !string TYPE string
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_istream.
 
-  methods CREATE_ISTREAM_XSTRING
-    importing
-      !STRING type XSTRING
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ISTREAM .
+  METHODS create_istream_xstring
+    IMPORTING
+      !string TYPE xstring
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_istream.
 
-  methods CREATE_OSTREAM_CSTRING
-    importing
-      !STRING type STRING
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_OSTREAM .
+  METHODS create_ostream_cstring
+    IMPORTING
+      !string TYPE REF TO string
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_ostream.
 
-  methods CREATE_OSTREAM_XSTRING
-    importing
-      !STRING type XSTRING
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_OSTREAM .
+  METHODS create_ostream_xstring
+    IMPORTING
+      !string TYPE REF TO xstring
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_ostream.
 
 ENDINTERFACE.
