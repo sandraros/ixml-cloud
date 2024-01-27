@@ -2,49 +2,47 @@
 *"* definitions, interfaces or type declarations) you need for
 *"* components in the private section
 
-CLASS lcl_ixml_attribute DEFINITION DEFERRED.
-CLASS lcl_ixml_character_data DEFINITION DEFERRED.
-CLASS lcl_ixml_document DEFINITION DEFERRED.
-CLASS lcl_ixml_element DEFINITION DEFERRED.
-CLASS lcl_ixml_encoding DEFINITION DEFERRED.
-CLASS lcl_ixml DEFINITION DEFERRED.
-CLASS lcl_ixml_istream_string DEFINITION DEFERRED.
-CLASS lcl_ixml_istream_xstring DEFINITION DEFERRED.
-CLASS lcl_ixml_named_node_map DEFINITION DEFERRED.
-CLASS lcl_ixml_node DEFINITION DEFERRED.
-CLASS lcl_ixml_node_collection DEFINITION DEFERRED.
-CLASS lcl_ixml_node_iterator DEFINITION DEFERRED.
-CLASS lcl_ixml_node_list DEFINITION DEFERRED.
-CLASS lcl_ixml_ostream_string DEFINITION DEFERRED.
-CLASS lcl_ixml_ostream_xstring DEFINITION DEFERRED.
-CLASS lcl_ixml_parser DEFINITION DEFERRED.
-CLASS lcl_ixml_renderer DEFINITION DEFERRED.
-CLASS lcl_ixml_stream DEFINITION DEFERRED.
-CLASS lcl_ixml_stream_factory DEFINITION DEFERRED.
-CLASS lcl_ixml_text DEFINITION DEFERRED.
-CLASS lcl_ixml_unknown DEFINITION DEFERRED.
+CLASS lcl_isxml_attribute DEFINITION DEFERRED.
+CLASS lcl_isxml_character_data DEFINITION DEFERRED.
+CLASS lcl_isxml_document DEFINITION DEFERRED.
+CLASS lcl_isxml_element DEFINITION DEFERRED.
+CLASS lcl_isxml_encoding DEFINITION DEFERRED.
+CLASS lcl_isxml DEFINITION DEFERRED.
+CLASS lcl_isxml_istream_string DEFINITION DEFERRED.
+CLASS lcl_isxml_istream_xstring DEFINITION DEFERRED.
+CLASS lcl_isxml_named_node_map DEFINITION DEFERRED.
+CLASS lcl_isxml_node DEFINITION DEFERRED.
+CLASS lcl_isxml_node_collection DEFINITION DEFERRED.
+CLASS lcl_isxml_node_iterator DEFINITION DEFERRED.
+CLASS lcl_isxml_node_list DEFINITION DEFERRED.
+CLASS lcl_isxml_ostream_string DEFINITION DEFERRED.
+CLASS lcl_isxml_ostream_xstring DEFINITION DEFERRED.
+CLASS lcl_isxml_parser DEFINITION DEFERRED.
+CLASS lcl_isxml_renderer DEFINITION DEFERRED.
+CLASS lcl_isxml_stream DEFINITION DEFERRED.
+CLASS lcl_isxml_stream_factory DEFINITION DEFERRED.
+CLASS lcl_isxml_text DEFINITION DEFERRED.
+CLASS lcl_isxml_unknown DEFINITION DEFERRED.
 
-INTERFACE lif_ixml_all_friends.
+INTERFACE lif_isxml_all_friends.
 ENDINTERFACE.
 
 
-CLASS lcl_ixml_root_all DEFINITION.
-*    FRIENDS lif_ixml_all_friends.
+CLASS lcl_isxml_root_all DEFINITION.
   PUBLIC SECTION.
-    INTERFACES lif_ixml_all_friends.
+    INTERFACES lif_isxml_all_friends.
 ENDCLASS.
 
 
-CLASS lcl_ixml DEFINITION
-    INHERITING FROM lcl_ixml_root_all
+CLASS lcl_isxml DEFINITION
+    INHERITING FROM lcl_isxml_root_all
     CREATE PROTECTED
     FRIENDS zcl_excel_ixml
-            lif_ixml_all_friends.
+            lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
     INTERFACES zif_excel_ixml.
-*    INTERFACES lif_ixml_all_friends.
 
     TYPES tv_element_name_id TYPE i.
     TYPES tv_node_id         TYPE i.
@@ -87,7 +85,7 @@ CLASS lcl_ixml DEFINITION
         id         TYPE tv_node_id,
         name_id    TYPE tv_element_name_id,
         attributes TYPE tt_attribute,
-        object     TYPE REF TO lcl_ixml_element,
+        object     TYPE REF TO lcl_isxml_element,
       END OF ts_element.
     TYPES tt_element TYPE HASHED TABLE OF ts_element WITH UNIQUE KEY id
                     WITH NON-UNIQUE SORTED KEY by_name COMPONENTS name_id.
@@ -197,9 +195,9 @@ CLASS lcl_ixml DEFINITION
 
     CLASS-METHODS get_singleton
       RETURNING
-        VALUE(rval) TYPE REF TO lcl_ixml.
+        VALUE(rval) TYPE REF TO lcl_isxml.
 
-    CLASS-DATA singleton TYPE REF TO lcl_ixml.
-    CLASS-DATA no_node TYPE REF TO lcl_ixml_node.
+    CLASS-DATA singleton TYPE REF TO lcl_isxml.
+    CLASS-DATA no_node TYPE REF TO lcl_isxml_node.
 
 ENDCLASS.

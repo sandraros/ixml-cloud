@@ -21,7 +21,7 @@ ENDCLASS.
 CLASS zcl_excel_ixml IMPLEMENTATION.
   METHOD create.
     IF singleton IS NOT BOUND.
-      singleton = lcl_ixml=>get_singleton( ).
+      singleton = lcl_isxml=>get_singleton( ).
     ENDIF.
     rval = singleton.
   ENDMETHOD.

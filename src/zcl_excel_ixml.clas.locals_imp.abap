@@ -2,21 +2,21 @@
 *"* local helper classes, interface definitions and type
 *"* declarations
 
-INTERFACE lif_ixml_istream.
+INTERFACE lif_isxml_istream.
   INTERFACES zif_excel_ixml_istream.
   DATA sxml_reader TYPE REF TO if_sxml_reader READ-ONLY.
 ENDINTERFACE.
 
 
-INTERFACE lif_ixml_ostream.
+INTERFACE lif_isxml_ostream.
   INTERFACES zif_excel_ixml_ostream.
   DATA sxml_writer TYPE REF TO if_sxml_writer READ-ONLY.
   DATA type        TYPE c LENGTH 1            READ-ONLY.
 ENDINTERFACE.
 
 
-CLASS lcl_ixml_unknown DEFINITION
-    INHERITING FROM lcl_ixml_root_all
+CLASS lcl_isxml_unknown DEFINITION
+    INHERITING FROM lcl_isxml_root_all
     CREATE PROTECTED.
 
   PUBLIC SECTION.
@@ -25,15 +25,15 @@ CLASS lcl_ixml_unknown DEFINITION
 
   PROTECTED SECTION.
 
-    DATA type TYPE lcl_ixml=>tv_node_type.
+    DATA type TYPE lcl_isxml=>tv_node_type.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_node DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_node DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PROTECTED
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -42,23 +42,29 @@ CLASS lcl_ixml_node DEFINITION
     " PRivate SECTION.
   PROTECTED SECTION.
 
-    DATA document         TYPE REF TO lcl_ixml_document.
+    DATA document         TYPE REF TO lcl_isxml_document.
 
 *    DATA value            TYPE string.
-    DATA parent           TYPE REF TO lcl_ixml_node.
-    DATA previous_sibling TYPE REF TO lcl_ixml_node.
-    DATA next_sibling     TYPE REF TO lcl_ixml_node.
-    DATA first_child      TYPE REF TO lcl_ixml_node.
+    DATA parent           TYPE REF TO lcl_isxml_node.
+    DATA previous_sibling TYPE REF TO lcl_isxml_node.
+    DATA next_sibling     TYPE REF TO lcl_isxml_node.
+    DATA first_child      TYPE REF TO lcl_isxml_node.
     "! Useful for performance to APPEND
-    DATA last_child       TYPE REF TO lcl_ixml_node.
+    DATA last_child       TYPE REF TO lcl_isxml_node.
+
+    METHODS render
+      IMPORTING
+      io_sxml_writer TYPE REF TO if_sxml_writer
+      RETURNING
+      VALUE(rv_rc) TYPE i.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_attribute DEFINITION
-    INHERITING FROM lcl_ixml_node
+CLASS lcl_isxml_attribute DEFINITION
+    INHERITING FROM lcl_isxml_node
     CREATE PROTECTED
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -72,10 +78,10 @@ CLASS lcl_ixml_attribute DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_character_data DEFINITION
-    INHERITING FROM lcl_ixml_node
+CLASS lcl_isxml_character_data DEFINITION
+    INHERITING FROM lcl_isxml_node
     CREATE PROTECTED
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -84,10 +90,10 @@ CLASS lcl_ixml_character_data DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_document DEFINITION
-    INHERITING FROM lcl_ixml_node
+CLASS lcl_isxml_document DEFINITION
+    INHERITING FROM lcl_isxml_node
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -95,75 +101,94 @@ CLASS lcl_ixml_document DEFINITION
 
 *    METHODS get_node
 *      IMPORTING
-*        id          TYPE lcl_ixml_factory=>tv_node_id
+*        id          TYPE lcl_isxml_factory=>tv_node_id
 *      RETURNING
 *        VALUE(rval) TYPE REF TO zif_excel_ixml_node.
 
+  PROTECTED SECTION.
+
+    METHODS render REDEFINITION.
+
   PRIVATE SECTION.
 
-*    DATA nodes                TYPE lcl_ixml_factory=>tt_node.
-*    DATA namespaces           TYPE lcl_ixml_factory=>tt_namespace.
-*    DATA element_names        TYPE lcl_ixml_factory=>tt_element_name.
-*    DATA elements             TYPE lcl_ixml_factory=>tt_element.
-*    DATA parse_element_levels TYPE lcl_ixml_factory=>tt_parse_element_level.
+    DATA encoding TYPE REF TO lcl_isxml_encoding.
+    DATA version  TYPE string value '1.0'.
+
+    METHODS get_xml_header_as_string
+      RETURNING
+        VALUE(rv_result) TYPE string.
+
+    METHODS get_xml_header_as_xstring
+      RETURNING
+        VALUE(rv_result) TYPE xstring.
+*    DATA nodes                TYPE lcl_isxml_factory=>tt_node.
+*    DATA namespaces           TYPE lcl_isxml_factory=>tt_namespace.
+*    DATA element_names        TYPE lcl_isxml_factory=>tt_element_name.
+*    DATA elements             TYPE lcl_isxml_factory=>tt_element.
+*    DATA parse_element_levels TYPE lcl_isxml_factory=>tt_parse_element_level.
 *
 *    METHODS append_child
 *      IMPORTING
-*        node        TYPE REF TO lcl_ixml_node
+*        node        TYPE REF TO lcl_isxml_node
 *        new_child   TYPE REF TO zif_excel_ixml_node
 *      RETURNING
 *        VALUE(rval) TYPE i.
 *
 *    METHODS get_node_children
 *      IMPORTING
-*        node_id TYPE lcl_ixml_factory=>tv_node_id
+*        node_id TYPE lcl_isxml_factory=>tv_node_id
 *      RETURNING
 *        VALUE(rval) TYPE REF TO zif_excel_ixml_node_list.
 *
 *    METHODS get_node_iterator
 *      IMPORTING
-*        node_list TYPE REF TO lcl_ixml_node_list OPTIONAL
-*        node_collection TYPE REF TO lcl_ixml_node_collection OPTIONAL
+*        node_list TYPE REF TO lcl_isxml_node_list OPTIONAL
+*        node_collection TYPE REF TO lcl_isxml_node_collection OPTIONAL
 *      RETURNING
-*      VALUE(rval) TYPE REF TO lcl_ixml_node_iterator.
+*      VALUE(rval) TYPE REF TO lcl_isxml_node_iterator.
 *
 *    METHODS parse
 *      IMPORTING
-*        istream     TYPE REF TO lif_ixml_istream
+*        istream     TYPE REF TO lif_isxml_istream
 *      RETURNING
 *        VALUE(rval) TYPE i.
 *
 *    METHODS render
 *      IMPORTING
-*        ostream     TYPE REF TO lif_ixml_ostream
+*        ostream     TYPE REF TO lif_isxml_ostream
 *      RETURNING
 *        VALUE(rval) TYPE i.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_element DEFINITION
-    INHERITING FROM lcl_ixml_node
+CLASS lcl_isxml_element DEFINITION
+    INHERITING FROM lcl_isxml_node
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
     INTERFACES zif_excel_ixml_element.
 
+  PROTECTED SECTION.
+
+    methods render REDEFINITION.
+
   PRIVATE SECTION.
 
     DATA name       TYPE string.
+    DATA prefix     TYPE string.
     DATA namespace  TYPE string.
-    DATA attributes TYPE TABLE OF REF TO lcl_ixml_attribute.
+    DATA attributes TYPE TABLE OF REF TO lcl_isxml_attribute.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_encoding DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_encoding DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -177,13 +202,13 @@ CLASS lcl_ixml_encoding DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_istream_string DEFINITION
+CLASS lcl_isxml_istream_string DEFINITION
     CREATE PRIVATE
-    FRIENDS lcl_ixml_stream_factory.
+    FRIENDS lcl_isxml_stream_factory.
 
   PUBLIC SECTION.
 
-    INTERFACES lif_ixml_istream.
+    INTERFACES lif_isxml_istream.
 
   PRIVATE SECTION.
 
@@ -191,18 +216,18 @@ CLASS lcl_ixml_istream_string DEFINITION
       IMPORTING
         string      TYPE string
       RETURNING
-        VALUE(rval) TYPE REF TO lcl_ixml_istream_string.
+        VALUE(rval) TYPE REF TO lcl_isxml_istream_string.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_istream_xstring DEFINITION
+CLASS lcl_isxml_istream_xstring DEFINITION
     CREATE PRIVATE
-    FRIENDS lcl_ixml_stream_factory.
+    FRIENDS lcl_isxml_stream_factory.
 
   PUBLIC SECTION.
 
-    INTERFACES lif_ixml_istream.
+    INTERFACES lif_isxml_istream.
 
   PRIVATE SECTION.
 
@@ -210,14 +235,14 @@ CLASS lcl_ixml_istream_xstring DEFINITION
       IMPORTING
         string      TYPE xstring
       RETURNING
-        VALUE(rval) TYPE REF TO lcl_ixml_istream_xstring.
+        VALUE(rval) TYPE REF TO lcl_isxml_istream_xstring.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_named_node_map DEFINITION
+CLASS lcl_isxml_named_node_map DEFINITION
     CREATE PRIVATE
-    FRIENDS lcl_ixml_document.
+    FRIENDS lcl_isxml_document.
 
   PUBLIC SECTION.
 
@@ -226,10 +251,10 @@ CLASS lcl_ixml_named_node_map DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_node_collection DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_node_collection DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -240,10 +265,10 @@ CLASS lcl_ixml_node_collection DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_node_iterator DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_node_iterator DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -254,10 +279,10 @@ CLASS lcl_ixml_node_iterator DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_node_list DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_node_list DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -268,13 +293,13 @@ CLASS lcl_ixml_node_list DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_ostream_string DEFINITION
+CLASS lcl_isxml_ostream_string DEFINITION
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
-    INTERFACES lif_ixml_ostream.
+    INTERFACES lif_isxml_ostream.
 
   PRIVATE SECTION.
 
@@ -284,18 +309,18 @@ CLASS lcl_ixml_ostream_string DEFINITION
       IMPORTING
         string      TYPE REF TO string
       RETURNING
-        VALUE(rval) TYPE REF TO lcl_ixml_ostream_string.
+        VALUE(rval) TYPE REF TO lcl_isxml_ostream_string.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_ostream_xstring DEFINITION
+CLASS lcl_isxml_ostream_xstring DEFINITION
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
-    INTERFACES lif_ixml_ostream.
+    INTERFACES lif_isxml_ostream.
 
   PRIVATE SECTION.
 
@@ -305,15 +330,15 @@ CLASS lcl_ixml_ostream_xstring DEFINITION
       IMPORTING
         xstring      TYPE REF TO xstring
       RETURNING
-        VALUE(rval) TYPE REF TO lcl_ixml_ostream_xstring.
+        VALUE(rval) TYPE REF TO lcl_isxml_ostream_xstring.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_parser DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_parser DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -321,17 +346,17 @@ CLASS lcl_ixml_parser DEFINITION
 
   PRIVATE SECTION.
 
-    DATA document       TYPE REF TO lcl_ixml_document.
-    DATA istream        TYPE REF TO lif_ixml_istream.
+    DATA document       TYPE REF TO lcl_isxml_document.
+    DATA istream        TYPE REF TO lif_isxml_istream.
     DATA stream_factory TYPE REF TO zif_excel_ixml_stream_factory.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_renderer DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_renderer DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -339,22 +364,22 @@ CLASS lcl_ixml_renderer DEFINITION
 
   PRIVATE SECTION.
 
-    DATA document TYPE REF TO lcl_ixml_document.
-    DATA ostream  TYPE REF TO lif_ixml_ostream.
+    DATA document TYPE REF TO lcl_isxml_document.
+    DATA ostream  TYPE REF TO lif_isxml_ostream.
 
     METHODS render_node
       IMPORTING
-        io_node TYPE REF TO lcl_ixml_node
+        io_node TYPE REF TO lcl_isxml_node
       RETURNING
         VALUE(rv_rc) TYPE i.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_stream DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_stream DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -362,10 +387,10 @@ CLASS lcl_ixml_stream DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_stream_factory DEFINITION
-    INHERITING FROM lcl_ixml_unknown
+CLASS lcl_isxml_stream_factory DEFINITION
+    INHERITING FROM lcl_isxml_unknown
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -373,10 +398,10 @@ CLASS lcl_ixml_stream_factory DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml_text DEFINITION
-    INHERITING FROM lcl_ixml_character_data
+CLASS lcl_isxml_text DEFINITION
+    INHERITING FROM lcl_isxml_character_data
     CREATE PRIVATE
-    FRIENDS lif_ixml_all_friends.
+    FRIENDS lif_isxml_all_friends.
 
   PUBLIC SECTION.
 
@@ -389,26 +414,26 @@ CLASS lcl_ixml_text DEFINITION
 ENDCLASS.
 
 
-CLASS lcl_ixml IMPLEMENTATION.
+CLASS lcl_isxml IMPLEMENTATION.
   METHOD zif_excel_ixml~create_document.
-    DATA(lo_document) = NEW lcl_ixml_document( ).
+    DATA(lo_document) = NEW lcl_isxml_document( ).
     lo_document->document = lo_document.
     rval = lo_document.
   ENDMETHOD.
 
   METHOD zif_excel_ixml~create_encoding.
-    DATA encoding TYPE REF TO lcl_ixml_encoding.
+    DATA encoding TYPE REF TO lcl_isxml_encoding.
 
-    encoding = NEW lcl_ixml_encoding( ).
+    encoding = NEW lcl_isxml_encoding( ).
     encoding->byte_order    = byte_order.
     encoding->character_set = character_set.
     rval = encoding.
   ENDMETHOD.
 
   METHOD zif_excel_ixml~create_parser.
-    DATA parser TYPE REF TO lcl_ixml_parser.
+    DATA parser TYPE REF TO lcl_isxml_parser.
 
-    parser = NEW lcl_ixml_parser( ).
+    parser = NEW lcl_isxml_parser( ).
     parser->document       ?= document.
     parser->istream        ?= istream.
     parser->stream_factory  = stream_factory.
@@ -416,36 +441,79 @@ CLASS lcl_ixml IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml~create_renderer.
-    DATA renderer TYPE REF TO lcl_ixml_renderer.
+    DATA renderer TYPE REF TO lcl_isxml_renderer.
 
-    renderer = NEW lcl_ixml_renderer( ).
+    renderer = NEW lcl_isxml_renderer( ).
     renderer->document ?= document.
     renderer->ostream  ?= ostream.
     rval = renderer.
   ENDMETHOD.
 
   METHOD zif_excel_ixml~create_stream_factory.
-    rval = NEW lcl_ixml_stream_factory( ).
+    rval = NEW lcl_isxml_stream_factory( ).
   ENDMETHOD.
 
   METHOD get_singleton.
     IF singleton IS NOT BOUND.
-      singleton = NEW lcl_ixml( ).
+      singleton = NEW lcl_isxml( ).
     ENDIF.
     rval = singleton.
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_character_data IMPLEMENTATION.
+CLASS lcl_isxml_character_data IMPLEMENTATION.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_document IMPLEMENTATION.
+CLASS lcl_isxml_document IMPLEMENTATION.
+  METHOD get_xml_header_as_string.
+  ENDMETHOD.
+
+  METHOD get_xml_header_as_xstring.
+    DATA lt_string type table of string.
+    DATA lv_string type string.
+    IF version IS NOT INITIAL.
+      insert |version="{ version }"| into table lt_string.
+    ENDIF.
+    IF encoding IS BOUND.
+      insert |encoding="{ to_lower( encoding->character_set ) }"| into table lt_string.
+    ENDIF.
+    IF lt_string is not initial.
+      lv_string = |<?xml { concat_lines_of( table = lt_string sep = ` ` ) }?>|.
+    endif.
+    rv_result = cl_abap_codepage=>convert_to( lv_string ).
+  ENDMETHOD.
+
+  METHOD render.
+*    DATA lo_writer                    TYPE REF TO if_sxml_writer.
+*    DATA lo_isxml_element                   TYPE REF TO lcl_isxml_element.
+*    DATA lo_isxml_node                      TYPE REF TO lcl_isxml_node.
+*    DATA lo_sxml_open_element              TYPE REF TO if_sxml_open_element.
+*    DATA lo_isxml_attribute                 TYPE REF TO lcl_isxml_attribute.
+*    DATA lo_isxml_text                      TYPE REF TO lcl_isxml_text.
+*    DATA lo_sxml_value                TYPE REF TO if_sxml_value_node.
+*    DATA lo_sxml_close_element TYPE REF TO if_sxml_close_element.
+*
+*    io_sxml_writer->open_element( name = lo_isxml_element->name ).
+*
+*    IF first_child IS BOUND.
+*      first_child->render( io_sxml_writer ).
+*    ENDIF.
+*
+*    lo_writer->close_element( ).
+*
+*    if encoding is bound.
+**      writer->.
+*    endif.
+
+    rv_rc = 0.
+  ENDMETHOD.
+
 *  METHOD append_child.
-*    DATA ls_node      TYPE lcl_ixml_factory=>ts_node.
-*    DATA lo_new_child TYPE REF TO lcl_ixml_node.
+*    DATA ls_node      TYPE lcl_isxml_factory=>ts_node.
+*    DATA lo_new_child TYPE REF TO lcl_isxml_node.
 *
 *    ls_node-id = lo_new_child->node_id.
 *    lo_new_child ?= new_child.
@@ -462,13 +530,13 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 *    ELSE.
 *      CASE lr_node->type.
 *        WHEN zif_excel_ixml_node=>co_node_element.
-*          DATA(lo_element) = NEW lcl_ixml_element( ).
+*          DATA(lo_element) = NEW lcl_isxml_element( ).
 *          lo_element->document = me.
 *          lo_element->type     = zif_excel_ixml_node=>co_node_element.
 *          lo_element->node_id  = id.
 *          rval = lo_element.
 *        WHEN zif_excel_ixml_node=>co_node_text.
-*          DATA(lo_text) = NEW lcl_ixml_text( ).
+*          DATA(lo_text) = NEW lcl_isxml_text( ).
 *          lo_text->document = me.
 *          lo_text->type     = zif_excel_ixml_node=>co_node_text.
 *          lo_text->node_id  = id.
@@ -479,7 +547,7 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 *  ENDMETHOD.
 *
 *  METHOD get_node_children.
-*    DATA(node_list) = NEW lcl_ixml_node_list( ).
+*    DATA(node_list) = NEW lcl_isxml_node_list( ).
 *    node_list->document = me.
 *    LOOP AT nodes REFERENCE INTO DATA(node)
 *         USING KEY by_parent
@@ -490,7 +558,7 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 *  ENDMETHOD.
 *
 *  METHOD get_node_iterator.
-*    DATA(node_iterator) = NEW lcl_ixml_node_iterator( ).
+*    DATA(node_iterator) = NEW lcl_isxml_node_iterator( ).
 *    node_iterator->document        = me.
 *    node_iterator->node_list       = node_list.
 *    node_iterator->node_collection = node_collection.
@@ -500,21 +568,21 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 *  METHOD parse.
 *    DATA lo_reader                  TYPE REF TO if_sxml_reader.
 *    DATA lv_current_level           TYPE i.
-*    DATA lv_current_element_node_id TYPE lcl_ixml_factory=>tv_node_id.
+*    DATA lv_current_element_node_id TYPE lcl_isxml_factory=>tv_node_id.
 *    DATA lo_node                    TYPE REF TO if_sxml_node.
 *    DATA lo_parse_error             TYPE REF TO cx_sxml_parse_error.
 *    DATA lo_node_close              TYPE REF TO if_sxml_close_element.
-*    DATA lr_parse_element_level     TYPE REF TO lcl_ixml_factory=>ts_parse_element_level.
+*    DATA lr_parse_element_level     TYPE REF TO lcl_isxml_factory=>ts_parse_element_level.
 *    DATA lo_node_open               TYPE REF TO if_sxml_open_element.
-*    DATA ls_node                    TYPE lcl_ixml_factory=>ts_node.
-*    DATA lr_namespace               TYPE REF TO lcl_ixml_factory=>ts_namespace.
-*    DATA ls_namespace               TYPE lcl_ixml_factory=>ts_namespace.
-*    DATA lv_namespace_id            TYPE lcl_ixml_factory=>tv_namespace_id.
-*    DATA lr_element_name            TYPE REF TO lcl_ixml_factory=>ts_element_name.
-*    DATA ls_element_name            TYPE lcl_ixml_factory=>ts_element_name.
-*    DATA ls_element                 TYPE lcl_ixml_factory=>ts_element.
-*    DATA ls_attribute               TYPE lcl_ixml_factory=>ts_attribute.
-*    DATA ls_parse_element_level     TYPE lcl_ixml_factory=>ts_parse_element_level.
+*    DATA ls_node                    TYPE lcl_isxml_factory=>ts_node.
+*    DATA lr_namespace               TYPE REF TO lcl_isxml_factory=>ts_namespace.
+*    DATA ls_namespace               TYPE lcl_isxml_factory=>ts_namespace.
+*    DATA lv_namespace_id            TYPE lcl_isxml_factory=>tv_namespace_id.
+*    DATA lr_element_name            TYPE REF TO lcl_isxml_factory=>ts_element_name.
+*    DATA ls_element_name            TYPE lcl_isxml_factory=>ts_element_name.
+*    DATA ls_element                 TYPE lcl_isxml_factory=>ts_element.
+*    DATA ls_attribute               TYPE lcl_isxml_factory=>ts_attribute.
+*    DATA ls_parse_element_level     TYPE lcl_isxml_factory=>ts_parse_element_level.
 *    DATA lo_node_value              TYPE REF TO if_sxml_value_node.
 *
 *    lo_reader = istream->sxml_reader.
@@ -616,10 +684,10 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 *  METHOD render.
 *    DATA lo_writer                  TYPE REF TO if_sxml_writer.
 *    DATA lv_current_level           TYPE i.
-*    DATA lv_current_element_node_id TYPE lcl_ixml_factory=>tv_node_id.
-*    DATA lr_element                 TYPE REF TO lcl_ixml_factory=>ts_element.
-*    DATA lr_element_name            TYPE REF TO lcl_ixml_factory=>ts_element_name.
-*    DATA lr_namespace               TYPE REF TO lcl_ixml_factory=>ts_namespace.
+*    DATA lv_current_element_node_id TYPE lcl_isxml_factory=>tv_node_id.
+*    DATA lr_element                 TYPE REF TO lcl_isxml_factory=>ts_element.
+*    DATA lr_element_name            TYPE REF TO lcl_isxml_factory=>ts_element_name.
+*    DATA lr_namespace               TYPE REF TO lcl_isxml_factory=>ts_namespace.
 *    DATA lv_uri                     TYPE string.
 *    DATA lo_sxml_element            TYPE REF TO if_sxml_open_element.
 *    DATA lt_sxml_attribute          TYPE if_sxml_attribute=>attributes.
@@ -648,18 +716,18 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 *  ENDMETHOD.
 
   METHOD zif_excel_ixml_document~create_element.
-    DATA lo_element TYPE REF TO lcl_ixml_element.
+    DATA lo_element TYPE REF TO lcl_isxml_element.
 
     CREATE OBJECT lo_element.
     lo_element->type      = zif_excel_ixml_node=>co_node_element.
     lo_element->name      = name.
     lo_element->namespace = namespace.
     rval = lo_element.
-*    DATA lr_namespace    TYPE REF TO lcl_ixml_factory=>ts_namespace.
-*    DATA ls_namespace    TYPE lcl_ixml_factory=>ts_namespace.
-*    DATA lr_element_name TYPE REF TO lcl_ixml_factory=>ts_element_name.
-*    DATA ls_element_name TYPE lcl_ixml_factory=>ts_element_name.
-*    DATA ls_element      TYPE lcl_ixml_factory=>ts_element.
+*    DATA lr_namespace    TYPE REF TO lcl_isxml_factory=>ts_namespace.
+*    DATA ls_namespace    TYPE lcl_isxml_factory=>ts_namespace.
+*    DATA lr_element_name TYPE REF TO lcl_isxml_factory=>ts_element_name.
+*    DATA ls_element_name TYPE lcl_isxml_factory=>ts_element_name.
+*    DATA ls_element      TYPE lcl_isxml_factory=>ts_element.
 *
 *    READ TABLE namespaces WITH TABLE KEY by_uri COMPONENTS uri = namespace REFERENCE INTO lr_namespace.
 *    IF sy-subrc <> 0.
@@ -690,20 +758,39 @@ CLASS lcl_ixml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~create_simple_element.
+    DATA lo_element TYPE REF TO lcl_isxml_element.
+
+    CREATE OBJECT lo_element.
+    lo_element->type = zif_excel_ixml_node=>co_node_element.
+    lo_element->name = name.
+
+    parent->append_child( lo_element ).
+
+    rval = lo_element.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~create_simple_element_ns.
+    DATA lo_element TYPE REF TO lcl_isxml_element.
+
+    CREATE OBJECT lo_element.
+    lo_element->type = zif_excel_ixml_node=>co_node_element.
+    lo_element->name = name.
+    " lo_element->namespace = namespace.
+
+    parent->append_child( lo_element ).
+
+    rval = lo_element.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~find_from_name.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~find_from_name_ns.
-*    DATA lv_namespace_id TYPE lcl_ixml_factory=>tv_namespace_id.
-*    DATA lr_namespace    TYPE REF TO lcl_ixml_factory=>ts_namespace.
-*    DATA lr_element_name TYPE REF TO lcl_ixml_factory=>ts_element_name.
-*    DATA lr_element      TYPE REF TO lcl_ixml_factory=>ts_element.
-*    DATA lo_element      TYPE REF TO lcl_ixml_element.
+*    DATA lv_namespace_id TYPE lcl_isxml_factory=>tv_namespace_id.
+*    DATA lr_namespace    TYPE REF TO lcl_isxml_factory=>ts_namespace.
+*    DATA lr_element_name TYPE REF TO lcl_isxml_factory=>ts_element_name.
+*    DATA lr_element      TYPE REF TO lcl_isxml_factory=>ts_element.
+*    DATA lo_element      TYPE REF TO lcl_isxml_element.
 *
 *    IF uri IS INITIAL.
 *      lv_namespace_id = 0.
@@ -725,7 +812,7 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 *         REFERENCE INTO lr_element.
 *    ASSERT sy-subrc = 0.
 *    IF lr_element->object IS NOT BOUND.
-*      lo_element = NEW lcl_ixml_element( ).
+*      lo_element = NEW lcl_isxml_element( ).
 *      lo_element->document = me.
 *      lo_element->node_id  = lr_element->id.
 *      lr_element->object = lo_element.
@@ -743,6 +830,7 @@ CLASS lcl_ixml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~set_encoding.
+    me->encoding ?= encoding.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~set_standalone.
@@ -750,13 +838,37 @@ CLASS lcl_ixml_document IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_element IMPLEMENTATION.
+CLASS lcl_isxml_element IMPLEMENTATION.
 *  METHOD create.
-*    rval = NEW lcl_ixml_element( ).
+*    rval = NEW lcl_isxml_element( ).
 *    rval->document = document.
 *    rval->node_id  = node_id.
 *  ENDMETHOD.
 *
+  METHOD render.
+    DATA lo_sxml_open_element  TYPE REF TO if_sxml_open_element.
+    DATA lo_isxml_attribute    TYPE REF TO lcl_isxml_attribute.
+    DATA lo_isxml_child_node   TYPE REF TO lcl_isxml_node.
+
+    lo_sxml_open_element = io_sxml_writer->new_open_element( name = name ).
+    io_sxml_writer->write_node( lo_sxml_open_element ).
+
+    LOOP AT attributes INTO lo_isxml_attribute.
+      lo_sxml_open_element->set_attribute( name  = lo_isxml_attribute->name
+                                           value = lo_isxml_attribute->value ).
+    ENDLOOP.
+
+    lo_isxml_child_node = first_child.
+    WHILE lo_isxml_child_node IS BOUND.
+      lo_isxml_child_node->render( io_sxml_writer ).
+      lo_isxml_child_node = lo_isxml_child_node->next_sibling.
+    ENDWHILE.
+
+    io_sxml_writer->close_element( ).
+
+    rv_rc = 0.
+  ENDMETHOD.
+
   METHOD zif_excel_ixml_element~find_from_name.
   ENDMETHOD.
 
@@ -789,18 +901,18 @@ CLASS lcl_ixml_element IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_encoding IMPLEMENTATION.
+CLASS lcl_isxml_encoding IMPLEMENTATION.
 
 ENDCLASS.
 
 
-CLASS lcl_ixml_istream_string IMPLEMENTATION.
+CLASS lcl_isxml_istream_string IMPLEMENTATION.
   METHOD create.
     DATA xstring TYPE xstring.
 
-    rval = NEW lcl_ixml_istream_string( ).
+    rval = NEW lcl_isxml_istream_string( ).
     xstring = cl_abap_codepage=>convert_to( string ).
-    rval->lif_ixml_istream~sxml_reader = cl_sxml_string_reader=>create( input = xstring ).
+    rval->lif_isxml_istream~sxml_reader = cl_sxml_string_reader=>create( input = xstring ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_stream~close.
@@ -808,10 +920,10 @@ CLASS lcl_ixml_istream_string IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_istream_xstring IMPLEMENTATION.
+CLASS lcl_isxml_istream_xstring IMPLEMENTATION.
   METHOD create.
-    rval = NEW lcl_ixml_istream_xstring( ).
-    rval->lif_ixml_istream~sxml_reader = cl_sxml_string_reader=>create( input = string ).
+    rval = NEW lcl_isxml_istream_xstring( ).
+    rval->lif_isxml_istream~sxml_reader = cl_sxml_string_reader=>create( input = string ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_stream~close.
@@ -819,15 +931,18 @@ CLASS lcl_ixml_istream_xstring IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_named_node_map IMPLEMENTATION.
+CLASS lcl_isxml_named_node_map IMPLEMENTATION.
   METHOD zif_excel_ixml_named_node_map~create_iterator.
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_node IMPLEMENTATION.
+CLASS lcl_isxml_node IMPLEMENTATION.
+  METHOD render.
+  ENDMETHOD.
+
   METHOD zif_excel_ixml_node~append_child.
-    DATA last_child_before TYPE REF TO lcl_ixml_node.
+    DATA last_child_before TYPE REF TO lcl_isxml_node.
 
     last_child_before = last_child.
 
@@ -840,7 +955,7 @@ CLASS lcl_ixml_node IMPLEMENTATION.
     last_child ?= new_child.
     last_child->parent           = me.
     last_child->previous_sibling = last_child_before.
-    last_child->next_sibling     = lcl_ixml=>no_node.
+    last_child->next_sibling     = lcl_isxml=>no_node.
 *    rval = document->append_child( node      = me
 *                                   new_child = new_child ).
   ENDMETHOD.
@@ -878,7 +993,7 @@ CLASS lcl_ixml_node IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_value.
-    DATA lo_cast_text           TYPE REF TO lcl_ixml_text.
+    DATA lo_cast_text           TYPE REF TO lcl_isxml_text.
     DATA lt_node                TYPE TABLE OF REF TO zif_excel_ixml_node.
     DATA lo_node                TYPE REF TO zif_excel_ixml_node.
     DATA lv_tabix               TYPE i.
@@ -886,7 +1001,7 @@ CLASS lcl_ixml_node IMPLEMENTATION.
     DATA lo_child_node_iterator TYPE REF TO zif_excel_ixml_node_iterator.
     DATA lo_child_node          TYPE REF TO zif_excel_ixml_node.
     DATA lv_node_type           TYPE i.
-    DATA lo_text                TYPE REF TO lcl_ixml_text.
+    DATA lo_text                TYPE REF TO lcl_isxml_text.
 
     IF type = zif_excel_ixml_node=>co_node_text.
       lo_cast_text ?= me.
@@ -926,7 +1041,7 @@ CLASS lcl_ixml_node IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_node_collection IMPLEMENTATION.
+CLASS lcl_isxml_node_collection IMPLEMENTATION.
   METHOD zif_excel_ixml_node_collection~create_iterator.
 *    rval = document->get_node_iterator( node_collection = me ).
   ENDMETHOD.
@@ -936,9 +1051,9 @@ CLASS lcl_ixml_node_collection IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_node_iterator IMPLEMENTATION.
+CLASS lcl_isxml_node_iterator IMPLEMENTATION.
   METHOD zif_excel_ixml_node_iterator~get_next.
-*    FIELD-SYMBOLS <lt_node_id> TYPE lcl_ixml_factory=>tt_node_id.
+*    FIELD-SYMBOLS <lt_node_id> TYPE lcl_isxml_factory=>tt_node_id.
 *
 *    IF node_list IS BOUND.
 *      ASSIGN node_list->node_ids TO <lt_node_id>.
@@ -955,36 +1070,36 @@ CLASS lcl_ixml_node_iterator IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_node_list IMPLEMENTATION.
+CLASS lcl_isxml_node_list IMPLEMENTATION.
   METHOD zif_excel_ixml_node_list~create_iterator.
 *    rval = document->get_node_iterator( node_list = me ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_ostream_string IMPLEMENTATION.
+CLASS lcl_isxml_ostream_string IMPLEMENTATION.
   METHOD create.
 *    DATA xstring TYPE xstring.
-    CREATE OBJECT rval TYPE lcl_ixml_ostream_string.
-    rval->ref_string = string.
+    CREATE OBJECT rval TYPE lcl_isxml_ostream_string.
+    rval->ref_string                    = string.
 *    xstring = cl_abap_codepage=>convert_to( string ).
-    rval->lif_ixml_ostream~type        = 'C'.
-    rval->lif_ixml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
+    rval->lif_isxml_ostream~type        = 'C'.
+    rval->lif_isxml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_ostream_xstring IMPLEMENTATION.
+CLASS lcl_isxml_ostream_xstring IMPLEMENTATION.
   METHOD create.
-    CREATE OBJECT rval TYPE lcl_ixml_ostream_xstring.
-    rval->ref_xstring = xstring.
-    rval->lif_ixml_ostream~type        = 'X'.
-    rval->lif_ixml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
+    CREATE OBJECT rval TYPE lcl_isxml_ostream_xstring.
+    rval->ref_xstring                   = xstring.
+    rval->lif_isxml_ostream~type        = 'X'.
+    rval->lif_isxml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_parser IMPLEMENTATION.
+CLASS lcl_isxml_parser IMPLEMENTATION.
   METHOD zif_excel_ixml_parser~add_strip_space_element.
   ENDMETHOD.
 
@@ -994,10 +1109,10 @@ CLASS lcl_ixml_parser IMPLEMENTATION.
     DATA lo_parse_error     TYPE REF TO cx_sxml_parse_error.
     DATA lo_node_close      TYPE REF TO if_sxml_close_element.
     DATA lo_node_open       TYPE REF TO if_sxml_open_element.
-    DATA lo_isxml_element   TYPE REF TO lcl_ixml_element.
-    DATA lo_isxml_attribute TYPE REF TO lcl_ixml_attribute.
+    DATA lo_isxml_element   TYPE REF TO lcl_isxml_element.
+    DATA lo_isxml_attribute TYPE REF TO lcl_isxml_attribute.
     DATA lo_node_value      TYPE REF TO if_sxml_value_node.
-    DATA lo_isxml_text      TYPE REF TO lcl_ixml_text.
+    DATA lo_isxml_text      TYPE REF TO lcl_isxml_text.
 
     lo_reader = istream->sxml_reader.
 
@@ -1067,15 +1182,15 @@ CLASS lcl_ixml_parser IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_renderer IMPLEMENTATION.
+CLASS lcl_isxml_renderer IMPLEMENTATION.
   METHOD render_node.
-    DATA lo_writer                    TYPE REF TO if_sxml_writer.
-    DATA lo_isxml_element                   TYPE REF TO lcl_ixml_element.
-    DATA lo_isxml_node                      TYPE REF TO lcl_ixml_node.
-    DATA lo_sxml_open_element              TYPE REF TO if_sxml_open_element.
-    DATA lo_isxml_attribute                 TYPE REF TO lcl_ixml_attribute.
-    DATA lo_isxml_text                      TYPE REF TO lcl_ixml_text.
-    DATA lo_sxml_value                TYPE REF TO if_sxml_value_node.
+    DATA lo_writer             TYPE REF TO if_sxml_writer.
+    DATA lo_isxml_element      TYPE REF TO lcl_isxml_element.
+    DATA lo_sxml_open_element  TYPE REF TO if_sxml_open_element.
+    DATA lo_isxml_attribute    TYPE REF TO lcl_isxml_attribute.
+    DATA lo_isxml_text         TYPE REF TO lcl_isxml_text.
+    DATA lo_sxml_value         TYPE REF TO if_sxml_value_node.
+    DATA lo_isxml_node         TYPE REF TO lcl_isxml_node.
     DATA lo_sxml_close_element TYPE REF TO if_sxml_close_element.
 
     lo_writer = ostream->sxml_writer.
@@ -1084,18 +1199,18 @@ CLASS lcl_ixml_renderer IMPLEMENTATION.
       WHEN zif_excel_ixml_node=>co_node_element.
         lo_isxml_element ?= io_node.
         lo_sxml_open_element = lo_writer->new_open_element( name = lo_isxml_element->name ).
-        LO_writer->write_node( lo_sxml_open_element ).
+        lo_writer->write_node( lo_sxml_open_element ).
 
         LOOP AT lo_isxml_element->attributes INTO lo_isxml_attribute.
           lo_sxml_open_element->set_attribute( name  = lo_isxml_attribute->name
-                                          value = lo_isxml_attribute->value ).
+                                               value = lo_isxml_attribute->value ).
         ENDLOOP.
 
       WHEN zif_excel_ixml_node=>co_node_text.
         lo_isxml_text ?= io_node.
         lo_sxml_value = lo_writer->new_value( ).
         lo_sxml_value->set_value( lo_isxml_text->value ).
-        LO_writer->write_node( lo_sxml_value ).
+        lo_writer->write_node( lo_sxml_value ).
     ENDCASE.
 
     lo_isxml_node = io_node->first_child.
@@ -1107,74 +1222,79 @@ CLASS lcl_ixml_renderer IMPLEMENTATION.
     CASE io_node->type.
       WHEN zif_excel_ixml_node=>co_node_element.
         lo_sxml_close_element = lo_writer->new_close_element( ).
-        LO_writer->write_node( lo_sxml_close_element ).
+        lo_writer->write_node( lo_sxml_close_element ).
     ENDCASE.
     rv_rc = 0.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_renderer~render.
-    DATA lo_writer                    TYPE REF TO if_sxml_writer.
-    DATA lo_sxml_string_writer   TYPE REF TO cl_sxml_string_writer.
-    DATA lv_xstring                   TYPE xstring.
-    DATA lo_isxml_ostream_string  TYPE REF TO lcl_ixml_ostream_string.
-    DATA lo_isxml_ostream_xstring TYPE REF TO lcl_ixml_ostream_xstring.
+    DATA lo_sxml_string_writer    TYPE REF TO cl_sxml_string_writer.
+    DATA lv_xstring               TYPE xstring.
+    DATA lo_isxml_ostream_string  TYPE REF TO lcl_isxml_ostream_string.
+    DATA lo_isxml_ostream_xstring TYPE REF TO lcl_isxml_ostream_xstring.
+    DATA: xml_header_as_xstring TYPE xstring,
+          xml_body_as_xstring TYPE xstring.
 
-    lo_writer = ostream->sxml_writer.
-
-    rval = render_node( document->first_child ).
+    rval = document->first_child->render( ostream->sxml_writer ).
 
     CASE ostream->type.
       WHEN 'C'.
-        lo_sxml_string_writer ?= lo_writer.
+        lo_sxml_string_writer ?= ostream->sxml_writer.
         lv_xstring = lo_sxml_string_writer->get_output( ).
         lo_isxml_ostream_string ?= ostream.
-        lo_isxml_ostream_string->ref_string->* = cl_abap_codepage=>convert_from( lv_xstring ).
+        lo_isxml_ostream_string->ref_string->* = document->get_xml_header_as_string( ) && cl_abap_codepage=>convert_from(
+                                                                                              lv_xstring ).
       WHEN 'X'.
-        lo_sxml_string_writer ?= lo_writer.
+        xml_header_as_xstring = document->get_xml_header_as_xstring( ).
+        lo_sxml_string_writer ?= ostream->sxml_writer.
         lo_isxml_ostream_xstring ?= ostream.
-        lo_isxml_ostream_xstring->ref_xstring->* = lo_sxml_string_writer->get_output( ).
+        xml_body_as_xstring = lo_sxml_string_writer->get_output( ).
+        CONCATENATE xml_header_as_xstring
+                    xml_body_as_xstring
+                    INTO lo_isxml_ostream_xstring->ref_xstring->*
+                    IN BYTE MODE.
     ENDCASE.
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_stream IMPLEMENTATION.
+CLASS lcl_isxml_stream IMPLEMENTATION.
   METHOD zif_excel_ixml_stream~close.
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_stream_factory IMPLEMENTATION.
+CLASS lcl_isxml_stream_factory IMPLEMENTATION.
   METHOD zif_excel_ixml_stream_factory~create_istream_string.
-    rval = lcl_ixml_istream_string=>create( string ).
+    rval = lcl_isxml_istream_string=>create( string ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_stream_factory~create_istream_xstring.
-    rval = lcl_ixml_istream_xstring=>create( string ).
+    rval = lcl_isxml_istream_xstring=>create( string ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_stream_factory~create_ostream_cstring.
-    rval = lcl_ixml_ostream_string=>create( string ).
+    rval = lcl_isxml_ostream_string=>create( string ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_stream_factory~create_ostream_xstring.
-    rval = lcl_ixml_ostream_xstring=>create( string ).
+    rval = lcl_isxml_ostream_xstring=>create( string ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lcl_ixml_text IMPLEMENTATION.
+CLASS lcl_isxml_text IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lcl_ixml_unknown IMPLEMENTATION.
+CLASS lcl_isxml_unknown IMPLEMENTATION.
   METHOD zif_excel_ixml_unknown~query_interface.
     CASE iid.
-      WHEN lcl_ixml=>ixml_iid-element.
+      WHEN lcl_isxml=>ixml_iid-element.
         IF type = zif_excel_ixml_node=>co_node_element.
           rval = me.
         ENDIF.
-      WHEN lcl_ixml=>ixml_iid-text.
+      WHEN lcl_isxml=>ixml_iid-text.
         IF type = zif_excel_ixml_node=>co_node_text.
           rval = me.
         ENDIF.

@@ -20,9 +20,9 @@ INTERFACE zif_excel_ixml_document
   methods CREATE_SIMPLE_ELEMENT
     importing
       !NAME type STRING
-      !NAMESPACE type STRING default ''
+*      !NAMESPACE type STRING default ''
       !PARENT type ref to zIF_excel_IXML_NODE
-      !VALUE type STRING default ''
+*      !VALUE type STRING default ''
     returning
       value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
 
@@ -31,8 +31,8 @@ INTERFACE zif_excel_ixml_document
       !NAME type STRING
       !PARENT type ref to zIF_excel_IXML_NODE
       !PREFIX type STRING default ''
-      !URI type STRING default ''
-      !VALUE type STRING default ''
+*      !URI type STRING default ''
+*      !VALUE type STRING default ''
     returning
       value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
 
