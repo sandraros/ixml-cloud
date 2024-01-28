@@ -95,8 +95,8 @@ INTERFACE zif_excel_ixml_element
   METHODS set_attribute_ns
     IMPORTING
       !name TYPE string
-      !prefix TYPE string DEFAULT ''
-      !uri TYPE string DEFAULT ''
+*      !prefix TYPE string DEFAULT ''
+*      !uri TYPE string DEFAULT ''
       !value TYPE string DEFAULT ''
     RETURNING
       VALUE(rval) TYPE i.

@@ -198,6 +198,6 @@ CLASS lcl_isxml DEFINITION
         VALUE(rval) TYPE REF TO lcl_isxml.
 
     CLASS-DATA singleton TYPE REF TO lcl_isxml.
-    CLASS-DATA no_node TYPE REF TO lcl_isxml_node.
+    CLASS-DATA no_node   TYPE REF TO lcl_isxml_node.
 
 ENDCLASS.

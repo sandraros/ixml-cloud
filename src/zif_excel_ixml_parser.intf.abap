@@ -1,29 +1,29 @@
 INTERFACE zif_excel_ixml_parser
-  PUBLIC .
+  PUBLIC.
 
-  constants CO_NO_VALIDATION type I value 0. "#EC NOTEXT
+  CONSTANTS co_no_validation TYPE i VALUE 0 ##NO_TEXT.
 
-  methods ADD_STRIP_SPACE_ELEMENT
-    importing
-      !NAME type STRING default '*'
-      !URI type STRING default ''
-    returning
-      value(RVAL) type BOOLEAN .
+  METHODS add_strip_space_element.
+  " importing
+  "   !NAME type STRING default '*'
+  "   !URI type STRING default ''
+  " returning
+  "   value(RVAL) type BOOLEAN .
 
-  methods PARSE
-    returning
-      value(RVAL) type I .
+  METHODS parse
+    RETURNING
+      VALUE(rval) TYPE i.
 
-  methods SET_NORMALIZING
-    importing
-      !IS_NORMALIZING type BOOLEAN default 'X'
-    returning
-      value(RVAL) type BOOLEAN .
+  METHODS set_normalizing
+    IMPORTING
+      !is_normalizing TYPE boolean DEFAULT 'X'
+    RETURNING
+      VALUE(rval) TYPE boolean.
 
-  methods SET_VALIDATING
-    importing
-      !MODE type I default '1'
-    returning
-      value(RVAL) type BOOLEAN .
+  METHODS set_validating
+    IMPORTING
+      !mode TYPE i DEFAULT '1'
+    RETURNING
+      VALUE(rval) TYPE boolean.
 
 ENDINTERFACE.
