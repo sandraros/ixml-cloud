@@ -1373,8 +1373,9 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
                                         exp = if_sxml_value=>co_vt_text ).
     cl_abap_unit_assert=>assert_equals( act = reader->value
                                         exp = 'UFE=' ).
+    CLEAR xstring.
     cl_abap_unit_assert=>assert_equals( act = reader->value_raw
-                                        exp = VALUE xstring( ) ).
+                                        exp = xstring ).
 
     reader->next_attribute( ).
     cl_abap_unit_assert=>assert_equals( act = reader->node_type
