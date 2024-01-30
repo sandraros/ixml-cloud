@@ -48,7 +48,7 @@ CLASS lcl_isxml DEFINITION
     TYPES tv_node_id         TYPE i.
     TYPES tv_node_type       TYPE i.
     TYPES tv_namespace_id    TYPE i.
-    TYPES tt_node_id         TYPE STANDARD TABLE OF tv_node_id WITH EMPTY KEY.
+    TYPES tt_node_id         TYPE STANDARD TABLE OF tv_node_id WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ts_node,
         id        TYPE tv_node_id,
@@ -79,7 +79,7 @@ CLASS lcl_isxml DEFINITION
         name  TYPE string,
         value TYPE string,
       END OF ts_attribute.
-    TYPES tt_attribute TYPE STANDARD TABLE OF ts_attribute WITH EMPTY KEY.
+    TYPES tt_attribute TYPE STANDARD TABLE OF ts_attribute WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ts_element,
         id         TYPE tv_node_id,

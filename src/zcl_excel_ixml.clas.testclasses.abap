@@ -1635,6 +1635,16 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
 ENDCLASS.
 
 
+CLASS lth_wrap_ixml_attribute IMPLEMENTATION.
+
+ENDCLASS.
+
+
+CLASS lth_wrap_ixml_character_data IMPLEMENTATION.
+
+ENDCLASS.
+
+
 CLASS lth_wrap_ixml_document IMPLEMENTATION.
   METHOD zif_excel_ixml_document~create_element.
     DATA lo_ixml_element TYPE REF TO if_ixml_element.
@@ -1643,8 +1653,8 @@ CLASS lth_wrap_ixml_document IMPLEMENTATION.
 *    DATA lo_wrap_ixml_element_as_node TYPE REF TO lth_wrap_ixml_node.
 
 *    CREATE OBJECT lo_wrap_ixml_element.
-    lo_ixml_element = ixml_document->create_element( name      = name
-                                                     namespace = namespace ).
+    lo_ixml_element = ixml_document->create_element( name = name ).
+*                                                     namespace = namespace ).
     rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
 *    lo_wrap_ixml_element_as_node = lo_wrap_ixml_element.
 *    lo_wrap_ixml_element_as_node->ixml_node = lo_wrap_ixml_element->ixml_element.
@@ -1762,8 +1772,8 @@ CLASS lth_wrap_ixml_element IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_element~set_attribute_ns.
-    rval = ixml_element->set_attribute_ns( name  = name
-                                           value = value ).
+    ixml_element->set_attribute_ns( name  = name
+                                    value = value ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -1791,7 +1801,7 @@ CLASS lth_wrap_ixml_node IMPLEMENTATION.
     DATA lo_wrap_ixml_node TYPE REF TO lth_wrap_ixml_node.
 
     lo_wrap_ixml_node ?= new_child.
-    rval = ixml_node->append_child( lo_wrap_ixml_node->ixml_node ).
+    ixml_node->append_child( lo_wrap_ixml_node->ixml_node ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~clone.
@@ -1998,7 +2008,7 @@ CLASS lth_ixml IMPLEMENTATION.
   METHOD create_document.
     ixml = cl_ixml=>create( ).
     document = ixml->create_document( ).
-    document->set_declaration( abap_false ).
+*    document->set_declaration( abap_false ).
   ENDMETHOD.
 
   METHOD parse.

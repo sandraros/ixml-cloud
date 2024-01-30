@@ -547,6 +547,11 @@ CLASS lcl_isxml IMPLEMENTATION.
 ENDCLASS.
 
 
+CLASS lcl_isxml_attribute IMPLEMENTATION.
+
+ENDCLASS.
+
+
 CLASS lcl_isxml_character_data IMPLEMENTATION.
 
 ENDCLASS.
@@ -584,7 +589,8 @@ CLASS lcl_isxml_document IMPLEMENTATION.
     DATA lv_string TYPE string.
 
     IF version IS NOT INITIAL.
-      INSERT |version="{ version }"| INTO TABLE lt_string.
+      lv_string = |version="{ version }"|.
+      INSERT lv_string INTO TABLE lt_string.
     ENDIF.
     INSERT `encoding="utf-16"` INTO TABLE lt_string.
     lv_string = |{ lcl_bom_utf16_as_character=>system_value }<?xml { concat_lines_of( table = lt_string
@@ -618,7 +624,7 @@ CLASS lcl_isxml_document IMPLEMENTATION.
     CREATE OBJECT lo_element.
     lo_element->type      = zif_excel_ixml_node=>co_node_element.
     lo_element->name      = name.
-    lo_element->namespace = namespace.
+*    lo_element->namespace = namespace.
     rval = lo_element.
   ENDMETHOD.
 
@@ -1191,7 +1197,7 @@ CLASS lcl_isxml_unknown IMPLEMENTATION.
           rval = me.
         ENDIF.
       WHEN OTHERS.
-        BREAK-POINT.
+        RAISE EXCEPTION TYPE lcx_unexpected.
     ENDCASE.
   ENDMETHOD.
 ENDCLASS.

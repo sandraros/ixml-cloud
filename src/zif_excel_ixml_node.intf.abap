@@ -26,9 +26,9 @@ INTERFACE zif_excel_ixml_node
 
   METHODS append_child
     IMPORTING
-      !new_child TYPE REF TO zif_excel_ixml_node
-    RETURNING
-      VALUE(rval) TYPE i.
+      !new_child TYPE REF TO zif_excel_ixml_node.
+*    RETURNING
+*      VALUE(rval) TYPE i.
 
   METHODS clone
     IMPORTING

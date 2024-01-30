@@ -97,8 +97,8 @@ INTERFACE zif_excel_ixml_element
       !name TYPE string
 *      !prefix TYPE string DEFAULT ''
 *      !uri TYPE string DEFAULT ''
-      !value TYPE string DEFAULT ''
-    RETURNING
-      VALUE(rval) TYPE i.
+      !value TYPE string DEFAULT ''.
+*    RETURNING
+*      VALUE(rval) TYPE i.
 
 ENDINTERFACE.
