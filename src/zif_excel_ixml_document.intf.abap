@@ -40,7 +40,7 @@ INTERFACE zif_excel_ixml_document
     importing
 *      !DEPTH type I default 0
       !NAME type STRING
-      !NAMESPACE type STRING default ''
+*      !NAMESPACE type STRING default ''
     returning
       value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
 

@@ -131,6 +131,14 @@ CLASS lcl_isxml_document DEFINITION
     DATA encoding TYPE REF TO lcl_isxml_encoding.
     DATA version  TYPE string VALUE '1.0'.
 
+    METHODS find_from_name_ns
+        IMPORTING
+        io_isxml_element TYPE REF TO lcl_isxml_element
+        iv_name TYPE string
+        iv_nsuri TYPE string DEFAULT ''
+        RETURNING
+        VALUE(ro_result) TYPE REF TO lcl_isxml_element.
+
     METHODS get_xml_header_as_string
       RETURNING
         VALUE(rv_result) TYPE string.
@@ -187,6 +195,8 @@ CLASS lcl_isxml_element DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_excel_ixml_element.
+
+    METHODS zif_excel_ixml_element~get_name REDEFINITION.
 
   PROTECTED SECTION.
 
@@ -484,6 +494,7 @@ CLASS lcl_isxml IMPLEMENTATION.
     DATA lo_document TYPE REF TO lcl_isxml_document.
 
     CREATE OBJECT lo_document.
+    lo_document->type     = zif_excel_ixml_node=>co_node_document.
     lo_document->document = lo_document.
     rval = lo_document.
   ENDMETHOD.
@@ -538,6 +549,32 @@ ENDCLASS.
 
 
 CLASS lcl_isxml_document IMPLEMENTATION.
+  METHOD find_from_name_ns.
+    DATA lo_child         TYPE REF TO lcl_isxml_node.
+    DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
+
+    IF     io_isxml_element->name      = iv_name
+       AND io_isxml_element->namespace = iv_nsuri.
+      ro_result = io_isxml_element.
+      RETURN.
+    ENDIF.
+
+    lo_child = io_isxml_element->first_child.
+    WHILE lo_child IS BOUND.
+      IF lo_child->type = if_ixml_node=>co_node_element.
+        lo_isxml_element ?= lo_child.
+        lo_isxml_element = find_from_name_ns( io_isxml_element = lo_isxml_element
+                                              iv_name          = iv_name
+                                              iv_nsuri         = iv_nsuri ).
+        IF lo_isxml_element IS BOUND.
+          ro_result = lo_isxml_element.
+          RETURN.
+        ENDIF.
+      ENDIF.
+      lo_child = lo_child->next_sibling.
+    ENDWHILE.
+  ENDMETHOD.
+
   METHOD get_xml_header_as_string.
     DATA lt_string TYPE TABLE OF string.
     DATA lv_string TYPE string.
@@ -607,9 +644,16 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~find_from_name.
+    rval = zif_excel_ixml_document~find_from_name_ns( name = name ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~find_from_name_ns.
+    DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
+
+    lo_isxml_element ?= first_child.
+    rval = find_from_name_ns( io_isxml_element = lo_isxml_element
+                              iv_name          = name
+                              iv_nsuri         = uri ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~get_elements_by_tag_name.
@@ -723,6 +767,10 @@ CLASS lcl_isxml_element IMPLEMENTATION.
   METHOD zif_excel_ixml_element~get_elements_by_tag_name_ns.
   ENDMETHOD.
 
+  METHOD zif_excel_ixml_element~GET_name.
+    rval = name.
+  ENDMETHOD.
+
   METHOD zif_excel_ixml_element~remove_attribute_ns.
   ENDMETHOD.
 
@@ -831,6 +879,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_first_child.
+    rval = FIRST_child.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_name.
@@ -843,6 +892,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_next.
+    rval = next_sibling.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_type.
@@ -944,6 +994,15 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_parser~parse.
+    TYPES:
+      BEGIN OF ts_level,
+        number     TYPE i,
+        isxml_node TYPE REF TO lcl_isxml_node,
+      END OF ts_level.
+
+    DATA lv_current_level   TYPE i.
+    DATA ls_level           TYPE ts_level.
+    DATA lt_level           TYPE STANDARD TABLE OF ts_level WITH EMPTY KEY.
     DATA lo_reader          TYPE REF TO if_sxml_reader.
     DATA lo_node            TYPE REF TO if_sxml_node.
     DATA lo_parse_error     TYPE REF TO cx_sxml_parse_error.
@@ -953,9 +1012,18 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
     DATA lt_sxml_attribute  TYPE if_sxml_attribute=>attributes.
     DATA lo_sxml_attribute  TYPE REF TO if_sxml_attribute.
     DATA ls_isxml_attribute TYPE lcl_isxml_element=>ts_attribute.
+    DATA lo_isxml_node      TYPE REF TO lcl_isxml_node.
     DATA lo_node_value      TYPE REF TO if_sxml_value_node.
     DATA lo_isxml_text      TYPE REF TO lcl_isxml_text.
+
+    FIELD-SYMBOLS <ls_level> TYPE ts_level.
+
     DATA lo_isxml_attribute TYPE REF TO lcl_isxml_attribute.
+
+    lv_current_level = 1.
+    ls_level-number     = lv_current_level.
+    ls_level-isxml_node = document.
+    INSERT ls_level INTO TABLE lt_level ASSIGNING <ls_level>.
 
     lo_reader = istream->sxml_reader.
 
@@ -977,12 +1045,23 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
         WHEN lo_node->co_nt_element_close.
           lo_node_close ?= lo_node.
 
+          DELETE lt_level INDEX lv_current_level.
+          lv_current_level = lv_current_level - 1.
+          READ TABLE lt_level INDEX lv_current_level ASSIGNING <ls_level>.
+
         WHEN lo_node->co_nt_element_open.
           lo_node_open ?= lo_node.
           CREATE OBJECT lo_isxml_element.
           lo_isxml_element->type      = zif_excel_ixml_node=>co_node_element.
           lo_isxml_element->name      = lo_node_open->qname-name.
           lo_isxml_element->namespace = lo_node_open->qname-namespace.
+
+          <ls_level>-isxml_node->zif_excel_ixml_node~append_child( lo_isxml_element ).
+
+          lv_current_level = lv_current_level + 1.
+          ls_level-number     = lv_current_level.
+          ls_level-isxml_node = lo_isxml_element.
+          INSERT ls_level INTO TABLE lt_level ASSIGNING <ls_level>.
 
           lt_sxml_attribute = lo_node_open->get_attributes( ).
           LOOP AT lt_sxml_attribute INTO lo_sxml_attribute.
@@ -995,6 +1074,8 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
             INSERT ls_isxml_attribute INTO TABLE lo_isxml_element->attributes.
           ENDLOOP.
 
+          lo_isxml_node = document.
+
         WHEN lo_node->co_nt_final.
           BREAK-POINT."should not happen?
 
@@ -1004,8 +1085,10 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
         WHEN lo_node->co_nt_value.
           lo_node_value ?= lo_node.
           CREATE OBJECT lo_isxml_text.
-          lo_isxml_text->type  = zif_excel_ixml_node=>co_node_attribute.
+          lo_isxml_text->type  = zif_excel_ixml_node=>co_node_text.
           lo_isxml_text->value = lo_node_value->get_value( ).
+
+          <ls_level>-isxml_node->zif_excel_ixml_node~append_child( lo_isxml_text ).
 
       ENDCASE.
     ENDDO.
