@@ -603,10 +603,12 @@ CLASS lcl_isxml_document IMPLEMENTATION.
     DATA lv_string TYPE string.
 
     IF version IS NOT INITIAL.
-      INSERT |version="{ version }"| INTO TABLE lt_string.
+      lv_string = |version="{ version }"|.
+      INSERT lv_string INTO TABLE lt_string.
     ENDIF.
     IF encoding IS BOUND.
-      INSERT |encoding="{ to_lower( encoding->character_set ) }"| INTO TABLE lt_string.
+      lv_string = |encoding="{ to_lower( encoding->character_set ) }"|.
+      INSERT lv_string INTO TABLE lt_string.
     ENDIF.
     IF lt_string IS NOT INITIAL.
       lv_string = |<?xml { concat_lines_of( table = lt_string
@@ -713,8 +715,7 @@ CLASS lcl_isxml_element IMPLEMENTATION.
            WITH KEY by_prefix COMPONENTS prefix = prefix
            REFERENCE INTO lr_namespace.
       IF sy-subrc <> 0.
-        " prefix defined which has
-        RAISE EXCEPTION TYPE zcx_excel_ixml.
+        RAISE EXCEPTION TYPE lcx_unexpected.
       ENDIF.
       lv_nsuri = lr_namespace->uri.
     ENDIF.
@@ -730,8 +731,7 @@ CLASS lcl_isxml_element IMPLEMENTATION.
              WITH KEY by_prefix COMPONENTS prefix = lr_isxml_attribute->prefix
              REFERENCE INTO lr_namespace.
         IF sy-subrc <> 0.
-          " prefix defined which has
-          RAISE EXCEPTION TYPE zcx_excel_ixml.
+          RAISE EXCEPTION TYPE lcx_unexpected.
         ENDIF.
         lv_nsuri = lr_namespace->uri.
       ENDIF.

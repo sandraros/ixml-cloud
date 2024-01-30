@@ -1,6 +1,6 @@
 INTERFACE zif_excel_ixml_encoding
-  PUBLIC .
+  PUBLIC.
 
-  constants CO_PLATFORM_ENDIAN type I value 4. "#EC NOTEXT
+  CONSTANTS co_platform_endian TYPE i VALUE 4 ##NO_TEXT.
 
 ENDINTERFACE.

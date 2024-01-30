@@ -1,10 +1,10 @@
-interface ZIF_EXCEL_IXML_UNKNOWN
-  public .
+INTERFACE zif_excel_ixml_unknown
+  PUBLIC.
 
-  methods QUERY_INTERFACE
-    importing
-      !IID type I
-    returning
-      value(RVAL) type ref to ZIF_EXCEL_IXML_UNKNOWN .
+  METHODS query_interface
+    IMPORTING
+      !iid TYPE i
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_unknown.
 
-endinterface.
+ENDINTERFACE.

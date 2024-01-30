@@ -1,83 +1,83 @@
 INTERFACE zif_excel_ixml_document
-  PUBLIC .
+  PUBLIC.
 
-  interfaces zif_excel_ixml_node.
+  INTERFACES zif_excel_ixml_node.
 
-  aliases APPEND_CHILD
-    for zif_excel_ixml_node~APPEND_CHILD .
-  aliases GET_FIRST_CHILD
-    for zif_excel_ixml_node~GET_FIRST_CHILD .
-  aliases SET_NAMESPACE_PREFIX
-    for zif_excel_ixml_node~SET_NAMESPACE_PREFIX .
+  ALIASES append_child
+    FOR zif_excel_ixml_node~append_child.
+  ALIASES get_first_child
+    FOR zif_excel_ixml_node~get_first_child.
+  ALIASES set_namespace_prefix
+    FOR zif_excel_ixml_node~set_namespace_prefix.
 
-  methods CREATE_ELEMENT
-    importing
-      !NAME type STRING
+  METHODS create_element
+    IMPORTING
+      !name TYPE string
 *      !NAMESPACE type STRING default ''
-    returning
-      value(RVAL) type ref to zif_excel_ixml_element .
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods CREATE_SIMPLE_ELEMENT
-    importing
-      !NAME type STRING
+  METHODS create_simple_element
+    IMPORTING
+      !name TYPE string
 *      !NAMESPACE type STRING default ''
-      !PARENT type ref to zIF_excel_IXML_NODE
+      !parent TYPE REF TO zif_excel_ixml_node
 *      !VALUE type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods CREATE_SIMPLE_ELEMENT_NS
-    importing
-      !NAME type STRING
-      !PARENT type ref to zIF_excel_IXML_NODE
-      !PREFIX type STRING default ''
+  METHODS create_simple_element_ns
+    IMPORTING
+      !name TYPE string
+      !parent TYPE REF TO zif_excel_ixml_node
+      !prefix TYPE string DEFAULT ''
 *      !URI type STRING default ''
 *      !VALUE type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods FIND_FROM_NAME
-    importing
+  METHODS find_from_name
+    IMPORTING
 *      !DEPTH type I default 0
-      !NAME type STRING
+      !name TYPE string
 *      !NAMESPACE type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods FIND_FROM_NAME_NS
-    importing
+  METHODS find_from_name_ns
+    IMPORTING
 *      !DEPTH type I default 0
-      !NAME type STRING
-      !URI type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods GET_ELEMENTS_BY_TAG_NAME
-    importing
-      !DEPTH type I default 0
-      !NAME type STRING
-      !NAMESPACE type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_NODE_COLLECTION .
+  METHODS get_elements_by_tag_name
+    IMPORTING
+      !depth TYPE i DEFAULT 0
+      !name TYPE string
+      !namespace TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
 
-  methods GET_ELEMENTS_BY_TAG_NAME_NS
-    importing
-      !DEPTH type I default 0
-      !NAME type STRING
-      !URI type STRING default ''
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_NODE_COLLECTION .
+  METHODS get_elements_by_tag_name_ns
+    IMPORTING
+      !depth TYPE i DEFAULT 0
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
 
-  methods GET_ROOT_ELEMENT
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_ELEMENT .
+  METHODS get_root_element
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
-  methods SET_ENCODING
-    importing
-      !ENCODING type ref to zIF_excel_IXML_ENCODING .
+  METHODS set_encoding
+    IMPORTING
+      !encoding TYPE REF TO zif_excel_ixml_encoding.
 
-  methods SET_STANDALONE
-    importing
-      !STANDALONE type ABAP_BOOL .
+  METHODS set_standalone
+    IMPORTING
+      !standalone TYPE abap_bool.
 
 ENDINTERFACE.

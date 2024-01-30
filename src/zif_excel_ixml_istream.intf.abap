@@ -1,9 +1,9 @@
 INTERFACE zif_excel_ixml_istream
-  PUBLIC .
+  PUBLIC.
 
-  interfaces zif_excel_ixml_stream.
+  INTERFACES zif_excel_ixml_stream.
 
-  aliases CLOSE
-    for zif_excel_IXML_STREAM~CLOSE .
+  ALIASES close
+    FOR zif_excel_ixml_stream~close.
 
 ENDINTERFACE.

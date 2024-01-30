@@ -1,6 +1,6 @@
 INTERFACE zif_excel_ixml_stream
-  PUBLIC .
+  PUBLIC.
 
-  methods CLOSE .
+  METHODS close.
 
 ENDINTERFACE.

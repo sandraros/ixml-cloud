@@ -1,8 +1,8 @@
 INTERFACE zif_excel_ixml_renderer
-  PUBLIC .
+  PUBLIC.
 
-  methods RENDER
-    returning
-      value(RVAL) type I .
+  METHODS render
+    RETURNING
+      VALUE(rval) TYPE i.
 
 ENDINTERFACE.

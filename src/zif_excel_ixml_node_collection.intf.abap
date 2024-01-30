@@ -1,12 +1,12 @@
 INTERFACE zif_excel_ixml_node_collection
-  PUBLIC .
+  PUBLIC.
 
-  methods CREATE_ITERATOR
-    returning
-      value(RVAL) type ref to zIF_excel_IXML_NODE_ITERATOR .
+  METHODS create_iterator
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_iterator.
 
-  methods GET_LENGTH
-    returning
-      value(RVAL) type I .
+  METHODS get_length
+    RETURNING
+      VALUE(rval) TYPE i.
 
 ENDINTERFACE.

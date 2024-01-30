@@ -1,12 +1,12 @@
 INTERFACE zif_excel_ixml_attribute
-  PUBLIC .
+  PUBLIC.
 
-  interfaces zIF_excel_IXML_NODE .
+  INTERFACES zif_excel_ixml_node.
 
-  aliases GET_NAME
-    for zIF_excel_IXML_NODE~GET_NAME .
+  ALIASES get_name
+    FOR zif_excel_ixml_node~get_name.
 
-  aliases GET_VALUE
-    for zIF_excel_IXML_NODE~GET_VALUE .
+  ALIASES get_value
+    FOR zif_excel_ixml_node~get_value.
 
 ENDINTERFACE.

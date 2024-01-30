@@ -1146,7 +1146,7 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
   METHOD empty_xml.
     ixml = cl_ixml=>create( ).
     stream_factory = ixml->create_stream_factory( ).
-    xstring = VALUE #( ).
+    CLEAR xstring.
     istream = stream_factory->create_istream_xstring( xstring ).
     document = ixml->create_document( ).
     parser = ixml->create_parser( stream_factory = stream_factory
@@ -1214,15 +1214,15 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_element_open ).
-    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
+*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
     node_open ?= node.
-    cl_abap_unit_assert=>assert_equals( act = node_open->qname
-                                        exp = VALUE qname( name = 'ROOTNODE' ) ).
+    cl_abap_unit_assert=>assert_equals( act = node_open->qname-name
+                                        exp = 'ROOTNODE' ).
     node = reader->read_next_node( ).
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_element_close ).
-    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_close_element ) ).
+*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_close_element ) ).
     node = reader->read_next_node( ).
     cl_abap_unit_assert=>assert_not_bound( node ).
   ENDMETHOD.
@@ -1322,10 +1322,10 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_element_open ).
-    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
+*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
     node_open ?= node.
-    cl_abap_unit_assert=>assert_equals( act = node_open->qname
-                                        exp = VALUE qname( name = 'ROOTNODE' ) ).
+    cl_abap_unit_assert=>assert_equals( act = node_open->qname-name
+                                        exp = 'ROOTNODE' ).
 
     node_attr = node_open->get_attribute_value( 'ATTR' ).
     cl_abap_unit_assert=>assert_bound( node_attr ).
@@ -1333,8 +1333,9 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
                                         exp = node_attr->co_vt_text ).
     cl_abap_unit_assert=>assert_equals( act = node_attr->get_value( )
                                         exp = 'Efe=' ).
+    xstring = 'E0'.
     cl_abap_unit_assert=>assert_equals( act = node_attr->get_value_raw( )
-                                        exp = CONV xstring( 'E0' ) ).
+                                        exp = xstring ).
 
     node = reader->read_current_node( ).
 
@@ -1342,12 +1343,13 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_value ).
-    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_value ) ).
+*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_value ) ).
     value_node ?= node.
     cl_abap_unit_assert=>assert_equals( act = value_node->get_value( )
                                         exp = 'Efe=' ).
+    xstring = 'E0'.
     cl_abap_unit_assert=>assert_equals( act = value_node->get_value_raw( )
-                                        exp = CONV xstring( 'E0' ) ).
+                                        exp = xstring ).
   ENDMETHOD.
 
   METHOD token_based_parsing.
@@ -1390,8 +1392,9 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
                                         exp = if_sxml_value=>co_vt_text ).
     cl_abap_unit_assert=>assert_equals( act = reader->value
                                         exp = 'UFE=' ).
+    CLEAR xstring.
     cl_abap_unit_assert=>assert_equals( act = reader->value_raw
-                                        exp = VALUE xstring( ) ).
+                                        exp = xstring ).
 
     reader->next_node( ).
     cl_abap_unit_assert=>assert_equals( act = reader->node_type

@@ -1,7 +1,7 @@
 INTERFACE zif_excel_ixml_node_list
-  PUBLIC .
+  PUBLIC.
 
-  methods CREATE_ITERATOR
-    returning
-      value(RVAL) type ref to zif_excel_IXML_NODE_ITERATOR .
+  METHODS create_iterator
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_ixml_node_iterator.
 ENDINTERFACE.
