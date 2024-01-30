@@ -7,7 +7,7 @@ CLASS ltc_ixml_isxml DEFINITION
 
   PROTECTED SECTION.
 
-    TYPES tt_ixml_and_isxml TYPE STANDARD TABLE OF REF TO zif_excel_ixml WITH EMPTY KEY.
+    TYPES tt_ixml_and_isxml TYPE STANDARD TABLE OF REF TO zif_excel_ixml WITH DEFAULT KEY.
 
     CLASS-DATA ixml  TYPE REF TO zif_excel_ixml.
     CLASS-DATA isxml TYPE REF TO zif_excel_ixml.
@@ -66,31 +66,30 @@ CLASS ltc_ixml_isxml_document DEFINITION
 *    METHODS set_encoding FOR TESTING RAISING cx_static_check.
 *    METHODS set_standalone FOR TESTING RAISING cx_static_check.
 
-    CONSTANTS:
-      "! Constant copied from the NAMESPACE constant of the protected section of ZCL_EXCEL_READER_2007
-      BEGIN OF namespace,
-        x14ac            TYPE string VALUE 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac',
-        vba_project      TYPE string VALUE 'http://schemas.microsoft.com/office/2006/relationships/vbaProject' ##NEEDED, " for future incorporation of XLSM-reader
-        c                TYPE string VALUE 'http://schemas.openxmlformats.org/drawingml/2006/chart',
-        a                TYPE string VALUE 'http://schemas.openxmlformats.org/drawingml/2006/main',
-        xdr              TYPE string VALUE 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
-        mc               TYPE string VALUE 'http://schemas.openxmlformats.org/markup-compatibility/2006',
-        r                TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-        chart            TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
-        drawing          TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
-        hyperlink        TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink',
-        image            TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
-        office_document  TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
-        printer_settings TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings',
-        shared_strings   TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings',
-        styles           TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles',
-        theme            TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme',
-        worksheet        TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet',
-        relationships    TYPE string VALUE 'http://schemas.openxmlformats.org/package/2006/relationships',
-        core_properties  TYPE string
-                         VALUE 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
-        main             TYPE string VALUE 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
-      END OF namespace.
+*    CONSTANTS:
+*      "! Constant copied from the NAMESPACE constant of the protected section of ZCL_EXCEL_READER_2007
+*      BEGIN OF namespace,
+*        x14ac            TYPE string VALUE 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac',
+*        c                TYPE string VALUE 'http://schemas.openxmlformats.org/drawingml/2006/chart',
+*        a                TYPE string VALUE 'http://schemas.openxmlformats.org/drawingml/2006/main',
+*        xdr              TYPE string VALUE 'http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing',
+*        mc               TYPE string VALUE 'http://schemas.openxmlformats.org/markup-compatibility/2006',
+*        r                TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+*        chart            TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart',
+*        drawing          TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing',
+*        hyperlink        TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink',
+*        image            TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/image',
+*        office_document  TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument',
+*        printer_settings TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/printerSettings',
+*        shared_strings   TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings',
+*        styles           TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles',
+*        theme            TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/theme',
+*        worksheet        TYPE string VALUE 'http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet',
+*        relationships    TYPE string VALUE 'http://schemas.openxmlformats.org/package/2006/relationships',
+*        core_properties  TYPE string
+*                         VALUE 'http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties',
+*        main             TYPE string VALUE 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+*      END OF namespace.
 
     METHODS setup.
 
@@ -1251,7 +1250,7 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
   METHOD empty_xml.
     DATA parse_error TYPE REF TO cx_sxml_parse_error.
 
-    xstring = VALUE xstring( )."cl_abap_codepage=>convert_to( '' ).
+    CLEAR xstring.
     reader = cl_sxml_string_reader=>create( xstring ).
     TRY.
         node = reader->read_next_node( ).
@@ -1377,7 +1376,7 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
 
     reader->next_attribute( ).
     cl_abap_unit_assert=>assert_equals( act = reader->node_type
-                                        exp = if_sxml_node=>co_nt_element_open ). " i.e. NOT if_sxml_node=>co_nt_attribute
+                                        exp = if_sxml_node=>co_nt_element_open ).
     cl_abap_unit_assert=>assert_equals( act = reader->name
                                         exp = 'ROOTNODE' ).
     reader->current_node( ).
@@ -1584,12 +1583,8 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
     DATA lo_wrap_ixml_document         TYPE REF TO lth_wrap_ixml_document.
     DATA lo_wrap_ixml_document_as_node TYPE REF TO lth_wrap_ixml_node.
 
-*    CREATE OBJECT lo_wrap_ixml_document.
     lo_ixml_document = ixml->create_document( ).
-*    lo_wrap_ixml_document_as_node = lo_wrap_ixml_document.
-*    lo_wrap_ixml_document_as_node->ixml_node = lo_wrap_ixml_document->ixml_document.
-
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_document )."lo_wrap_ixml_document.
+    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_document ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml~create_encoding.

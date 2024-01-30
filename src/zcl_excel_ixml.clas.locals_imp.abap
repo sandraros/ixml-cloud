@@ -2,6 +2,10 @@
 *"* local helper classes, interface definitions and type
 *"* declarations
 
+CLASS lcx_unexpected DEFINITION INHERITING FROM cx_no_check.
+ENDCLASS.
+
+
 CLASS lcl_bom_utf16_as_character DEFINITION.
   PUBLIC SECTION.
     CLASS-METHODS class_constructor.
@@ -767,7 +771,7 @@ CLASS lcl_isxml_element IMPLEMENTATION.
   METHOD zif_excel_ixml_element~get_elements_by_tag_name_ns.
   ENDMETHOD.
 
-  METHOD zif_excel_ixml_element~GET_name.
+  METHOD zif_excel_ixml_element~get_name.
     rval = name.
   ENDMETHOD.
 
@@ -879,7 +883,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_first_child.
-    rval = FIRST_child.
+    rval = first_child.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_name.
@@ -935,7 +939,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
       CASE lv_node_type.
         WHEN zif_excel_ixml_node=>co_node_text.
           lo_text ?= lo_node.
-          rval = rval && lo_text->value."get_value( ).
+          rval = rval && lo_text->value.
       ENDCASE.
     ENDLOOP.
   ENDMETHOD.
@@ -1002,7 +1006,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
 
     DATA lv_current_level   TYPE i.
     DATA ls_level           TYPE ts_level.
-    DATA lt_level           TYPE STANDARD TABLE OF ts_level WITH EMPTY KEY.
+    DATA lt_level           TYPE STANDARD TABLE OF ts_level WITH DEFAULT KEY.
     DATA lo_reader          TYPE REF TO if_sxml_reader.
     DATA lo_node            TYPE REF TO if_sxml_node.
     DATA lo_parse_error     TYPE REF TO cx_sxml_parse_error.
@@ -1040,7 +1044,8 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
 
       CASE lo_node->type.
         WHEN lo_node->co_nt_attribute.
-          BREAK-POINT."should not happen in OO parsing?
+          "should not happen in OO parsing?
+          RAISE EXCEPTION TYPE lcx_unexpected.
 
         WHEN lo_node->co_nt_element_close.
           lo_node_close ?= lo_node.
@@ -1077,10 +1082,12 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
           lo_isxml_node = document.
 
         WHEN lo_node->co_nt_final.
-          BREAK-POINT."should not happen?
+          "should not happen?
+          RAISE EXCEPTION TYPE lcx_unexpected.
 
         WHEN lo_node->co_nt_initial.
-          BREAK-POINT."should not happen?
+          "should not happen?
+          RAISE EXCEPTION TYPE lcx_unexpected.
 
         WHEN lo_node->co_nt_value.
           lo_node_value ?= lo_node.
