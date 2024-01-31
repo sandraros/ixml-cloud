@@ -10,9 +10,9 @@ INTERFACE zif_excel_ixml_parser
   " returning
   "   value(RVAL) type BOOLEAN .
 
-  METHODS parse
-    RETURNING
-      VALUE(rval) TYPE i.
+  METHODS parse.
+*    RETURNING
+*      VALUE(rval) TYPE i.
 
   METHODS set_normalizing
     IMPORTING

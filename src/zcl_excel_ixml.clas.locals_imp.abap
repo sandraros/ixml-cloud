@@ -69,10 +69,10 @@ CLASS lcl_isxml_node DEFINITION
     "! Must be redefined in subclasses
     METHODS render
       IMPORTING
-      io_sxml_writer    TYPE REF TO if_sxml_writer
-      io_isxml_renderer TYPE REF TO lcl_isxml_renderer
+        io_sxml_writer    TYPE REF TO if_sxml_writer
+        io_isxml_renderer TYPE REF TO lcl_isxml_renderer
       RETURNING
-      VALUE(rv_rc) TYPE i.
+        VALUE(rv_rc)      TYPE i.
 
 ENDCLASS.
 
@@ -132,16 +132,33 @@ CLASS lcl_isxml_document DEFINITION
 
   PRIVATE SECTION.
 
-    DATA encoding TYPE REF TO lcl_isxml_encoding.
-    DATA version  TYPE string VALUE '1.0'.
+    TYPES tt_element TYPE STANDARD TABLE OF REF TO lcl_isxml_element WITH DEFAULT KEY.
+
+    DATA encoding   TYPE REF TO lcl_isxml_encoding.
+    DATA version    TYPE string                    VALUE '1.0'.
+    DATA standalone TYPE string.
 
     METHODS find_from_name_ns
-        IMPORTING
+      IMPORTING
         io_isxml_element TYPE REF TO lcl_isxml_element
-        iv_name TYPE string
-        iv_nsuri TYPE string DEFAULT ''
-        RETURNING
+        iv_name          TYPE string
+        iv_nsuri         TYPE string DEFAULT ''
+      RETURNING
         VALUE(ro_result) TYPE REF TO lcl_isxml_element.
+
+    METHODS get_elements_by_tag_name_ns
+      IMPORTING
+        io_isxml_element TYPE REF TO lcl_isxml_element
+        iv_name          TYPE string
+        iv_nsuri         TYPE string DEFAULT ''
+      RETURNING
+        VALUE(rt_result) TYPE tt_element.
+
+    METHODS get_xml_header
+      IMPORTING
+        iv_encoding      TYPE string
+      RETURNING
+        VALUE(rv_result) TYPE string.
 
     METHODS get_xml_header_as_string
       RETURNING
@@ -150,43 +167,6 @@ CLASS lcl_isxml_document DEFINITION
     METHODS get_xml_header_as_xstring
       RETURNING
         VALUE(rv_result) TYPE xstring.
-*    DATA nodes                TYPE lcl_isxml_factory=>tt_node.
-*    DATA namespaces           TYPE lcl_isxml_factory=>tt_namespace.
-*    DATA element_names        TYPE lcl_isxml_factory=>tt_element_name.
-*    DATA elements             TYPE lcl_isxml_factory=>tt_element.
-*    DATA parse_element_levels TYPE lcl_isxml_factory=>tt_parse_element_level.
-*
-*    METHODS append_child
-*      IMPORTING
-*        node        TYPE REF TO lcl_isxml_node
-*        new_child   TYPE REF TO zif_excel_ixml_node
-*      RETURNING
-*        VALUE(rval) TYPE i.
-*
-*    METHODS get_node_children
-*      IMPORTING
-*        node_id TYPE lcl_isxml_factory=>tv_node_id
-*      RETURNING
-*        VALUE(rval) TYPE REF TO zif_excel_ixml_node_list.
-*
-*    METHODS get_node_iterator
-*      IMPORTING
-*        node_list TYPE REF TO lcl_isxml_node_list OPTIONAL
-*        node_collection TYPE REF TO lcl_isxml_node_collection OPTIONAL
-*      RETURNING
-*      VALUE(rval) TYPE REF TO lcl_isxml_node_iterator.
-*
-*    METHODS parse
-*      IMPORTING
-*        istream     TYPE REF TO lif_isxml_istream
-*      RETURNING
-*        VALUE(rval) TYPE i.
-*
-*    METHODS render
-*      IMPORTING
-*        ostream     TYPE REF TO lif_isxml_ostream
-*      RETURNING
-*        VALUE(rval) TYPE i.
 
 ENDCLASS.
 
@@ -301,6 +281,8 @@ CLASS lcl_isxml_node_collection DEFINITION
 
   PRIVATE SECTION.
 
+    DATA table_nodes TYPE TABLE OF REF TO lcl_isxml_node.
+
 ENDCLASS.
 
 
@@ -315,6 +297,10 @@ CLASS lcl_isxml_node_iterator DEFINITION
 
   PRIVATE SECTION.
 
+    DATA node_list       TYPE REF TO lcl_isxml_node_list.
+    DATA node_collection TYPE REF TO lcl_isxml_node_collection.
+    DATA position        TYPE i.
+
 ENDCLASS.
 
 
@@ -328,6 +314,8 @@ CLASS lcl_isxml_node_list DEFINITION
     INTERFACES zif_excel_ixml_node_list.
 
   PRIVATE SECTION.
+
+    DATA table_nodes TYPE TABLE OF REF TO lcl_isxml_node.
 
 ENDCLASS.
 
@@ -367,7 +355,7 @@ CLASS lcl_isxml_ostream_xstring DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        xstring      TYPE REF TO xstring
+        xstring     TYPE REF TO xstring
       RETURNING
         VALUE(rval) TYPE REF TO lcl_isxml_ostream_xstring.
 
@@ -584,37 +572,65 @@ CLASS lcl_isxml_document IMPLEMENTATION.
     ENDWHILE.
   ENDMETHOD.
 
-  METHOD get_xml_header_as_string.
-    DATA lt_string TYPE TABLE OF string.
+  METHOD get_elements_by_tag_name_ns.
+    DATA lo_child         TYPE REF TO lcl_isxml_node.
+    DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
+    DATA lt_element       TYPE tt_element.
+
+    IF     io_isxml_element->name      = iv_name
+       AND io_isxml_element->namespace = iv_nsuri.
+      INSERT io_isxml_element INTO TABLE rt_result.
+    ENDIF.
+
+    lo_child = io_isxml_element->first_child.
+    WHILE lo_child IS BOUND.
+      IF lo_child->type = if_ixml_node=>co_node_element.
+        lo_isxml_element ?= lo_child.
+        lt_element = get_elements_by_tag_name_ns( io_isxml_element = lo_isxml_element
+                                                  iv_name          = iv_name
+                                                  iv_nsuri         = iv_nsuri ).
+        INSERT LINES OF lt_element INTO TABLE rt_result.
+      ENDIF.
+      lo_child = lo_child->next_sibling.
+    ENDWHILE.
+  ENDMETHOD.
+
+  METHOD get_xml_header.
     DATA lv_string TYPE string.
+    DATA lt_string TYPE TABLE OF string.
 
     IF version IS NOT INITIAL.
       lv_string = |version="{ version }"|.
       INSERT lv_string INTO TABLE lt_string.
     ENDIF.
-    INSERT `encoding="utf-16"` INTO TABLE lt_string.
-    lv_string = |{ lcl_bom_utf16_as_character=>system_value }<?xml { concat_lines_of( table = lt_string
-                                                                                      sep   = ` ` ) }?>|.
-    rv_result = lv_string.
+
+    IF iv_encoding IS NOT INITIAL.
+      lv_string = |encoding="{ iv_encoding }"|.
+      INSERT lv_string INTO TABLE lt_string.
+    ENDIF.
+
+    IF standalone IS NOT INITIAL.
+      lv_string = |standalone="{ standalone }"|.
+      INSERT lv_string INTO TABLE lt_string.
+    ENDIF.
+
+    rv_result = |<?xml { concat_lines_of( table = lt_string
+                                          sep   = ` ` ) }?>|.
+  ENDMETHOD.
+
+  METHOD get_xml_header_as_string.
+    rv_result = |{ lcl_bom_utf16_as_character=>system_value }{ get_xml_header( 'utf-16' ) }|.
   ENDMETHOD.
 
   METHOD get_xml_header_as_xstring.
-    DATA lt_string TYPE TABLE OF string.
-    DATA lv_string TYPE string.
+    DATA lv_character_set TYPE string.
 
-    IF version IS NOT INITIAL.
-      lv_string = |version="{ version }"|.
-      INSERT lv_string INTO TABLE lt_string.
-    ENDIF.
     IF encoding IS BOUND.
-      lv_string = |encoding="{ to_lower( encoding->character_set ) }"|.
-      INSERT lv_string INTO TABLE lt_string.
+      lv_character_set = encoding->character_set.
+    ELSE.
+      lv_character_set = ''.
     ENDIF.
-    IF lt_string IS NOT INITIAL.
-      lv_string = |<?xml { concat_lines_of( table = lt_string
-                                            sep   = ` ` ) }?>|.
-    ENDIF.
-    rv_result = cl_abap_codepage=>convert_to( lv_string ).
+    rv_result = cl_abap_codepage=>convert_to( get_xml_header( to_lower( lv_character_set ) ) ).
   ENDMETHOD.
 
   METHOD render.
@@ -624,9 +640,9 @@ CLASS lcl_isxml_document IMPLEMENTATION.
     DATA lo_element TYPE REF TO lcl_isxml_element.
 
     CREATE OBJECT lo_element.
-    lo_element->type      = zif_excel_ixml_node=>co_node_element.
-    lo_element->name      = name.
-*    lo_element->namespace = namespace.
+    lo_element->type = zif_excel_ixml_node=>co_node_element.
+    lo_element->name = name.
+    " lo_element->namespace = namespace.
     rval = lo_element.
   ENDMETHOD.
 
@@ -669,9 +685,24 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~get_elements_by_tag_name.
+    rval = zif_excel_ixml_document~get_elements_by_tag_name_ns( name = name ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~get_elements_by_tag_name_ns.
+    DATA lo_isxml_element         TYPE REF TO lcl_isxml_element.
+    DATA lt_element               TYPE tt_element.
+    DATA lo_isxml_node_collection TYPE REF TO lcl_isxml_node_collection.
+    DATA lo_element               TYPE REF TO lcl_isxml_element.
+
+    lo_isxml_element ?= first_child.
+    lt_element = get_elements_by_tag_name_ns( io_isxml_element = lo_isxml_element
+                                              iv_name          = name
+                                              iv_nsuri         = uri ).
+    CREATE OBJECT lo_isxml_node_collection.
+    LOOP AT lt_element INTO lo_element.
+      INSERT lo_element INTO TABLE lo_isxml_node_collection->table_nodes.
+    ENDLOOP.
+    rval = lo_isxml_node_collection.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~get_root_element.
@@ -683,6 +714,11 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_document~set_standalone.
+    IF standalone = abap_true.
+      me->standalone = 'yes'.
+    ELSE.
+      me->standalone = ''.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
 
@@ -886,6 +922,18 @@ CLASS lcl_isxml_node IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_children.
+    DATA lo_isxml_node_list TYPE REF TO lcl_isxml_node_list.
+    DATA lo_child           TYPE REF TO lcl_isxml_node.
+
+    CREATE OBJECT lo_isxml_node_list.
+
+    lo_child = first_child.
+    WHILE lo_child IS BOUND.
+      INSERT lo_child INTO TABLE lo_isxml_node_list->table_nodes.
+      lo_child = lo_child->next_sibling.
+    ENDWHILE.
+
+    rval = lo_isxml_node_list.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~get_first_child.
@@ -960,6 +1008,12 @@ ENDCLASS.
 
 CLASS lcl_isxml_node_collection IMPLEMENTATION.
   METHOD zif_excel_ixml_node_collection~create_iterator.
+    DATA lo_isxml_node_iterator TYPE REF TO lcl_isxml_node_iterator.
+
+    CREATE OBJECT lo_isxml_node_iterator.
+    lo_isxml_node_iterator->node_collection = me.
+
+    rval = lo_isxml_node_iterator.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node_collection~get_length.
@@ -969,12 +1023,29 @@ ENDCLASS.
 
 CLASS lcl_isxml_node_iterator IMPLEMENTATION.
   METHOD zif_excel_ixml_node_iterator~get_next.
+    IF node_list IS BOUND.
+      IF position < lines( node_list->table_nodes ).
+        position = position + 1.
+        READ TABLE node_list->table_nodes INDEX position INTO rval.
+      ENDIF.
+    ELSEIF node_collection IS BOUND.
+      IF position < lines( node_collection->table_nodes ).
+        position = position + 1.
+        READ TABLE node_collection->table_nodes INDEX position INTO rval.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
 
 
 CLASS lcl_isxml_node_list IMPLEMENTATION.
   METHOD zif_excel_ixml_node_list~create_iterator.
+    DATA lo_isxml_node_iterator TYPE REF TO lcl_isxml_node_iterator.
+
+    CREATE OBJECT lo_isxml_node_iterator.
+    lo_isxml_node_iterator->node_list = me.
+
+    rval = lo_isxml_node_iterator.
   ENDMETHOD.
 ENDCLASS.
 
@@ -1041,7 +1112,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
       TRY.
           lo_node = lo_reader->read_next_node( ).
         CATCH cx_sxml_parse_error INTO lo_parse_error.
-          rval = lcl_isxml=>ixml_mr-parser_error.
+*          rval = lcl_isxml=>ixml_mr-parser_error.
           EXIT.
       ENDTRY.
       IF lo_node IS NOT BOUND.
