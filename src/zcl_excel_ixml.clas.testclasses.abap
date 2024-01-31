@@ -116,7 +116,7 @@ CLASS ltc_ixml_isxml_element DEFINITION
     METHODS set_attribute               FOR TESTING RAISING cx_static_check.
     METHODS set_attribute_ns            FOR TESTING RAISING cx_static_check.
 
-    DATA dummy TYPE REF TO ZIF_EXCEL_IXML_ELEMENT.
+    DATA dummy TYPE REF TO zif_excel_ixml_element.
 
 ENDCLASS.
 
@@ -971,7 +971,6 @@ ENDCLASS.
 
 
 CLASS ltc_ixml_isxml_element IMPLEMENTATION.
-
   METHOD find_from_name.
     cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
   ENDMETHOD.

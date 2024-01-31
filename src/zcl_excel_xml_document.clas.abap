@@ -68,7 +68,8 @@ CLASS zcl_excel_xml_document IMPLEMENTATION.
     " --- default PARSER omits leading spaces 03.12.02 ---
     l_parser->set_normalizing( is_normalizing = space ).
 
-    retcode = l_parser->parse( ).
+    l_parser->parse( ).
+*    retcode = l_parser->parse( ).
 
 *    IF retcode NE 0.
 *      l_errno = l_parser->num_errors( ).
