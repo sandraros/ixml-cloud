@@ -26,9 +26,9 @@ INTERFACE zif_excel_ixml_element
 
   METHODS find_from_name
     IMPORTING
-      !depth TYPE i DEFAULT 0
+*      !depth TYPE i DEFAULT 0
       !name TYPE string
-      !namespace TYPE string DEFAULT ''
+*      !namespace TYPE string DEFAULT ''
     RETURNING
       VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
@@ -43,7 +43,7 @@ INTERFACE zif_excel_ixml_element
   METHODS get_attribute
     IMPORTING
       !name TYPE string
-      !namespace TYPE string DEFAULT ''
+*      !namespace TYPE string DEFAULT ''
     RETURNING
       VALUE(rval) TYPE string.
 
@@ -63,15 +63,15 @@ INTERFACE zif_excel_ixml_element
 
   METHODS get_elements_by_tag_name
     IMPORTING
-      !depth TYPE i DEFAULT 0
+*      !depth TYPE i DEFAULT 0
       !name TYPE string
-      !namespace TYPE string DEFAULT ''
+*      !namespace TYPE string DEFAULT ''
     RETURNING
       VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
 
   METHODS get_elements_by_tag_name_ns
     IMPORTING
-      !depth TYPE i DEFAULT 0
+*      !depth TYPE i DEFAULT 0
       !name TYPE string
       !uri TYPE string DEFAULT ''
     RETURNING
@@ -79,10 +79,10 @@ INTERFACE zif_excel_ixml_element
 
   METHODS remove_attribute_ns
     IMPORTING
-      !name TYPE string
-      !uri TYPE string DEFAULT ''
-    RETURNING
-      VALUE(rval) TYPE i.
+      !name TYPE string.
+*      !uri TYPE string DEFAULT ''
+*    RETURNING
+*      VALUE(rval) TYPE i.
 
   METHODS set_attribute
     IMPORTING

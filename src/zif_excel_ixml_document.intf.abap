@@ -60,17 +60,21 @@ INTERFACE zif_excel_ixml_document
     RETURNING
       VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
 
-  METHODS get_elements_by_tag_name_ns
-    IMPORTING
-*      !depth TYPE i DEFAULT 0
-      !name TYPE string
-      !uri TYPE string DEFAULT ''
-    RETURNING
-      VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
+*  METHODS get_elements_by_tag_name_ns
+*    IMPORTING
+**      !depth TYPE i DEFAULT 0
+*      !name TYPE string
+*      !uri TYPE string DEFAULT ''
+*    RETURNING
+*      VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
 
   METHODS get_root_element
     RETURNING
       VALUE(rval) TYPE REF TO zif_excel_ixml_element.
+
+  METHODS set_declaration
+    importing
+      !DECLARATION type BOOLEAN .
 
   METHODS set_encoding
     IMPORTING
