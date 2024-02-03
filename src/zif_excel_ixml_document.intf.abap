@@ -73,8 +73,8 @@ INTERFACE zif_excel_ixml_document
       VALUE(rval) TYPE REF TO zif_excel_ixml_element.
 
   METHODS set_declaration
-    importing
-      !DECLARATION type BOOLEAN .
+    IMPORTING
+      !declaration TYPE boolean.
 
   METHODS set_encoding
     IMPORTING

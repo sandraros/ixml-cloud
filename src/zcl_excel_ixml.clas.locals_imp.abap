@@ -129,9 +129,9 @@ CLASS lcl_isxml_document DEFINITION
 
   PRIVATE SECTION.
 
-    DATA declaration TYPE boolean VALUE abap_true.
+    DATA declaration TYPE boolean                   VALUE abap_true.
     DATA encoding    TYPE REF TO lcl_isxml_encoding.
-    DATA version     TYPE string VALUE '1.0'.
+    DATA version     TYPE string                    VALUE '1.0'.
     DATA standalone  TYPE string.
 
     METHODS get_xml_header
@@ -175,7 +175,9 @@ CLASS lcl_isxml_element DEFINITION
         namespace TYPE string,
         object    TYPE REF TO lcl_isxml_attribute,
       END OF ts_attribute.
-    TYPES tt_attribute TYPE SORTED TABLE OF ts_attribute WITH UNIQUE KEY name namespace.
+    TYPES tt_attribute TYPE STANDARD TABLE OF ts_attribute WITH DEFAULT KEY
+                        WITH UNIQUE SORTED KEY by_name COMPONENTS name namespace
+                        WITH UNIQUE SORTED KEY by_prefix_name COMPONENTS prefix name.
     TYPES tt_element   TYPE STANDARD TABLE OF REF TO lcl_isxml_element WITH DEFAULT KEY.
 
     DATA name       TYPE string.
@@ -395,7 +397,7 @@ CLASS lcl_isxml_renderer DEFINITION
         prefix    TYPE string,
         uri       TYPE string,
       END OF ts_namespace.
-    TYPES tt_namespace TYPE SORTED TABLE OF ts_namespace WITH UNIQUE KEY level
+    TYPES tt_namespace TYPE SORTED TABLE OF ts_namespace WITH UNIQUE KEY level prefix
                     WITH UNIQUE SORTED KEY by_prefix COMPONENTS prefix neg_level.
 
     DATA document           TYPE REF TO lcl_isxml_document.
@@ -719,16 +721,20 @@ CLASS lcl_isxml_element IMPLEMENTATION.
 
   METHOD render.
     DATA ls_namespace         TYPE lcl_isxml_renderer=>ts_namespace.
-    DATA lr_namespace         TYPE REF TO lcl_isxml_renderer=>ts_namespace.
+    DATA lv_nAME              TYPE string.
     DATA lv_nsuri             TYPE string.
+    DATA lv_prefix            TYPE string.
+    DATA lr_namespace         TYPE REF TO lcl_isxml_renderer=>ts_namespace.
     DATA lo_sxml_open_element TYPE REF TO if_sxml_open_element.
     DATA lr_isxml_attribute   TYPE REF TO lcl_isxml_element=>ts_attribute.
     DATA lo_isxml_child_node  TYPE REF TO lcl_isxml_node.
 
     FIELD-SYMBOLS <ls_attribute> TYPE lcl_isxml_element=>ts_attribute.
 
+    " Namespaces with a prefix
     io_isxml_renderer->current_level = io_isxml_renderer->current_level + 1.
     LOOP AT attributes ASSIGNING <ls_attribute>
+         USING KEY by_prefix_name
          WHERE prefix = 'xmlns'.
       ls_namespace-level     = io_isxml_renderer->current_level.
       ls_namespace-neg_level = -1 * io_isxml_renderer->current_level.
@@ -737,25 +743,57 @@ CLASS lcl_isxml_element IMPLEMENTATION.
       INSERT ls_namespace INTO TABLE io_isxml_renderer->current_namespaces.
     ENDLOOP.
 
-    " IXML does accept a namespace prefix which is not registered yet for namespaces (can be later defined via set_attribute( name = 'xmlns:xx' )),
+    " Default namespace
+    READ TABLE attributes ASSIGNING <ls_attribute>
+         WITH TABLE KEY by_prefix_name
+         COMPONENTS prefix = ''
+                    name   = 'xmlns'.
+    IF sy-subrc = 0.
+      ls_namespace-level     = io_isxml_renderer->current_level.
+      ls_namespace-neg_level = -1 * io_isxml_renderer->current_level.
+      ls_namespace-prefix    = ''.
+      ls_namespace-uri       = <ls_attribute>-object->value.
+      INSERT ls_namespace INTO TABLE io_isxml_renderer->current_namespaces.
+    ENDIF.
+    " IXML does accept a namespace prefix which is not registered yet for namespaces (can be
+    " later defined via IXML set_attribute( name = 'xmlns:xx' value = 'http://...' )),
     " while SXML doesn't accept a namespace prefix without URI.
-    IF prefix IS NOT INITIAL.
+    IF prefix IS INITIAL.
+      lv_nsuri = ''.
+    ELSE.
       READ TABLE io_isxml_renderer->current_namespaces
            WITH KEY by_prefix COMPONENTS prefix = prefix
            REFERENCE INTO lr_namespace.
       IF sy-subrc <> 0.
-        RAISE EXCEPTION TYPE lcx_unexpected.
+        lv_nsuri = ''.
+      ELSE.
+        lv_nsuri = lr_namespace->uri.
       ENDIF.
-      lv_nsuri = lr_namespace->uri.
     ENDIF.
     lo_sxml_open_element = io_sxml_writer->new_open_element( name   = name
                                                              nsuri  = lv_nsuri
                                                              prefix = prefix ).
-    io_sxml_writer->write_node( lo_sxml_open_element ).
-
+    " Process actual attributes (not namespace declarations)
     LOOP AT attributes REFERENCE INTO lr_isxml_attribute
-         WHERE prefix <> 'xmlns'.
-      IF lr_isxml_attribute->prefix IS NOT INITIAL.
+*         WHERE prefix <> 'xmlns'
+         .
+      lv_name = lr_isxml_attribute->name.
+      lv_prefix = lr_isxml_attribute->prefix.
+      IF lr_isxml_attribute->prefix IS INITIAL.
+        IF lr_isxml_attribute->name = 'xmlns'.
+          " Default namespace
+          lv_nsuri = ''.
+        ELSE.
+          " Attribute without namespace
+          lv_nsuri = lr_isxml_attribute->namespace.
+        ENDIF.
+      ELSEIF lr_isxml_attribute->prefix = 'xmlns'.
+*        lv_name = |xmlns:{ lv_name }|.
+*        lv_prefix = ''.
+*        lv_name = |xmlns:{ lv_name }|.
+*        lv_prefix = ''.
+        lv_nsuri = lr_isxml_attribute->namespace.
+      ELSE.
         READ TABLE io_isxml_renderer->current_namespaces
              WITH KEY by_prefix COMPONENTS prefix = lr_isxml_attribute->prefix
              REFERENCE INTO lr_namespace.
@@ -764,11 +802,13 @@ CLASS lcl_isxml_element IMPLEMENTATION.
         ENDIF.
         lv_nsuri = lr_namespace->uri.
       ENDIF.
-      lo_sxml_open_element->set_attribute( name   = lr_isxml_attribute->name
+      lo_sxml_open_element->set_attribute( name   = lv_name
                                            nsuri  = lv_nsuri
-                                           prefix = lr_isxml_attribute->prefix
+                                           prefix = lv_prefix
                                            value  = lr_isxml_attribute->object->value ).
     ENDLOOP.
+
+    io_sxml_writer->write_node( lo_sxml_open_element ).
 
     lo_isxml_child_node = first_child.
     WHILE lo_isxml_child_node IS BOUND.
@@ -805,8 +845,9 @@ CLASS lcl_isxml_element IMPLEMENTATION.
     DATA lr_attribute TYPE REF TO ts_attribute.
 
     READ TABLE attributes REFERENCE INTO lr_attribute
-         WITH TABLE KEY name      = name
-                        namespace = uri.
+         WITH TABLE KEY by_name
+         COMPONENTS name      = name
+                    namespace = uri.
     IF sy-subrc = 0.
       rval = lr_attribute->object.
     ENDIF.
@@ -922,6 +963,7 @@ ENDCLASS.
 CLASS lcl_isxml_node IMPLEMENTATION.
   METHOD render.
     " Must be redefined in subclasses.
+    RAISE EXCEPTION TYPE lcx_unexpected.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_node~append_child.
@@ -1115,6 +1157,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
       BEGIN OF ts_level,
         number     TYPE i,
         isxml_node TYPE REF TO lcl_isxml_node,
+        nsbindings TYPE if_sxml_named=>nsbindings,
       END OF ts_level.
 
     DATA lv_current_level    TYPE i.
@@ -1126,11 +1169,15 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
     DATA lo_sxml_node_close  TYPE REF TO if_sxml_close_element.
     DATA lo_sxml_node_open   TYPE REF TO if_sxml_open_element.
     DATA lo_isxml_element    TYPE REF TO lcl_isxml_element.
+    DATA lt_nsbinding        TYPE if_sxml_named=>nsbindings.
+    DATA lr_nsbinding        TYPE REF TO if_sxml_named=>nsbinding.
+    DATA lr_nsbinding_2      TYPE REF TO if_sxml_named=>nsbinding.
+    DATA ls_isxml_attribute  TYPE lcl_isxml_element=>ts_attribute.
     DATA lt_sxml_attribute   TYPE if_sxml_attribute=>attributes.
     DATA lo_sxml_attribute   TYPE REF TO if_sxml_attribute.
-    DATA ls_isxml_attribute  TYPE lcl_isxml_element=>ts_attribute.
     DATA lo_sxml_node_value  TYPE REF TO if_sxml_value_node.
     DATA lo_isxml_text       TYPE REF TO lcl_isxml_text.
+    DATA lv_add_xmlns_attribute TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_level> TYPE ts_level.
 
@@ -1167,26 +1214,67 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
           lo_sxml_node_open ?= lo_sxml_node.
           CREATE OBJECT lo_isxml_element.
           lo_isxml_element->type      = zif_excel_ixml_node=>co_node_element.
+          " case  input                 name  namespace  prefix
+          " 1     <A xmlns="nsuri">     A     nsuri      (empty)
+          " 2     <A xmlns="nsuri"><B>  B     nsuri      (empty)
           lo_isxml_element->name      = lo_sxml_node_open->qname-name.
           lo_isxml_element->namespace = lo_sxml_node_open->qname-namespace.
           lo_isxml_element->prefix    = lo_sxml_node_open->prefix.
 
           <ls_level>-isxml_node->zif_excel_ixml_node~append_child( lo_isxml_element ).
 
+          lt_nsbinding = lo_sxml_reader->get_nsbindings( ).
+          LOOP AT lt_nsbinding REFERENCE INTO lr_nsbinding.
+            lv_add_xmlns_attribute = abap_false.
+            READ TABLE <ls_level>-nsbindings WITH TABLE KEY prefix = lo_sxml_node_open->prefix
+                 REFERENCE INTO lr_nsbinding_2.
+            IF sy-subrc <> 0.
+              INSERT lr_nsbinding->* INTO TABLE <ls_level>-nsbindings.
+              lv_add_xmlns_attribute = abap_true.
+            ELSEIF lr_nsbinding->nsuri <> lr_nsbinding_2->nsuri.
+              lv_add_xmlns_attribute = abap_true.
+            ENDIF.
+            IF lv_add_xmlns_attribute = abap_true.
+              IF lr_nsbinding->prefix IS INITIAL.
+                " Default namespace
+                ls_isxml_attribute-name      = 'xmlns'.
+                ls_isxml_attribute-namespace = lr_nsbinding->nsuri.
+                ls_isxml_attribute-prefix    = ''.
+              ELSE.
+                ls_isxml_attribute-name      = lr_nsbinding->prefix.
+                ls_isxml_attribute-namespace = lr_nsbinding->nsuri.
+                ls_isxml_attribute-prefix    = 'xmlns'.
+              ENDIF.
+              CREATE OBJECT ls_isxml_attribute-object.
+              ls_isxml_attribute-object->type   = zif_excel_ixml_node=>co_node_attribute.
+              ls_isxml_attribute-object->prefix = ls_isxml_attribute-prefix.
+              ls_isxml_attribute-object->name   = ls_isxml_attribute-name.
+              ls_isxml_attribute-object->value  = lr_nsbinding->nsuri.
+              INSERT ls_isxml_attribute INTO TABLE lo_isxml_element->attributes.
+            ENDIF.
+          ENDLOOP.
+
           lv_current_level = lv_current_level + 1.
           ls_level-number     = lv_current_level.
           ls_level-isxml_node = lo_isxml_element.
+          ls_level-nsbindings = lt_nsbinding.
           INSERT ls_level INTO TABLE lt_level ASSIGNING <ls_level>.
 
           lt_sxml_attribute = lo_sxml_node_open->get_attributes( ).
           LOOP AT lt_sxml_attribute INTO lo_sxml_attribute.
+            " SXML property values of XML attributes.
+            " case  input                                         name  namespace  prefix
+            " 1     <A xmlns:nsprefix="nsuri" nsprefix:attr="B">  attr  nsuri      nsprefix
+            " 2     <A attr="B">                                  attr  (empty)    (empty)
+            " 3     <nsprefix:A xmlns:nsprefix="nsuri" attr="B">  attr  (empty)    (empty)
+            " 4     <A xmlns="dnsuri" attr="B">                   attr  (empty)    (empty)
             ls_isxml_attribute-name      = lo_sxml_attribute->qname-name.
             ls_isxml_attribute-namespace = lo_sxml_attribute->qname-namespace.
             ls_isxml_attribute-prefix    = lo_sxml_attribute->prefix.
             CREATE OBJECT ls_isxml_attribute-object.
             ls_isxml_attribute-object->type   = zif_excel_ixml_node=>co_node_attribute.
-            ls_isxml_attribute-object->prefix = lo_sxml_attribute->prefix.
-            ls_isxml_attribute-object->name   = lo_sxml_attribute->qname-name.
+            ls_isxml_attribute-object->prefix = ls_isxml_attribute-prefix.
+            ls_isxml_attribute-object->name   = ls_isxml_attribute-name.
             ls_isxml_attribute-object->value  = lo_sxml_attribute->get_value( ).
             INSERT ls_isxml_attribute INTO TABLE lo_isxml_element->attributes.
           ENDLOOP.
@@ -1210,6 +1298,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
           <ls_level>-isxml_node->zif_excel_ixml_node~append_child( lo_isxml_text ).
 
       ENDCASE.
+      ASSERT 1 = 1. " debug helper
     ENDDO.
   ENDMETHOD.
 
