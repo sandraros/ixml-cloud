@@ -88,9 +88,9 @@ INTERFACE zif_excel_ixml_element
     IMPORTING
       !name TYPE string
       !namespace TYPE string DEFAULT ''
-      !value TYPE string DEFAULT ''
-    RETURNING
-      VALUE(rval) TYPE i.
+      !value TYPE string DEFAULT ''.
+*    RETURNING
+*      VALUE(rval) TYPE i.
 
   METHODS set_attribute_ns
     IMPORTING

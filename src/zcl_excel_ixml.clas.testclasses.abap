@@ -241,22 +241,88 @@ CLASS ltc_sxml_parse_render DEFINITION
   PRIVATE SECTION.
 
     METHODS default_namespace FOR TESTING RAISING cx_static_check.
+    METHODS default_namespace_removed FOR TESTING RAISING cx_static_check.
     METHODS namespace FOR TESTING RAISING cx_static_check.
+    METHODS namespace_2 FOR TESTING RAISING cx_static_check.
 
-    DATA node          TYPE REF TO if_sxml_node.
-    DATA open_element  TYPE REF TO if_sxml_open_element.
-    DATA writer        TYPE REF TO if_sxml_writer.
-    DATA string_writer TYPE REF TO cl_sxml_string_writer.
-    DATA string        TYPE string.
-    DATA xstring       TYPE xstring.
-    DATA value_node    TYPE REF TO if_sxml_value_node.
-    DATA close_element TYPE REF TO if_sxml_close_element.
+*    TYPES:
+*      BEGIN OF ts_attribute,
+*        name      TYPE string,
+*        namespace TYPE string,
+*        prefix    TYPE string,
+*      END OF ts_attribute.
+*    TYPES tt_attribute TYPE STANDARD TABLE OF ts_attribute WITH DEFAULT KEY.
+*    TYPES:
+*      BEGIN OF ts_element,
+*        name      TYPE string,
+*        namespace TYPE string,
+*        prefix    TYPE string,
+*      END OF ts_element.
+*    TYPES:
+*      BEGIN OF ts_nsbinding,
+*        prefix TYPE string,
+*        nsuri  TYPE string,
+*      END OF ts_nsbinding.
+*    TYPES tt_nsbinding TYPE STANDARD TABLE OF ts_nsbinding WITH DEFAULT KEY.
+*    TYPES:
+*      BEGIN OF ts_complete_element,
+*        element    TYPE ts_element,
+*        attributes TYPE tt_attribute,
+*        nsbindings TYPE tt_nsbinding,
+*      END OF ts_complete_element.
+*
+*    DATA complete_parsed_elements  TYPE TABLE OF ts_complete_element.
+    DATA parsed_element_index TYPE i.
+    DATA string               TYPE string.
+
+    METHODS get_expected_attribute
+      IMPORTING
+        iv_name          TYPE string
+        iv_namespace     TYPE string DEFAULT ``
+        iv_prefix        TYPE string DEFAULT ``
+      RETURNING
+        VALUE(rs_result) TYPE lcl_rewrite_xml_via_sxml=>ts_attribute.
+
+    METHODS get_expected_element
+      IMPORTING
+        iv_name          TYPE string
+        iv_namespace     TYPE string DEFAULT ``
+        iv_prefix        TYPE string DEFAULT ``
+      RETURNING
+        VALUE(rs_result) TYPE lcl_rewrite_xml_via_sxml=>ts_element.
+
+    METHODS get_expected_nsbinding
+      IMPORTING
+        iv_prefix        TYPE string DEFAULT ``
+        iv_nsuri         TYPE string DEFAULT ``
+      RETURNING
+        VALUE(rs_result) TYPE lcl_rewrite_xml_via_sxml=>ts_nsbinding.
+
+    METHODS get_parsed_element
+      RETURNING
+        VALUE(rs_result) TYPE lcl_rewrite_xml_via_sxml=>ts_element.
+
+    METHODS get_parsed_element_attribute
+      IMPORTING
+        iv_index         TYPE i
+      RETURNING
+        VALUE(rs_result) TYPE lcl_rewrite_xml_via_sxml=>ts_attribute.
+
+    METHODS get_parsed_element_nsbinding
+      IMPORTING
+        iv_index         TYPE i
+      RETURNING
+        VALUE(rs_result) TYPE lcl_rewrite_xml_via_sxml=>ts_nsbinding.
 
     METHODS parse_render
       IMPORTING
         iv_xml_string TYPE string
       RETURNING
         VALUE(rv_string) TYPE string.
+
+    METHODS set_current_parsed_element
+      IMPORTING
+        iv_index TYPE i.
 
 ENDCLASS.
 
@@ -298,22 +364,47 @@ CLASS ltc_sxml_writer DEFINITION
   PRIVATE SECTION.
 
     METHODS attribute_namespace FOR TESTING RAISING cx_static_check.
+    "! It's mandatory to indicate nsuri = 'http://www.w3.org/XML/1998/namespace'
+    "! for the standard "xml" namespace, but the URI is not rendered.
+    "! e.g. open_element->set_attribute( name = 'space' nsuri = 'http://www.w3.org/XML/1998/namespace' prefix = 'xml' value = 'preserve' ).
+    "! will render &lt;A xml:space="preserve"/>; as expected, there's no
+    "! xmlns:xml="http://www.w3.org/XML/1998/namespace".
+    METHODS attribute_xml_namespace FOR TESTING RAISING cx_static_check.
     METHODS most_simple_valid_xml FOR TESTING RAISING cx_static_check.
     METHODS namespace FOR TESTING RAISING cx_static_check.
     METHODS namespace_default FOR TESTING RAISING cx_static_check.
-    METHODS namespace_nested FOR TESTING RAISING cx_static_check.
+    METHODS namespace_default_by_attribute FOR TESTING RAISING cx_static_check.
+    METHODS namespace_inheritance FOR TESTING RAISING cx_static_check.
     METHODS namespace_set_prefix FOR TESTING RAISING cx_static_check.
     METHODS object_oriented_rendering FOR TESTING RAISING cx_static_check.
     METHODS token_based_rendering FOR TESTING RAISING cx_static_check.
+    METHODS write_namespace_declaration FOR TESTING RAISING cx_static_check.
+    "! Order between namespace declarations, 1 then 2
+    METHODS write_namespace_declaration_2 FOR TESTING RAISING cx_static_check.
+    "! Order between namespace declarations, 2 then 1
+    METHODS write_namespace_declaration_3 FOR TESTING RAISING cx_static_check.
+    "! write_namespace_declaration called right before write_node( element )
+    "! will position namespace declarations at the beginning of element,
+    "! before default namespace and attributes
+    METHODS write_namespace_declaration_4 FOR TESTING RAISING cx_static_check.
+    "! write_namespace_declaration called right after write_node( element )
+    "! will position namespace declarations at the end of element
+    METHODS write_namespace_declaration_5 FOR TESTING RAISING cx_static_check.
+    METHODS write_namespace_declaration_6 FOR TESTING RAISING cx_static_check.
 
-    DATA node          TYPE REF TO if_sxml_node.
     DATA open_element  TYPE REF TO if_sxml_open_element.
     DATA writer        TYPE REF TO if_sxml_writer.
-    DATA string_writer TYPE REF TO cl_sxml_string_writer.
     DATA string        TYPE string.
-    DATA xstring       TYPE xstring.
     DATA value_node    TYPE REF TO if_sxml_value_node.
     DATA close_element TYPE REF TO if_sxml_close_element.
+
+    METHODS get_output
+      IMPORTING
+        io_writer        TYPE REF TO if_sxml_writer
+      RETURNING
+        VALUE(rv_result) TYPE string.
+
+    METHODS setup.
 
 ENDCLASS.
 
@@ -805,8 +896,15 @@ CLASS ltc_ixml_isxml IMPLEMENTATION.
     lo_ostream = stream_factory->create_ostream_cstring( lr_string ).
     lo_renderer = ixml_or_isxml->create_renderer( ostream  = lo_ostream
                                                   document = document ).
+    document->set_declaration( abap_false ).
     " Fills RV_RESULT
     lo_renderer->render( ).
+    " remove the UTF-16 BOM (i.e. remove the first character)
+    SHIFT rv_result LEFT BY 1 PLACES.
+
+    " Normalize XML according to SXML limitations in order to compare IXML
+    " and SXML results by simple string comparison.
+    rv_result = lcl_rewrite_xml_via_sxml=>execute( rv_result ).
   ENDMETHOD.
 
   METHOD setup.
@@ -829,7 +927,7 @@ CLASS ltc_ixml_isxml_document IMPLEMENTATION.
       string = render( ).
       cl_abap_unit_assert=>assert_equals(
           act = string
-          exp = |{ lcl_bom_utf16_as_character=>system_value }<?xml version="1.0" encoding="utf-16"?><A/>| ).
+          exp = `<A/>` ).
     ENDLOOP.
   ENDMETHOD.
 
@@ -848,7 +946,7 @@ CLASS ltc_ixml_isxml_document IMPLEMENTATION.
       string = render( ).
       cl_abap_unit_assert=>assert_equals(
           act = string
-          exp = |{ lcl_bom_utf16_as_character=>system_value }<?xml version="1.0" encoding="utf-16"?><A/>| ).
+          exp = `<A/>` ).
     ENDLOOP.
   ENDMETHOD.
 
@@ -875,7 +973,7 @@ CLASS ltc_ixml_isxml_document IMPLEMENTATION.
       string = render( ).
       cl_abap_unit_assert=>assert_equals(
           act = string
-          exp = |{ lcl_bom_utf16_as_character=>system_value }<?xml version="1.0" encoding="utf-16"?><a:A xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>| ).
+          exp = `<a:A xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>` ).
     ENDLOOP.
   ENDMETHOD.
 
@@ -1226,38 +1324,60 @@ CLASS ltc_ixml_isxml_element IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD remove_attribute_ns.
-    LOOP AT ixml_and_isxml INTO ixml_or_isxml
-*         WHERE table_line = ixml
-*         WHERE table_line = isxml
-.
+* Method CREATE_CONTENT_TYPES of class ZCL_EXCEL_WRITER_XLSM:
+*        lo_element->remove_attribute_ns( lc_xml_attr_contenttype ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       document = lth_ixml_isxml=>parse(
                      ixml_or_isxml = ixml_or_isxml
                      xml_string    = `<A xmlns="nsuri" xmlns:nsprefix="nsuri2" nsprefix:attr="A1" attr="A2"/>` ).
       element = document->get_root_element( ).
       element->remove_attribute_ns( name = 'attr' ).
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = render( ).
       cl_abap_unit_assert=>assert_equals( act = string
-                                          exp = `<A xmlns="nsuri" xmlns:nsprefix="nsuri" nsprefix:attr="A1"/>` ).
+                                          exp = `<A nsprefix:attr="A1" xmlns="nsuri" xmlns:nsprefix="nsuri2"/>` ).
     ENDLOOP.
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
   ENDMETHOD.
 
   METHOD set_attribute.
-    LOOP AT ixml_and_isxml INTO ixml_or_isxml
-*         WHERE table_line = ixml
-*         WHERE table_line = isxml
-.
+* Method CREATE_XL_SHAREDSTRINGS of class ZCL_EXCEL_WRITER_2007:
+*           lo_sub_element->set_attribute( name = 'space' namespace = 'xml' value = 'preserve' ).
+* Method CREATE_XL_SHEET_COLUMN_FORMULA of class ZCL_EXCEL_WRITER_2007:
+*      eo_element->set_attribute( name  = 't'
+*                                 value = <ls_column_formula_used>-t ).
+
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = ixml_or_isxml->create_document( ).
+      element = document->create_simple_element( name   = 'A'
+                                                 parent = document ).
+      element->set_attribute( name  = 'a'
+                              value = '1' ).
+      element->set_attribute( name      = 'space'
+                              namespace = 'xml'
+                              value     = 'preserve' ).
+      string = render( ).
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = `<A a="1" xml:space="preserve"/>` ).
+*          exp = |{ lcl_bom_utf16_as_character=>system_value }<?xml version="1.0" encoding="utf-16"?><a:A xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>| ).
     ENDLOOP.
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
   ENDMETHOD.
 
   METHOD set_attribute_ns.
-    LOOP AT ixml_and_isxml INTO ixml_or_isxml
-*         WHERE table_line = ixml
-*         WHERE table_line = isxml
-.
+* Method CREATE_CONTENT_TYPES of class ZCL_EXCEL_WRITER_XLSM:
+*        lo_element->set_attribute_ns( name  = lc_xml_attr_contenttype
+*                                      value = lc_xml_node_workb_ct ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = ixml_or_isxml->create_document( ).
+      document->set_namespace_prefix( prefix = 'a' ).
+      element = document->create_simple_element_ns( name   = 'A'
+                                                    parent = document
+                                                    prefix = 'a' ).
+      element->set_attribute_ns( name  = 'xmlns:a'
+                                 value = 'http://schemas.openxmlformats.org/drawingml/2006/main' ).
+      string = render( ).
+      cl_abap_unit_assert=>assert_equals(
+          act = string
+          exp = `<a:A xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"/>` ).
     ENDLOOP.
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
   ENDMETHOD.
 
   METHOD setup.
@@ -1685,7 +1805,7 @@ CLASS ltc_ixml_isxml_render IMPLEMENTATION.
       string = lth_ixml_isxml=>render( ixml_or_isxml ).
       cl_abap_unit_assert=>assert_equals(
           act = string
-          exp = `<nsprefix:A xmlns="dnsuri" xmlns:nsprefix="nsuri" nsprefix:attr="1" attr="2"><B attr="3"/></nsprefix:A>` ).
+          exp = `<nsprefix:A xmlns:nsprefix="nsuri" xmlns="dnsuri" nsprefix:attr="1" attr="2"><B attr="3"/></nsprefix:A>` ).
       ASSERT 1 = 1. " debug helper
     ENDLOOP.
   ENDMETHOD.
@@ -1763,9 +1883,58 @@ ENDCLASS.
 CLASS ltc_sxml_parse_render IMPLEMENTATION.
   METHOD default_namespace.
     string = parse_render( `<A xmlns="dnsuri" xmlns:nsprefix="nsuri" nsprefix:attr="1" attr="2"><B attr="3"/></A>` ).
+    set_current_parsed_element( iv_index = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name      = 'A'
+                                                                    iv_namespace = 'dnsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 1 )
+                                        exp = get_expected_nsbinding( iv_prefix = 'nsprefix'
+                                                                      iv_nsuri  = 'nsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 2 )
+                                        exp = get_expected_nsbinding( iv_nsuri = 'dnsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_attribute( iv_index = 1 )
+                                        exp = get_expected_attribute( iv_name      = 'attr'
+                                                                      iv_namespace = 'nsuri'
+                                                                      iv_prefix    = 'nsprefix' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_attribute( iv_index = 2 )
+                                        exp = get_expected_attribute( iv_name = 'attr' ) ).
+    set_current_parsed_element( iv_index = 2 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name      = 'B'
+                                                                    iv_namespace = 'dnsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 1 )
+                                        exp = get_expected_nsbinding( iv_prefix = 'nsprefix'
+                                                                      iv_nsuri  = 'nsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 2 )
+                                        exp = get_expected_nsbinding( iv_nsuri = 'dnsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_attribute( iv_index = 1 )
+                                        exp = get_expected_attribute( iv_name = 'attr' ) ).
     cl_abap_unit_assert=>assert_equals(
         act = string
         exp = `<A nsprefix:attr="1" attr="2" xmlns="dnsuri" xmlns:nsprefix="nsuri"><B attr="3"/></A>` ).
+  ENDMETHOD.
+
+  METHOD default_namespace_removed.
+    string = parse_render( `<A><B xmlns="dnsuri"><C xmlns=""><D/></C></B></A>` ).
+    set_current_parsed_element( iv_index = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name = 'A' ) ).
+    set_current_parsed_element( iv_index = 2 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name      = 'B'
+                                                                    iv_namespace = 'dnsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 1 )
+                                        exp = get_expected_nsbinding( iv_nsuri = 'dnsuri' ) ).
+    set_current_parsed_element( iv_index = 3 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name = 'C' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 1 )
+                                        exp = get_expected_nsbinding( iv_nsuri = '' ) ).
+    set_current_parsed_element( iv_index = 4 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name = 'D' ) ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = `<A><B xmlns="dnsuri"><C xmlns=""><D/></C></B></A>` ).
   ENDMETHOD.
 
   METHOD namespace.
@@ -1773,177 +1942,292 @@ CLASS ltc_sxml_parse_render IMPLEMENTATION.
         `<nsprefix:A xmlns="dnsuri" xmlns:nsprefix="nsuri" nsprefix:attr="1" attr="2"><B attr="3"/></nsprefix:A>` ).
     cl_abap_unit_assert=>assert_equals(
         act = string
-        exp = `<nsprefix:A nsprefix:attr="1" attr="2" xmlns:nsprefix="nsuri"><B attr="3"/></nsprefix:A>` ).
+        exp = `<nsprefix:A nsprefix:attr="1" attr="2" xmlns="dnsuri" xmlns:nsprefix="nsuri"><B attr="3"/></nsprefix:A>` ).
+
+    cl_abap_unit_assert=>assert_equals( act = parse_render( `<A xmlns=""/>` )
+                                        exp = `<A xmlns=""/>` ).
+
+    cl_abap_unit_assert=>assert_equals( act = parse_render( `<A xmlns=""><B/></A>` )
+                                        exp = `<A xmlns=""><B/></A>` ).
+
+    cl_abap_unit_assert=>assert_equals( act = parse_render( `<A><B xmlns=""/></A>` )
+                                        exp = `<A><B xmlns=""/></A>` ).
+  ENDMETHOD.
+
+  METHOD namespace_2.
+    string = parse_render( `<A xmlns="dnsuri" xmlns:nsprefix="nsuri"><B/><nsprefix:C/></A>` ).
+
+    set_current_parsed_element( iv_index = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name      = 'A'
+                                                                    iv_namespace = 'dnsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 1 )
+                                        exp = get_expected_nsbinding( iv_prefix = 'nsprefix'
+                                                                      iv_nsuri  = 'nsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 2 )
+                                        exp = get_expected_nsbinding( iv_nsuri = 'dnsuri' ) ).
+    set_current_parsed_element( iv_index = 2 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name      = 'B'
+                                                                    iv_namespace = 'dnsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 1 )
+                                        exp = get_expected_nsbinding( iv_prefix = 'nsprefix'
+                                                                      iv_nsuri  = 'nsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 2 )
+                                        exp = get_expected_nsbinding( iv_nsuri = 'dnsuri' ) ).
+    set_current_parsed_element( iv_index = 3 ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element( )
+                                        exp = get_expected_element( iv_name      = 'C'
+                                                                    iv_namespace = 'nsuri'
+                                                                    iv_prefix    = 'nsprefix' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 1 )
+                                        exp = get_expected_nsbinding( iv_prefix = 'nsprefix'
+                                                                      iv_nsuri  = 'nsuri' ) ).
+    cl_abap_unit_assert=>assert_equals( act = get_parsed_element_nsbinding( iv_index = 2 )
+                                        exp = get_expected_nsbinding( iv_nsuri = 'dnsuri' ) ).
+
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = `<A xmlns="dnsuri" xmlns:nsprefix="nsuri"><B/><nsprefix:C/></A>` ).
   ENDMETHOD.
 
   METHOD parse_render.
-    TYPES:
-      BEGIN OF ts_level,
-        number     TYPE i,
-        nsbindings TYPE if_sxml_named=>nsbindings,
-      END OF ts_level.
-
-    DATA lv_current_level    TYPE i.
-    DATA ls_level            TYPE ts_level.
-    DATA lt_level            TYPE STANDARD TABLE OF ts_level WITH DEFAULT KEY.
-    DATA lo_reader           TYPE REF TO if_sxml_reader.
-    DATA lo_sxml_parse_error TYPE REF TO cx_sxml_parse_error.
-    DATA lt_nsbinding        TYPE if_sxml_named=>nsbindings.
-    DATA lt_attribute        TYPE if_sxml_attribute=>attributes.
-    DATA lr_nsbinding        TYPE REF TO if_sxml_named=>nsbinding.
-    DATA lo_sxml_attribute   TYPE REF TO if_sxml_attribute.
-
-    FIELD-SYMBOLS <ls_level> TYPE ts_level.
-
-    DATA lo_default_namespace_uri TYPE REF TO if_sxml_value.
-
-    lv_current_level = 1.
-    ls_level-number = lv_current_level.
-    " ls_level-isxml_node = document.
-    INSERT ls_level INTO TABLE lt_level ASSIGNING <ls_level>.
-
-    lo_reader = cl_sxml_string_reader=>create( input = cl_abap_codepage=>convert_to( iv_xml_string ) ).
-    string_writer = cl_sxml_string_writer=>create( type = if_sxml=>co_xt_xml10 ).
-    writer = string_writer.
-
-    DO.
-      TRY.
-          node = lo_reader->read_next_node( ).
-        CATCH cx_sxml_parse_error INTO lo_sxml_parse_error.
-          EXIT.
-      ENDTRY.
-      IF node IS NOT BOUND.
-        EXIT.
-      ENDIF.
-
-      CASE node->type.
-        WHEN node->co_nt_attribute.
-          "should not happen in OO parsing
-          RAISE EXCEPTION TYPE lcx_unexpected.
-
-        WHEN node->co_nt_element_close.
-          close_element ?= node.
-
-          DELETE lt_level INDEX lv_current_level.
-          lv_current_level = lv_current_level - 1.
-          READ TABLE lt_level INDEX lv_current_level ASSIGNING <ls_level>.
-
-          writer->write_node( node = close_element ).
-
-        WHEN node->co_nt_element_open.
-          open_element ?= node.
-*          CREATE OBJECT lo_isxml_element.
-*          lo_isxml_element->type      = zif_excel_ixml_node=>co_node_element.
-*          " case  input                 name  namespace  prefix
-*          " 1     <A xmlns="nsuri">     A     nsuri      (empty)
-*          " 2     <A xmlns="nsuri"><B>  B     nsuri      (empty)
-*          lo_isxml_element->name      = lo_sxml_node_open->qname-name.
-*          lo_isxml_element->namespace = lo_sxml_node_open->qname-namespace.
-*          lo_isxml_element->prefix    = lo_sxml_node_open->prefix.
+    rv_string = lcl_rewrite_xml_via_sxml=>execute( iv_xml_string = iv_xml_string
+                                                   iv_trace      = abap_true ).
+  ENDMETHOD.
+*  METHOD parse_render.
+*    TYPES:
+*      BEGIN OF ts_level,
+*        number     TYPE i,
+*        nsbindings TYPE if_sxml_named=>nsbindings,
+*      END OF ts_level.
 *
-*          <ls_level>-isxml_node->zif_excel_ixml_node~append_child( lo_isxml_element ).
+*    DATA lv_current_level    TYPE i.
+*    DATA ls_level            TYPE ts_level.
+*    DATA lt_level            TYPE STANDARD TABLE OF ts_level WITH DEFAULT KEY.
+*    DATA lo_reader           TYPE REF TO if_sxml_reader.
+*    DATA string_writer       TYPE REF TO cl_sxml_string_writer.
+*    DATA writer              TYPE REF TO if_sxml_writer.
+*    DATA node                TYPE REF TO if_sxml_node.
+*    DATA close_element       TYPE REF TO if_sxml_close_element.
+*    DATA open_element        TYPE REF TO if_sxml_open_element.
+*    DATA lt_nsbinding        TYPE if_sxml_named=>nsbindings.
+*    DATA lt_attribute        TYPE if_sxml_attribute=>attributes.
+*    DATA ls_complete_element TYPE ts_complete_element.
+*    DATA lr_nsbinding        TYPE REF TO if_sxml_named=>nsbinding.
+*    DATA ls_nsbinding        TYPE ts_nsbinding.
+*    DATA lo_attribute        TYPE REF TO if_sxml_attribute.
+*    DATA ls_attribute        TYPE ts_attribute.
+*    DATA value_node          TYPE REF TO if_sxml_value_node.
+*
+*    FIELD-SYMBOLS <ls_level> TYPE ts_level.
+*
+*    lv_current_level = 1.
+*    ls_level-number = lv_current_level.
+*    INSERT ls_level INTO TABLE lt_level ASSIGNING <ls_level>.
+*
+*    lo_reader = cl_sxml_string_reader=>create( input = cl_abap_codepage=>convert_to( iv_xml_string ) ).
+*    string_writer = cl_sxml_string_writer=>create( type = if_sxml=>co_xt_xml10 ).
+*    writer = string_writer.
+*
+*    DO.
+*      node = lo_reader->read_next_node( ).
+*      IF node IS NOT BOUND.
+*        " End of XML
+*        EXIT.
+*      ENDIF.
+*
+*      CASE node->type.
+*        WHEN node->co_nt_attribute.
+*          "should not happen in OO parsing (READ_NEXT_NODE)
+*          RAISE EXCEPTION TYPE lcx_unexpected.
+*
+*        WHEN node->co_nt_element_close.
+*
+*          DELETE lt_level INDEX lv_current_level.
+*          lv_current_level = lv_current_level - 1.
+*          READ TABLE lt_level INDEX lv_current_level ASSIGNING <ls_level>.
+*
+*          close_element = writer->new_close_element( ).
+*          writer->write_node( close_element ).
+**          writer->write_node( node ).
+*
+*        WHEN node->co_nt_element_open.
+*          open_element ?= node.
+*
+*          lt_nsbinding = lo_reader->get_nsbindings( ).
+*          lt_attribute = open_element->get_attributes( ).
+*
+*          CLEAR ls_complete_element.
+*          ls_complete_element-element-name      = open_element->qname-name.
+*          ls_complete_element-element-namespace = open_element->qname-namespace.
+*          ls_complete_element-element-prefix    = open_element->prefix.
+*          LOOP AT lt_nsbinding REFERENCE INTO lr_nsbinding.
+*            ls_nsbinding-prefix = lr_nsbinding->prefix.
+*            ls_nsbinding-nsuri  = lr_nsbinding->nsuri.
+*            INSERT ls_nsbinding INTO TABLE ls_complete_element-nsbindings.
+*          ENDLOOP.
+*          LOOP AT lt_attribute INTO lo_attribute.
+*            ls_attribute-name      = lo_attribute->qname-name.
+*            ls_attribute-namespace = lo_attribute->qname-namespace.
+*            ls_attribute-prefix    = lo_attribute->prefix.
+*            INSERT ls_attribute INTO TABLE ls_complete_element-attributes.
+*          ENDLOOP.
+*          INSERT ls_complete_element INTO TABLE complete_parsed_elements.
+*
+*          IF open_element->prefix IS INITIAL.
+*            open_element = writer->new_open_element( name = open_element->qname-name ).
+*          ELSE.
+*            open_element = writer->new_open_element( name   = open_element->qname-name
+*                                                     nsuri  = open_element->qname-namespace
+*                                                     prefix = open_element->prefix ).
+*          ENDIF.
+*
+*          open_element->set_attributes( lt_attribute ).
 *
 *          LOOP AT lt_nsbinding REFERENCE INTO lr_nsbinding.
-*            DATA(lv_add_xmlns_attribute) = abap_false.
-*            READ TABLE <ls_level>-nsbindings WITH TABLE KEY prefix = lo_sxml_node_open->prefix
-*                 REFERENCE INTO lr_nsbinding_2.
+*            READ TABLE <ls_level>-nsbindings TRANSPORTING NO FIELDS WITH KEY prefix = lr_nsbinding->prefix
+*                                                                             nsuri  = lr_nsbinding->nsuri.
 *            IF sy-subrc <> 0.
-*              INSERT lr_nsbinding->* INTO TABLE <ls_level>-nsbindings.
-*              lv_add_xmlns_attribute = abap_true.
-*            ELSEIF lr_nsbinding->nsuri <> lr_nsbinding_2->nsuri.
-*              lv_add_xmlns_attribute = abap_true.
-*            ENDIF.
-*            IF lv_add_xmlns_attribute = abap_true.
+*              " It's the first time the default namespace is used,
+*              " or if it has been changed, then declare it.
 *              IF lr_nsbinding->prefix IS INITIAL.
-*                " Default namespace
-*                ls_isxml_attribute-name      = 'xmlns'.
-*                ls_isxml_attribute-namespace = lr_nsbinding->nsuri.
-*                ls_isxml_attribute-prefix    = ''.
+*                open_element->set_attribute( name  = 'xmlns'
+*                                             value = lr_nsbinding->nsuri ).
 *              ELSE.
-*                ls_isxml_attribute-name      = lr_nsbinding->prefix.
-*                ls_isxml_attribute-namespace = lr_nsbinding->nsuri.
-*                ls_isxml_attribute-prefix    = 'xmlns'.
+*                writer->write_namespace_declaration( nsuri  = lr_nsbinding->nsuri
+*                                                     prefix = lr_nsbinding->prefix ).
 *              ENDIF.
-*              CREATE OBJECT ls_isxml_attribute-object.
-*              ls_isxml_attribute-object->type   = zif_excel_ixml_node=>co_node_attribute.
-*              ls_isxml_attribute-object->prefix = ls_isxml_attribute-prefix.
-*              ls_isxml_attribute-object->name   = ls_isxml_attribute-name.
-*              ls_isxml_attribute-object->value  = lr_nsbinding->nsuri.
-*              INSERT ls_isxml_attribute INTO TABLE lo_isxml_element->attributes.
 *            ENDIF.
 *          ENDLOOP.
-
-          lt_nsbinding = lo_reader->get_nsbindings( ).
-          lt_attribute = open_element->get_attributes( ).
-
-          " Default namespace
-          READ TABLE lt_nsbinding REFERENCE INTO lr_nsbinding WITH TABLE KEY prefix = ``.
-          IF     sy-subrc = 0
-             AND open_element->qname-namespace = lr_nsbinding->nsuri.
-            open_element = writer->new_open_element( name = open_element->qname-name ).
-            open_element->set_attributes( lt_attribute ).
-            READ TABLE <ls_level>-nsbindings TRANSPORTING NO FIELDS WITH TABLE KEY prefix = ``.
-            IF sy-subrc <> 0.
-              open_element->set_attribute( name  = 'xmlns'
-                                           value = lr_nsbinding->nsuri ).
-            ENDIF.
-*            ENDIF.
-          ENDIF.
-
-          lv_current_level = lv_current_level + 1.
-          ls_level-number     = lv_current_level.
-          ls_level-nsbindings = lt_nsbinding.
-          INSERT ls_level INTO TABLE lt_level ASSIGNING <ls_level>.
-
-*          lo_default_namespace_uri = open_element->get_attribute_value( name = 'xmlns' ).
-
-          LOOP AT lt_attribute INTO lo_sxml_attribute.
-            " SXML property values of XML attributes.
-            " case  input                                         name  namespace  prefix
-            " 1     <A xmlns:nsprefix="nsuri" nsprefix:attr="B">  attr  nsuri      nsprefix
-            " 2     <A attr="B">                                  attr  (empty)    (empty)
-            " 3     <nsprefix:A xmlns:nsprefix="nsuri" attr="B">  attr  (empty)    (empty)
-            " 4     <A xmlns="dnsuri" attr="B">                   attr  (empty)    (empty)
-*            ls_isxml_attribute-name      = lo_sxml_attribute->qname-name.
-*            ls_isxml_attribute-namespace = lo_sxml_attribute->qname-namespace.
-*            ls_isxml_attribute-prefix    = lo_sxml_attribute->prefix.
-*            CREATE OBJECT ls_isxml_attribute-object.
-*            ls_isxml_attribute-object->type   = zif_excel_ixml_node=>co_node_attribute.
-*            ls_isxml_attribute-object->prefix = ls_isxml_attribute-prefix.
-*            ls_isxml_attribute-object->name   = ls_isxml_attribute-name.
-*            ls_isxml_attribute-object->value  = lo_sxml_attribute->get_value( ).
-*            INSERT ls_isxml_attribute INTO TABLE lo_isxml_element->attributes.
-          ENDLOOP.
-
-          writer->write_node( node = open_element ).
-
-        " lo_isxml_node = document.
-
-        WHEN node->co_nt_final.
-          "should not happen in OO parsing
-          RAISE EXCEPTION TYPE lcx_unexpected.
-
-        WHEN node->co_nt_initial.
-          "should not happen in OO parsing
-          RAISE EXCEPTION TYPE lcx_unexpected.
-
-        WHEN node->co_nt_value.
-          value_node ?= node.
-*          CREATE OBJECT lo_isxml_text.
-*          lo_isxml_text->type  = zif_excel_ixml_node=>co_node_text.
-*          lo_isxml_text->value = lo_sxml_node_value->get_value( ).
 *
-*          <ls_level>-isxml_node->zif_excel_ixml_node~append_child( lo_isxml_text ).
+**          " Default namespace declaration is set (xmlns="...")
+**          READ TABLE lt_nsbinding REFERENCE INTO lr_nsbinding WITH TABLE KEY prefix = ``.
+**          IF sy-subrc = 0.
+**
+***            IF open_element->prefix IS INITIAL.
+**            IF open_element->qname-namespace = lr_nsbinding->nsuri.
+**              " Element URI = default namespace URI
+**              open_element = writer->new_open_element( name = open_element->qname-name ).
+**            ELSE.
+**              " Element URI <> default namespace URI.
+**              open_element = writer->new_open_element( name   = open_element->qname-name
+**                                                       nsuri  = open_element->qname-namespace
+**                                                       prefix = open_element->prefix ).
+**            ENDIF.
+**
+**            open_element->set_attributes( lt_attribute ).
+**
+**            READ TABLE <ls_level>-nsbindings TRANSPORTING NO FIELDS WITH KEY prefix = ``
+**                                                                             nsuri  = lr_nsbinding->nsuri.
+**            IF sy-subrc <> 0.
+**              " It's the first time the default namespace is used,
+**              " or if it has been changed, then declare it.
+**              open_element->set_attribute( name  = 'xmlns'
+**                                           value = lr_nsbinding->nsuri ).
+**            ENDIF.
+**
+**          ELSE.
+***          READ TABLE lt_nsbinding REFERENCE INTO lr_nsbinding WITH TABLE KEY prefix = ``.
+**            IF open_element->qname-namespace IS NOT INITIAL.
+**              READ TABLE lt_nsbinding REFERENCE INTO lr_nsbinding WITH KEY prefix = open_element->prefix
+**                                                                           nsuri  = open_element->qname-namespace.
+**              IF sy-subrc = 0.
+**                open_element = writer->new_open_element( name   = open_element->qname-name
+**                                                         nsuri  = open_element->qname-namespace
+**                                                         prefix = open_element->prefix ).
+**              ENDIF.
+**            ENDIF.
+**
+***            lv_add_default_namespace = abap_false.
+***            IF open_element->qname-namespace <> lr_nsbinding->nsuri.
+***              lv_add_default_namespace = abap_true.
+***            ELSE.
+***              READ TABLE <ls_level>-nsbindings TRANSPORTING NO FIELDS WITH TABLE KEY prefix = ``.
+***              IF sy-subrc <> 0.
+***                lv_add_default_namespace = abap_true.
+***              ENDIF.
+***            ENDIF.
+***            IF lv_add_default_namespace = abap_true.
+***              open_element->set_attribute( name  = 'xmlns'
+***                                           value = lr_nsbinding->nsuri ).
+***            ENDIF.
+**          ENDIF.
+*
+*          lv_current_level = lv_current_level + 1.
+*          ls_level-number     = lv_current_level.
+*          ls_level-nsbindings = lt_nsbinding.
+*          INSERT ls_level INTO TABLE lt_level ASSIGNING <ls_level>.
+*
+*          writer->write_node( node = open_element ).
+*
+*        WHEN node->co_nt_final.
+*          "should not happen in OO parsing
+*          RAISE EXCEPTION TYPE lcx_unexpected.
+*
+*        WHEN node->co_nt_initial.
+*          "should not happen in OO parsing
+*          RAISE EXCEPTION TYPE lcx_unexpected.
+*
+*        WHEN node->co_nt_value.
+*
+*          value_node = writer->new_value( ).
+*          writer->write_node( value_node ).
+**          writer->write_node( node ).
+*
+*        WHEN OTHERS.
+*          "should not happen whatever it's OO or token parsing
+*          RAISE EXCEPTION TYPE lcx_unexpected.
+*      ENDCASE.
+*    ENDDO.
+*    rv_string = cl_abap_codepage=>convert_from( string_writer->get_output( ) ).
+*  ENDMETHOD.
 
-          writer->write_node( node = value_node ).
+  METHOD get_expected_attribute.
+    rs_result-name      = iv_name.
+    rs_result-namespace = iv_namespace.
+    rs_result-prefix    = iv_prefix.
+  ENDMETHOD.
 
-        WHEN OTHERS.
-          "should not happen
-          RAISE EXCEPTION TYPE lcx_unexpected.
-      ENDCASE.
-      ASSERT 1 = 1. " debug helper
-    ENDDO.
-    rv_string = cl_abap_codepage=>convert_from( string_writer->get_output( ) ).
+  METHOD get_expected_element.
+    rs_result-name      = iv_name.
+    rs_result-namespace = iv_namespace.
+    rs_result-prefix    = iv_prefix.
+  ENDMETHOD.
+
+  METHOD get_expected_nsbinding.
+    rs_result-prefix = iv_prefix.
+    rs_result-nsuri  = iv_nsuri.
+  ENDMETHOD.
+
+  METHOD get_parsed_element.
+    DATA lr_complete_parsed_element TYPE REF TO lcl_rewrite_xml_via_sxml=>ts_complete_element.
+
+    READ TABLE lcl_rewrite_xml_via_sxml=>complete_parsed_elements REFERENCE INTO lr_complete_parsed_element INDEX parsed_element_index.
+    IF sy-subrc = 0.
+      rs_result = lr_complete_parsed_element->element.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD get_parsed_element_attribute.
+    DATA lr_complete_parsed_element TYPE REF TO lcl_rewrite_xml_via_sxml=>ts_complete_element.
+
+    READ TABLE lcl_rewrite_xml_via_sxml=>complete_parsed_elements REFERENCE INTO lr_complete_parsed_element INDEX parsed_element_index.
+    IF sy-subrc = 0.
+      READ TABLE lr_complete_parsed_element->attributes INTO rs_result INDEX iv_index.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD get_parsed_element_nsbinding.
+    DATA lr_complete_parsed_element TYPE REF TO lcl_rewrite_xml_via_sxml=>ts_complete_element.
+
+    READ TABLE lcl_rewrite_xml_via_sxml=>complete_parsed_elements REFERENCE INTO lr_complete_parsed_element INDEX parsed_element_index.
+    IF sy-subrc = 0.
+      READ TABLE lr_complete_parsed_element->nsbindings INTO rs_result INDEX iv_index.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD set_current_parsed_element.
+    parsed_element_index = iv_index.
   ENDMETHOD.
 ENDCLASS.
 
@@ -1956,7 +2240,6 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_element_open ).
-*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
     node_open ?= node.
     cl_abap_unit_assert=>assert_equals( act = node_open->qname-name
                                         exp = 'ROOTNODE' ).
@@ -1964,7 +2247,6 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_element_close ).
-*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_close_element ) ).
     node = reader->read_next_node( ).
     cl_abap_unit_assert=>assert_not_bound( node ).
   ENDMETHOD.
@@ -2064,7 +2346,6 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_element_open ).
-*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_open_element ) ).
     node_open ?= node.
     cl_abap_unit_assert=>assert_equals( act = node_open->qname-name
                                         exp = 'ROOTNODE' ).
@@ -2085,7 +2366,6 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     cl_abap_unit_assert=>assert_bound( node ).
     cl_abap_unit_assert=>assert_equals( act = node->type
                                         exp = node->co_nt_value ).
-*    cl_abap_unit_assert=>assert_true( act = xsdbool( node IS INSTANCE OF cl_sxml_value ) ).
     value_node ?= node.
     cl_abap_unit_assert=>assert_equals( act = value_node->get_value( )
                                         exp = 'Efe=' ).
@@ -2175,47 +2455,57 @@ ENDCLASS.
 
 CLASS ltc_sxml_writer IMPLEMENTATION.
   METHOD attribute_namespace.
-    DATA lo_attribute TYPE REF TO if_sxml_attribute.
-
-    writer = cl_sxml_string_writer=>create( ).
     open_element = writer->new_open_element( name = 'A' ).
-    lo_attribute = open_element->set_attribute( name   = 'attr'
-                                                nsuri  = 'http://...'
-                                                prefix = 'a'
-                                                value  = '1' ).
-*    lo_attribute->set_prefix( 'b' ).
-    open_element->set_attribute( name   = 'attr2'
+    open_element->set_attribute( name   = 'attr'
                                  nsuri  = 'http://...'
                                  prefix = 'a'
-                                 value  = '2' ).
+                                 value  = '1' ).
     writer->write_node( open_element ).
     close_element = writer->new_close_element( ).
     writer->write_node( close_element ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<A a:attr="1" xmlns:a="http://..."/>' ).
-*                                        exp = '<A xmlns:a="http://..." a:attr="1"/>' ).
+  ENDMETHOD.
+
+  METHOD attribute_xml_namespace.
+    open_element = writer->new_open_element( name = 'A' ).
+    open_element->set_attribute( name   = 'space'
+                                 nsuri  = 'http://www.w3.org/XML/1998/namespace'
+                                 prefix = 'xml'
+                                 value  = 'preserve' ).
+    writer->write_node( open_element ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<A xml:space="preserve"/>' ).
+  ENDMETHOD.
+
+  METHOD get_output.
+    DATA lo_string_writer TYPE REF TO cl_sxml_string_writer.
+    DATA lv_xstring       TYPE xstring.
+
+    lo_string_writer ?= io_writer.
+    lv_xstring = lo_string_writer->get_output( ).
+    rv_result = cl_abap_codepage=>convert_from( lv_xstring ).
   ENDMETHOD.
 
   METHOD most_simple_valid_xml.
-    writer = cl_sxml_string_writer=>create( ).
     open_element = writer->new_open_element( 'A' ).
     writer->write_node( open_element ).
     close_element = writer->new_close_element( ).
     writer->write_node( close_element ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<A/>' ).
   ENDMETHOD.
 
   METHOD namespace.
-    writer = cl_sxml_string_writer=>create( ).
     open_element = writer->new_open_element( name   = 'A'
                                              nsuri  = 'http://...'
                                              prefix = 'a' ).
@@ -2223,15 +2513,31 @@ CLASS ltc_sxml_writer IMPLEMENTATION.
     close_element = writer->new_close_element( ).
     writer->write_node( close_element ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<a:A xmlns:a="http://..."/>' ).
   ENDMETHOD.
 
   METHOD namespace_default.
-    writer = cl_sxml_string_writer=>create( ).
+    open_element = writer->new_open_element( name   = 'A'
+                                             nsuri  = 'http://...'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    writer->write_node( open_element ).
+    open_element = writer->new_open_element( name   = 'B'
+                                             nsuri  = 'http://...'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    writer->write_node( open_element ).
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<A xmlns="http://..."><B/></A>' ).
+  ENDMETHOD.
+
+  METHOD namespace_default_by_attribute.
     open_element = writer->new_open_element( name = 'A' ).
     open_element->set_attribute( name  = 'xmlns'
                                  value = 'http://...' ).
@@ -2243,15 +2549,12 @@ CLASS ltc_sxml_writer IMPLEMENTATION.
     close_element = writer->new_close_element( ).
     writer->write_node( close_element ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<A xmlns="http://..."><B/></A>' ).
   ENDMETHOD.
 
-  METHOD namespace_nested.
-    writer = cl_sxml_string_writer=>create( ).
+  METHOD namespace_inheritance.
     open_element = writer->new_open_element( name   = 'A'
                                              nsuri  = 'http://...'
                                              prefix = 'a' ).
@@ -2265,15 +2568,12 @@ CLASS ltc_sxml_writer IMPLEMENTATION.
     close_element = writer->new_close_element( ).
     writer->write_node( close_element ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<a:A xmlns:a="http://..."><a:B/></a:A>' ).
   ENDMETHOD.
 
   METHOD namespace_set_prefix.
-    writer = cl_sxml_string_writer=>create( ).
     open_element = writer->new_open_element( name   = 'A'
                                              nsuri  = 'http://...'
                                              prefix = 'a' ).
@@ -2282,9 +2582,7 @@ CLASS ltc_sxml_writer IMPLEMENTATION.
     close_element = writer->new_close_element( ).
     writer->write_node( close_element ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<b:A xmlns:b="http://..."/>' ).
   ENDMETHOD.
@@ -2292,7 +2590,6 @@ CLASS ltc_sxml_writer IMPLEMENTATION.
   METHOD object_oriented_rendering.
     " WRITE_NODE and NEW_* methods
     " NB: NEW_* methods are static methods (i.e. it's valid: DATA(open_element) = cl_sxml_writer=>if_sxml_writer~new_open_element( 'ROOTNODE' ).)
-    writer = cl_sxml_string_writer=>create( ).
     open_element = writer->new_open_element( 'ROOTNODE' ).
     open_element->set_attribute( name  = 'ATTR'
                                  value = '5' ).
@@ -2309,15 +2606,16 @@ CLASS ltc_sxml_writer IMPLEMENTATION.
     close_element = writer->new_close_element( ).
     writer->write_node( close_element ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<ROOTNODE ATTR="5" ATTR2="A" ATTR3="UFE=">HELLO</ROOTNODE>' ).
   ENDMETHOD.
 
-  METHOD token_based_rendering.
+  METHOD setup.
     writer = cl_sxml_string_writer=>create( ).
+  ENDMETHOD.
+
+  METHOD token_based_rendering.
     writer->open_element( 'ROOTNODE' ).
     " WRITE_ATTRIBUTE and WRITE_ATTRIBUTE_RAW can be used only after OPEN_ELEMENT
     writer->write_attribute( name  = 'ATTR'
@@ -2330,11 +2628,143 @@ CLASS ltc_sxml_writer IMPLEMENTATION.
     writer->close_element( ).
     writer->close_element( ).
 
-    string_writer ?= writer.
-    xstring = string_writer->get_output( ).
-    string = cl_abap_codepage=>convert_from( xstring ).
+    string = get_output( writer ).
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<ROOTNODE ATTR="5" ATTR2="UFE=">HELLO<NODE>UFE=</NODE></ROOTNODE>' ).
+  ENDMETHOD.
+
+  METHOD write_namespace_declaration.
+    open_element = writer->new_open_element( name = 'A' ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri'
+                                         prefix = 'nsprefix' ).
+    writer->write_node( open_element ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<A xmlns:nsprefix="nsuri"/>' ).
+  ENDMETHOD.
+
+  METHOD write_namespace_declaration_2.
+    " <A xmlns:nsprefix="nsuri"/>
+    open_element = writer->new_open_element( name   = 'A'
+                                             nsuri  = 'dnsuri'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_1'
+                                         prefix = 'nsprefix_1' ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_2'
+                                         prefix = 'nsprefix_2' ).
+    writer->write_node( open_element ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals(
+        act = string
+        exp = '<A xmlns:nsprefix_1="nsuri_1" xmlns:nsprefix_2="nsuri_2" xmlns="dnsuri"/>' ).
+  ENDMETHOD.
+
+  METHOD write_namespace_declaration_3.
+    " <A xmlns:nsprefix="nsuri"/>
+    open_element = writer->new_open_element( name   = 'A'
+                                             nsuri  = 'dnsuri'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_2'
+                                         prefix = 'nsprefix_2' ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_1'
+                                         prefix = 'nsprefix_1' ).
+    writer->write_node( open_element ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals(
+        act = string
+        exp = '<A xmlns:nsprefix_2="nsuri_2" xmlns:nsprefix_1="nsuri_1" xmlns="dnsuri"/>' ).
+  ENDMETHOD.
+
+  METHOD write_namespace_declaration_4.
+    " <A xmlns:nsprefix="nsuri"/>
+    open_element = writer->new_open_element( name   = 'A'
+                                             nsuri  = 'dnsuri'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_1'
+                                         prefix = 'nsprefix_1' ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_2'
+                                         prefix = 'nsprefix_2' ).
+    open_element->set_attribute( name  = 'a'
+                                 value = '1' ).
+*    open_element->set_attribute( name = 'a' nsuri = 'nsuri_1' prefix = 'nsprefix_1' value = '1' ).
+    writer->write_node( open_element ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals(
+        act = string
+        exp = '<A a="1" xmlns:nsprefix_1="nsuri_1" xmlns:nsprefix_2="nsuri_2" xmlns="dnsuri"/>' ).
+*                                        exp = '<A nsprefix_1:a="1" xmlns:nsprefix_1="nsuri_1" xmlns:nsprefix_2="nsuri_2" xmlns="dnsuri"/>' ).
+  ENDMETHOD.
+
+  METHOD write_namespace_declaration_5.
+    " <A xmlns:nsprefix="nsuri"/>
+    open_element = writer->new_open_element( name   = 'A'
+                                             nsuri  = 'dnsuri'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    open_element->set_attribute( name  = 'a'
+                                 value = '1' ).
+*    open_element->set_attribute( name = 'a' nsuri = 'nsuri_1' prefix = 'nsprefix_1' value = '1' ).
+    writer->write_node( open_element ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_1'
+                                         prefix = 'nsprefix_1' ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri_2'
+                                         prefix = 'nsprefix_2' ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals(
+        act = string
+*        exp = '<A nsprefix_1:a="1" xmlns="dnsuri" xmlns:nsprefix_1="nsuri_1" xmlns:nsprefix_2="nsuri_2"/>' ).
+        exp = '<A a="1" xmlns="dnsuri" xmlns:nsprefix_1="nsuri_1" xmlns:nsprefix_2="nsuri_2"/>' ).
+  ENDMETHOD.
+
+  METHOD write_namespace_declaration_6.
+    " <A xmlns="dnsuri" xmlns:nsprefix="nsuri"><B/><nsprefix:C/></A>
+    open_element = writer->new_open_element( name   = 'A'
+                                             nsuri  = 'dnsuri'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    writer->write_namespace_declaration( nsuri  = 'nsuri'
+                                         prefix = 'nsprefix' ).
+    writer->write_node( open_element ).
+
+    open_element = writer->new_open_element( name   = 'B'
+                                             nsuri  = 'dnsuri'
+                                             prefix = if_sxml_named=>co_use_default_xmlns ).
+    writer->write_node( open_element ).
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    open_element = writer->new_open_element( name   = 'C'
+                                             nsuri  = 'nsuri'
+                                             prefix = 'nsprefix' ).
+    writer->write_node( open_element ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    close_element = writer->new_close_element( ).
+    writer->write_node( close_element ).
+
+    string = get_output( writer ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<A xmlns:nsprefix="nsuri" xmlns="dnsuri"><B/><nsprefix:C/></A>' ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -2343,7 +2773,6 @@ CLASS lth_ixml IMPLEMENTATION.
   METHOD create_document.
     ixml = cl_ixml=>create( ).
     document = ixml->create_document( ).
-*    document->set_declaration( abap_false ).
   ENDMETHOD.
 
   METHOD parse.
@@ -2360,7 +2789,6 @@ CLASS lth_ixml IMPLEMENTATION.
     stream_factory = ixml->create_stream_factory( ).
 
     lv_xstring = cl_abap_codepage=>convert_to( xml_string ).
-*    lv_xstring = cl_abap_codepage=>convert_to( '<root>' && xml_string && '</root>' ).
     lo_istream = stream_factory->create_istream_xstring( lv_xstring ).
     lo_parser = ixml->create_parser( stream_factory = stream_factory
                                      istream        = lo_istream
@@ -2700,9 +3128,13 @@ CLASS lth_wrap_ixml_element IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_ixml_element~remove_attribute_ns.
+    ixml_element->remove_attribute_ns( name = name ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_element~set_attribute.
+    ixml_element->set_attribute( name      = name
+                                 namespace = namespace
+                                 value     = value ).
   ENDMETHOD.
 
   METHOD zif_excel_ixml_element~set_attribute_ns.
