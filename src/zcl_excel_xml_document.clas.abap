@@ -1,3 +1,4 @@
+"! Wraps CL_XML_DOCUMENT (and its super-class CL_XML_DOCUMENT_BASE) to use SXML
 CLASS zcl_excel_xml_document DEFINITION
   PUBLIC
   FINAL
@@ -5,29 +6,25 @@ CLASS zcl_excel_xml_document DEFINITION
 
   PUBLIC SECTION.
 
-    DATA m_document TYPE REF TO zif_excel_ixml_document READ-ONLY.
+    DATA m_document TYPE REF TO zif_excel_xml_document READ-ONLY.
 
-    METHODS parse_string
+    METHODS constructor
       IMPORTING
-        !stream TYPE string
-      RETURNING
-        VALUE(retcode) TYPE sysubrc.
-
+        !document TYPE REF TO zif_excel_xml_document OPTIONAL.
     METHODS parse_xstring
       IMPORTING
-        !stream TYPE xstring
-      RETURNING
-        VALUE(retcode) TYPE sysubrc.
-
+        !stream TYPE REF TO xstring.
+*      RETURNING
+*        VALUE(retcode) TYPE sysubrc.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA g_ixml           TYPE REF TO zif_excel_ixml.
-    CLASS-DATA g_stream_factory TYPE REF TO zif_excel_ixml_stream_factory.
+    CLASS-DATA g_ixml           TYPE REF TO zif_excel_xml.
+    CLASS-DATA g_stream_factory TYPE REF TO zif_excel_xml_stream_factory.
 
     METHODS parse
       IMPORTING
-        !stream TYPE REF TO zif_excel_ixml_istream
+        !stream TYPE REF TO zif_excel_xml_istream
       RETURNING
         VALUE(retcode) TYPE sysubrc.
 
@@ -35,8 +32,21 @@ ENDCLASS.
 
 
 CLASS zcl_excel_xml_document IMPLEMENTATION.
+  METHOD constructor.
+    " --- create global interfaces ----
+    IF g_ixml IS INITIAL.
+      g_ixml = zcl_excel_xml=>create( ).
+*    g_ixml = cl_ixml=>create( ).
+      IF g_ixml IS NOT INITIAL.
+        g_stream_factory = g_ixml->create_stream_factory( ).
+      ENDIF.
+    ENDIF.
+
+    m_document = document.
+  ENDMETHOD.
+
   METHOD parse.
-    DATA l_parser TYPE REF TO zif_excel_ixml_parser.
+    DATA l_parser TYPE REF TO zif_excel_xml_parser.
     DATA l_errno  TYPE i.
 
 *    retcode = c_no_ixml.
@@ -80,24 +90,8 @@ CLASS zcl_excel_xml_document IMPLEMENTATION.
 *    ENDIF.
   ENDMETHOD.
 
-  METHOD parse_string.
-    DATA: l_stream TYPE REF TO zif_excel_ixml_istream.
-
-*    retcode = c_no_ixml.
-
-    IF g_stream_factory IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    l_stream = g_stream_factory->create_istream_string( string = stream ).
-
-    retcode = parse( stream = l_stream ).
-
-    l_stream->close( ).
-  ENDMETHOD.
-
   METHOD parse_xstring.
-    DATA: l_stream TYPE REF TO zif_excel_ixml_istream.
+    DATA: l_stream TYPE REF TO zif_excel_xml_istream.
 
 *    retcode = c_no_ixml.
 
@@ -105,9 +99,11 @@ CLASS zcl_excel_xml_document IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    l_stream = g_stream_factory->create_istream_xstring( string = stream ).
+*    l_stream = g_stream_factory->create_istream_xstring( string = stream- ).
+    l_stream = g_stream_factory->create_istream_xstring( string = stream->* ).
 
-    retcode = parse( stream = l_stream ).
+*    retcode = parse( stream = l_stream ).
+    parse( stream = l_stream ).
 
     l_stream->close( ).
   ENDMETHOD.
