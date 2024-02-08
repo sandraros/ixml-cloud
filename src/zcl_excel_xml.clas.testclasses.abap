@@ -11,17 +11,27 @@ CLASS ltc_diff_ixml_sxml_parser DEFINITION
     "! Parsing of &lt;a:A/> is possible with IXML, not with SXML
     METHODS missing_namespace_declaration FOR TESTING RAISING cx_static_check.
 
-    DATA open_element TYPE REF TO if_sxml_open_element.
-    DATA node         TYPE REF TO if_sxml_node.
-    DATA reader       TYPE REF TO if_sxml_reader.
-    DATA string       TYPE string.
-    DATA xstring      TYPE xstring.
-    DATA parse_error  TYPE REF TO cx_sxml_parse_error.
-    DATA error_rtti   TYPE REF TO cl_abap_typedescr.
-    DATA node_open    TYPE REF TO if_sxml_open_element.
-    DATA error        TYPE REF TO cx_root.
-    DATA node_attr    TYPE REF TO if_sxml_value.
-    DATA value_node   TYPE REF TO if_sxml_value_node.
+    DATA error               TYPE REF TO cx_root.
+    DATA error_rtti          TYPE REF TO cl_abap_typedescr.
+    DATA ixml                TYPE REF TO if_ixml.
+    DATA ixml_document       TYPE REF TO if_ixml_document.
+    DATA ixml_element        TYPE REF TO if_ixml_element.
+    DATA ixml_istream        TYPE REF TO if_ixml_istream.
+    DATA ixml_node           TYPE REF TO if_ixml_node.
+    DATA ixml_parser         TYPE REF TO if_ixml_parser.
+    DATA ixml_stream_factory TYPE REF TO if_ixml_stream_factory.
+    DATA ixml_text           TYPE REF TO if_ixml_text.
+    DATA sxml_open_element   TYPE REF TO if_sxml_open_element.
+    DATA sxml_node           TYPE REF TO if_sxml_node.
+    DATA sxml_reader         TYPE REF TO if_sxml_reader.
+    DATA sxml_parse_error    TYPE REF TO cx_sxml_parse_error.
+    DATA sxml_node_open      TYPE REF TO if_sxml_open_element.
+    DATA sxml_node_attr      TYPE REF TO if_sxml_value.
+    DATA sxml_value_node     TYPE REF TO if_sxml_value_node.
+    DATA string              TYPE string.
+    DATA xstring             TYPE xstring.
+
+    METHODS parse_ixml.
 
 ENDCLASS.
 
@@ -44,7 +54,7 @@ CLASS ltc_ixml DEFINITION
     DATA reason         TYPE string.
     DATA stream_factory TYPE REF TO if_ixml_stream_factory.
     DATA string         TYPE string.
-    DATA text       TYPE REF TO if_ixml_text.
+    DATA text           TYPE REF TO if_ixml_text.
     DATA xstring        TYPE xstring.
 
 ENDCLASS.
@@ -104,6 +114,7 @@ CLASS ltc_isxml DEFINITION
     DATA ostream         TYPE REF TO zif_excel_xml_ostream.
     DATA parser          TYPE REF TO zif_excel_xml_parser.
     DATA rc              TYPE i.
+    DATA ref_string      TYPE REF TO string.
     DATA ref_xstring     TYPE REF TO xstring.
     DATA renderer        TYPE REF TO zif_excel_xml_renderer.
     DATA stream_factory  TYPE REF TO zif_excel_xml_stream_factory.
@@ -277,24 +288,24 @@ CLASS ltc_isxml_parser DEFINITION
 
   PRIVATE SECTION.
 
-    METHODS add_strip_space_element FOR TESTING RAISING cx_static_check.
     METHODS namespace FOR TESTING RAISING cx_static_check.
-    METHODS set_normalizing FOR TESTING RAISING cx_static_check.
     METHODS set_validating FOR TESTING RAISING cx_static_check.
     METHODS several_children FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_left_right FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_off FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_on FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_on_strip_on FOR TESTING RAISING cx_static_check.
     METHODS text_node FOR TESTING RAISING cx_static_check.
     METHODS two_ixml_instances FOR TESTING RAISING cx_static_check.
     METHODS two_ixml_stream_factories FOR TESTING RAISING cx_static_check.
     METHODS two_ixml_encodings FOR TESTING RAISING cx_static_check.
 *    METHODS two_parsers FOR TESTING RAISING cx_static_check.
 
+*    METHODS init_parser
+*      IMPORTING
+*        ixml_or_isxml type ref to zif_excel_xml.
     METHODS setup.
 
-    METHODS parse
-      IMPORTING
-        iv_string TYPE string
-      RETURNING
-        VALUE(ro_document) TYPE REF TO zif_excel_xml_document.
 ENDCLASS.
 
 
@@ -323,6 +334,8 @@ CLASS ltc_isxml_stream DEFINITION
 
     METHODS close FOR TESTING RAISING cx_static_check.
 
+    METHODS setup.
+
 ENDCLASS.
 
 
@@ -339,6 +352,21 @@ CLASS ltc_isxml_stream_factory DEFINITION
     METHODS create_ostream_cstring FOR TESTING RAISING cx_static_check.
     METHODS create_ostream_xstring FOR TESTING RAISING cx_static_check.
 
+    METHODS parse
+      IMPORTING
+        io_ixml_or_isxml TYPE REF TO zif_excel_xml
+        io_istream       TYPE REF TO zif_excel_xml_istream
+      RETURNING
+        VALUE(ro_result) TYPE REF TO zif_excel_xml_document.
+    METHODS prepare
+      IMPORTING
+        io_ixml_or_isxml TYPE REF TO zif_excel_xml.
+    METHODS setup.
+    METHODS render_ostream
+      IMPORTING
+        io_ixml_or_isxml TYPE REF TO zif_excel_xml
+        io_ostream       TYPE REF TO zif_excel_xml_ostream.
+
 ENDCLASS.
 
 
@@ -350,10 +378,15 @@ CLASS ltc_ixml_parser DEFINITION
 
   PRIVATE SECTION.
 
+    METHODS add_preserve_space_element FOR TESTING RAISING cx_static_check.
+    METHODS add_strip_space_element FOR TESTING RAISING cx_static_check.
     METHODS empty_xml FOR TESTING RAISING cx_static_check.
     METHODS end_tag_doesnt_match_begin_tag FOR TESTING RAISING cx_static_check.
     METHODS most_simple_valid_xml FOR TESTING RAISING cx_static_check.
     METHODS normalization FOR TESTING RAISING cx_static_check.
+    METHODS set_validating_on FOR TESTING RAISING cx_static_check.
+
+    METHODS init_parser.
 
 ENDCLASS.
 
@@ -871,14 +904,18 @@ CLASS lth_ixml_isxml DEFINITION.
 
   PUBLIC SECTION.
 
-    CLASS-DATA document       TYPE REF TO zif_excel_xml_document.
-    CLASS-DATA ixml           TYPE REF TO zif_excel_xml.
-    CLASS-DATA stream_factory TYPE REF TO zif_excel_xml_stream_factory.
+    CLASS-DATA document       TYPE REF TO zif_excel_xml_document       READ-ONLY.
+    CLASS-DATA istream        TYPE REF TO zif_excel_xml_istream        READ-ONLY.
+    CLASS-DATA ixml           TYPE REF TO zif_excel_xml                READ-ONLY.
+    CLASS-DATA stream_factory TYPE REF TO zif_excel_xml_stream_factory READ-ONLY.
+
     CLASS-METHODS parse
       IMPORTING
         io_ixml_or_isxml TYPE REF TO zif_excel_xml
         iv_xml_string TYPE csequence
         iv_normalizing TYPE abap_bool DEFAULT abap_true
+        iv_preserve_space_element TYPE abap_bool DEFAULT abap_true
+        iv_validating TYPE i DEFAULT zif_excel_xml_parser=>co_no_validation
       RETURNING
         VALUE(ro_result) TYPE REF TO zif_excel_xml_document.
 
@@ -920,18 +957,36 @@ CLASS ltc_diff_ixml_sxml_parser IMPLEMENTATION.
   METHOD missing_namespace_declaration.
     string = '<a:A><B/></a:A>'.
     xstring = cl_abap_codepage=>convert_to( string ).
-    reader = cl_sxml_string_reader=>create( xstring ).
+    sxml_reader = cl_sxml_string_reader=>create( xstring ).
     TRY.
-        node = reader->read_next_node( ).
+        sxml_node = sxml_reader->read_next_node( ).
         cl_abap_unit_assert=>fail( msg = 'missing namespace declaration xmlns:a="..." -> should have failed' ).
       CATCH cx_sxml_parse_error.
-        cl_abap_unit_assert=>assert_not_bound( act = node ).
-        cl_abap_unit_assert=>assert_equals( act = reader->name
+        cl_abap_unit_assert=>assert_not_bound( act = sxml_node ).
+        cl_abap_unit_assert=>assert_equals( act = sxml_reader->name
                                             exp = '' ).
     ENDTRY.
-    open_element ?= reader->read_next_node( ).
-    cl_abap_unit_assert=>assert_equals( act = open_element->qname-name
+    sxml_open_element ?= sxml_reader->read_next_node( ).
+    cl_abap_unit_assert=>assert_equals( act = sxml_open_element->qname-name
                                         exp = 'B' ).
+  ENDMETHOD.
+
+  METHOD parse_ixml.
+    ixml = cl_ixml=>create( ).
+    ixml_document = ixml->create_document( ).
+*    encoding = ixml->create_encoding( byte_order    = if_ixml_encoding=>co_none "co_platform_endian
+*                                      character_set = 'UTF-16' ).
+*    document->set_encoding( encoding ).
+    ixml_stream_factory = ixml->create_stream_factory( ).
+
+    xstring = cl_abap_codepage=>convert_to( string ).
+    ixml_istream = ixml_stream_factory->create_istream_xstring( xstring ).
+    ixml_parser = ixml->create_parser( stream_factory = ixml_stream_factory
+                                       istream        = ixml_istream
+                                       document       = ixml_document ).
+    ixml_parser->set_normalizing( abap_true ).
+    ixml_parser->set_validating( mode = zif_excel_xml_parser=>co_no_validation ).
+    ixml_parser->parse( ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -1944,34 +1999,6 @@ ENDCLASS.
 
 
 CLASS ltc_isxml_parser IMPLEMENTATION.
-  METHOD add_strip_space_element.
-* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
-*    lo_ixml           = cl_ixml=>create( ).
-*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
-*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
-*    r_ixml            = lo_ixml->create_document( ).
-*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
-*                                                istream        = lo_istream
-*                                                document       = r_ixml ).
-*    lo_parser->set_normalizing( is_normalizing ).
-*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
-*    lo_parser->parse( ).
-* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
-*    li_ixml = cl_ixml=>create( ).
-*    li_document = li_ixml->create_document( ).
-*    li_factory = li_ixml->create_stream_factory( ).
-*    li_istream = li_factory->create_istream_string( iv_string ).
-*    li_parser = li_ixml->create_parser(
-*      stream_factory = li_factory
-*      istream        = li_istream
-*      document       = li_document ).
-*    li_parser->add_strip_space_element( ).
-*    li_parser->parse( ).
-*    li_istream->close( ).
-*    ri_node = li_document->get_first_child( ).
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
-  ENDMETHOD.
-
   METHOD namespace.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
@@ -1987,25 +2014,11 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
-  METHOD parse.
-* Method GET_IXML_FROM_ZIP_ARCHIVE of ZCL_EXCEL_READER_2007
-*    lo_parser->parse( ).
-    xstring = cl_abap_codepage=>convert_to( iv_string ).
-    stream_factory = ixml_or_isxml->create_stream_factory( ).
-    istream = stream_factory->create_istream_xstring( xstring ).
-    document = ixml_or_isxml->create_document( ).
-    parser = ixml_or_isxml->create_parser( stream_factory = stream_factory
-                                           istream        = istream
-                                           document       = document ).
-    parser->parse( ).
-    ro_document = document.
-  ENDMETHOD.
-
   METHOD setup.
     ixml_and_isxml = get_ixml_and_isxml( ).
   ENDMETHOD.
 
-  METHOD set_normalizing.
+  METHOD space_normalizing_left_right.
 * Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
 *    lo_comments_xml = me->get_ixml_from_zip_archive( ip_path ).
 *    METHODS get_ixml_from_zip_archive
@@ -2047,7 +2060,134 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
       string = lth_ixml_isxml=>render( ixml_or_isxml ).
       " THEN
       cl_abap_unit_assert=>assert_equals( act = string
-                                          exp = `<A>  <B>  1  </B>  </A>` ).
+                                          exp = `<A><B>  1  </B></A>` ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD space_normalizing_off.
+* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
+*    lo_ixml           = cl_ixml=>create( ).
+*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
+*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
+*    r_ixml            = lo_ixml->create_document( ).
+*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
+*                                                istream        = lo_istream
+*                                                document       = r_ixml ).
+*    lo_parser->set_normalizing( is_normalizing ).
+*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+*    lo_parser->parse( ).
+* ALL CALLS ARE DONE WITH is_normalizing = 'X' except this one in method LOAD_SHARED_STRINGS of ZCL_EXCEL_READER_2007:
+*    lo_shared_strings_xml = me->get_ixml_from_zip_archive( i_filename     = ip_path
+*                                                           is_normalizing = space ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      " GIVEN
+      document = lth_ixml_isxml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                        iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                        iv_normalizing            = abap_false
+                                        iv_preserve_space_element = abap_true ).
+      " WHEN
+      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = `<A><B>  </B></A>` ).
+      " WHEN
+      element = document->get_root_element( ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+      text ?= element->get_first_child( ).
+      cl_abap_unit_assert=>assert_equals( act = text->get_value( )
+                                          exp = `  ` ).
+      element ?= text->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'B' ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD space_normalizing_on.
+* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
+*    lo_ixml           = cl_ixml=>create( ).
+*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
+*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
+*    r_ixml            = lo_ixml->create_document( ).
+*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
+*                                                istream        = lo_istream
+*                                                document       = r_ixml ).
+*    lo_parser->set_normalizing( is_normalizing ).
+*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+*    lo_parser->parse( ).
+* ALL CALLS ARE DONE WITH is_normalizing = 'X' except this one in method LOAD_SHARED_STRINGS of ZCL_EXCEL_READER_2007:
+*    lo_shared_strings_xml = me->get_ixml_from_zip_archive( i_filename     = ip_path
+*                                                           is_normalizing = space ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      " GIVEN
+      document = lth_ixml_isxml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                        iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                        iv_normalizing            = abap_true
+                                        iv_preserve_space_element = abap_true ).
+      " WHEN
+      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      " THEN
+*      cl_abap_unit_assert=>assert_equals(
+*          act = string
+*          exp = `<A><B>  </B></A>` ).
+      " WHEN
+      element = document->get_root_element( ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+      " WHEN
+      element ?= element->get_first_child( ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'B' ).
+      " WHEN
+      text ?= element->get_first_child( ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = text->get_value( )
+                                          exp = `  ` ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD space_normalizing_on_strip_on.
+* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
+*    li_ixml = cl_ixml=>create( ).
+*    li_document = li_ixml->create_document( ).
+*    li_factory = li_ixml->create_stream_factory( ).
+*    li_istream = li_factory->create_istream_string( iv_string ).
+*    li_parser = li_ixml->create_parser(
+*      stream_factory = li_factory
+*      istream        = li_istream
+*      document       = li_document ).
+*    li_parser->add_strip_space_element( ).
+*    li_parser->parse( ).
+*    li_istream->close( ).
+*    ri_node = li_document->get_first_child( ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      " GIVEN
+      document = lth_ixml_isxml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                        iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                        iv_normalizing            = abap_true
+                                        iv_preserve_space_element = abap_false ).
+      " WHEN
+      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = `<A><B/></A>` ).
+      " WHEN
+      element = document->get_root_element( ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+      " WHEN
+      element ?= element->get_first_child( ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'B' ).
+      " WHEN
+      text ?= element->get_first_child( ).
+      " THEN
+      cl_abap_unit_assert=>assert_not_bound( act = text ).
     ENDLOOP.
   ENDMETHOD.
 
@@ -2076,17 +2216,25 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 *    li_parser->parse( ).
 *    li_istream->close( ).
 *    ri_node = li_document->get_first_child( ).
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                        iv_xml_string    = `<A/>`
+                                        iv_validating    = zif_excel_xml_parser=>co_no_validation ).
+      element = document->get_root_element( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD several_children.
     DATA lo_element TYPE REF TO zif_excel_xml_element.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      parse( `<A>T<B>U</B><C/></A>` ).
+      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                        iv_xml_string    = `<A>T<B>U</B><C/></A>` ).
       cl_abap_unit_assert=>assert_equals( act = rc
                                           exp = lcl_isxml=>ixml_mr-dom_ok ).
-      element ?= document->get_first_child( ).
+      element = document->get_root_element( ).
       cl_abap_unit_assert=>assert_equals( act = element->get_name( )
                                           exp = 'A' ).
       text ?= element->get_first_child( ).
@@ -2106,10 +2254,11 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 
   METHOD text_node.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      parse( `<A>B</A>` ).
+      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                        iv_xml_string    = `<A>B</A>` ).
       cl_abap_unit_assert=>assert_equals( act = rc
                                           exp = lcl_isxml=>ixml_mr-dom_ok ).
-      element ?= document->get_first_child( ).
+      element = document->get_root_element( ).
       cl_abap_unit_assert=>assert_equals( act = element->get_name( )
                                           exp = 'A' ).
       text ?= element->get_first_child( ).
@@ -2220,7 +2369,6 @@ CLASS ltc_isxml_render IMPLEMENTATION.
       cl_abap_unit_assert=>assert_equals(
           act = string
           exp = `<nsprefix:A nsprefix:attr="1" attr="2" xmlns="dnsuri" xmlns:nsprefix="nsuri"><B attr="3"/></nsprefix:A>` ).
-      ASSERT 1 = 1. " debug helper
     ENDLOOP.
   ENDMETHOD.
 
@@ -2232,7 +2380,31 @@ ENDCLASS.
 
 CLASS ltc_isxml_stream IMPLEMENTATION.
   METHOD close.
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
+* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
+*    li_ixml = cl_ixml=>create( ).
+*    li_document = li_ixml->create_document( ).
+*    li_factory = li_ixml->create_stream_factory( ).
+*    li_istream = li_factory->create_istream_string( iv_string ).
+*    li_parser = li_ixml->create_parser(
+*      stream_factory = li_factory
+*      istream        = li_istream
+*      document       = li_document ).
+*    li_parser->add_strip_space_element( ).
+*    li_parser->parse( ).
+*    li_istream->close( ).
+*    ri_node = li_document->get_first_child( ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                        iv_xml_string    = '<A/>' ).
+      lth_ixml_isxml=>istream->close( ).
+      element = document->get_root_element( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = `A` ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD setup.
+    ixml_and_isxml = get_ixml_and_isxml( ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -2252,7 +2424,16 @@ CLASS ltc_isxml_stream_factory IMPLEMENTATION.
 *    li_parser->parse( ).
 *    li_istream->close( ).
 *    ri_node = li_document->get_first_child( ).
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
+
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      prepare( ixml_or_isxml ).
+      istream = stream_factory->create_istream_string( `<A/>` ).
+      document = parse( io_ixml_or_isxml = ixml_or_isxml
+                        io_istream       = istream ).
+      element = document->get_root_element( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD create_istream_xstring.
@@ -2267,7 +2448,16 @@ CLASS ltc_isxml_stream_factory IMPLEMENTATION.
 *    lo_parser->set_normalizing( is_normalizing ).
 *    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
 *    lo_parser->parse( ).
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
+
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      prepare( ixml_or_isxml ).
+      istream = stream_factory->create_istream_xstring( cl_abap_codepage=>convert_to( `<A/>` ) ).
+      document = parse( io_ixml_or_isxml = ixml_or_isxml
+                        io_istream       = istream ).
+      element = document->get_root_element( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD create_ostream_cstring.
@@ -2276,7 +2466,18 @@ CLASS ltc_isxml_stream_factory IMPLEMENTATION.
 *    lo_ostream = lo_streamfactory->create_ostream_cstring( string = lv_string ).
 *    lo_renderer = me->ixml->create_renderer( ostream  = lo_ostream document = io_document ).
 *    lo_renderer->render( ).
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
+    GET REFERENCE OF string INTO ref_string.
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      prepare( ixml_or_isxml ).
+      document->create_simple_element( name   = 'A'
+                                       parent = document ).
+      ostream = stream_factory->create_ostream_cstring( ref_string ).
+      CLEAR string.
+      render_ostream( io_ixml_or_isxml = ixml_or_isxml
+                      io_ostream       = ostream ).
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = |{ lcl_bom_utf16_as_character=>system_value }<A/>| ).
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD create_ostream_xstring.
@@ -2287,21 +2488,97 @@ CLASS ltc_isxml_stream_factory IMPLEMENTATION.
 *    lo_ostream = lo_streamfactory->create_ostream_xstring( string = ep_content ).
 *    lo_renderer = lo_ixml->create_renderer( ostream  = lo_ostream document = lo_document ).
 *    lo_renderer->render( ).
-    cl_abap_unit_assert=>fail( msg = 'Not tested yet' ).
+    GET REFERENCE OF xstring INTO ref_xstring.
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      prepare( ixml_or_isxml ).
+      document->create_simple_element( name   = 'A'
+                                       parent = document ).
+      ostream = stream_factory->create_ostream_xstring( ref_xstring ).
+      CLEAR xstring.
+      render_ostream( io_ixml_or_isxml = ixml_or_isxml
+                      io_ostream       = ostream ).
+      cl_abap_unit_assert=>assert_equals( act = xstring
+                                          exp = cl_abap_codepage=>convert_to( `<A/>` ) ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD parse.
+    parser = io_ixml_or_isxml->create_parser( stream_factory = stream_factory
+                                              istream        = io_istream
+                                              document       = document ).
+    parser->parse( ).
+    ro_result = document.
+  ENDMETHOD.
+
+  METHOD prepare.
+    document = io_ixml_or_isxml->create_document( ).
+    stream_factory = io_ixml_or_isxml->create_stream_factory( ).
+  ENDMETHOD.
+
+  METHOD setup.
+    ixml_and_isxml = get_ixml_and_isxml( ).
+  ENDMETHOD.
+
+  METHOD render_ostream.
+    DATA lo_renderer TYPE REF TO zif_excel_xml_renderer.
+
+    lo_renderer = ixml_or_isxml->create_renderer( ostream  = io_ostream
+                                                  document = document ).
+    document->set_declaration( abap_false ).
+    lo_renderer->render( ).
+*    " remove the UTF-16 BOM (i.e. remove the first character)
+*    SHIFT rv_result LEFT BY 1 PLACES.
+*
+*    " Normalize XML according to SXML limitations in order to compare IXML
+*    " and SXML results by simple string comparison.
+*    rv_result = lcl_rewrite_xml_via_sxml=>execute( rv_result ).
   ENDMETHOD.
 ENDCLASS.
 
 
 CLASS ltc_ixml_parser IMPLEMENTATION.
+  METHOD add_preserve_space_element.
+    string = |  <A>  <B>   </B>  </A>  |.
+    init_parser( ).
+    rc = parser->parse( ).
+    element = document->get_root_element( ).
+    cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                        exp = `A` ).
+*    element ?= element->get_first_child( ).
+    cl_abap_unit_assert=>assert_equals( act = element->get_value( )
+                                        exp = `   ` ).
+    element ?= element->get_first_child( ).
+    cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                        exp = `B` ).
+    cl_abap_unit_assert=>assert_equals( act = element->get_value( )
+                                        exp = `   ` ).
+  ENDMETHOD.
+
+  METHOD add_strip_space_element.
+    string = |  <A>  <B>  </B>  </A>  |.
+    init_parser( ).
+    parser->add_strip_space_element( ).
+    rc = parser->parse( ).
+    element = document->get_root_element( ).
+    cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                        exp = `A` ).
+*    element ?= element->get_first_child( ).
+    cl_abap_unit_assert=>assert_equals( act = element->get_value( )
+                                        exp = `` ).
+    element ?= element->get_first_child( ).
+  ENDMETHOD.
+
   METHOD empty_xml.
-    ixml = cl_ixml=>create( ).
-    stream_factory = ixml->create_stream_factory( ).
-    CLEAR xstring.
-    istream = stream_factory->create_istream_xstring( xstring ).
-    document = ixml->create_document( ).
-    parser = ixml->create_parser( stream_factory = stream_factory
-                                  istream        = istream
-                                  document       = document ).
+    CLEAR string.
+    init_parser( ).
+*    ixml = cl_ixml=>create( ).
+*    stream_factory = ixml->create_stream_factory( ).
+*    CLEAR xstring.
+*    istream = stream_factory->create_istream_xstring( xstring ).
+*    document = ixml->create_document( ).
+*    parser = ixml->create_parser( stream_factory = stream_factory
+*                                  istream        = istream
+*                                  document       = document ).
     rc = parser->parse( ).
     cl_abap_unit_assert=>assert_equals( act = rc
                                         exp = lcl_isxml=>ixml_mr-parser_error ).
@@ -2315,14 +2592,8 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD end_tag_doesnt_match_begin_tag.
-    ixml = cl_ixml=>create( ).
-    xstring = cl_abap_codepage=>convert_to( |<A></B>| ).
-    stream_factory = ixml->create_stream_factory( ).
-    istream = stream_factory->create_istream_xstring( xstring ).
-    document = ixml->create_document( ).
-    parser = ixml->create_parser( stream_factory = stream_factory
-                                  istream        = istream
-                                  document       = document ).
+    string = |<A></B>|.
+    init_parser( ).
     rc = parser->parse( ).
     cl_abap_unit_assert=>assert_equals( act = rc
                                         exp = lcl_isxml=>ixml_mr-parser_error ).
@@ -2335,17 +2606,20 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
                                         exp = `end tag 'B' does not match begin tag 'A'` ).
   ENDMETHOD.
 
-  METHOD most_simple_valid_xml.
+  METHOD init_parser.
     ixml = cl_ixml=>create( ).
     stream_factory = ixml->create_stream_factory( ).
-    xstring = cl_abap_codepage=>convert_to( |<A/>| ).
+    xstring = cl_abap_codepage=>convert_to( string ).
     istream = stream_factory->create_istream_xstring( xstring ).
     document = ixml->create_document( ).
     parser = ixml->create_parser( stream_factory = stream_factory
                                   istream        = istream
                                   document       = document ).
-    parser->set_normalizing( abap_true ).
-    parser->set_validating( mode = zif_excel_xml_parser=>co_no_validation ).
+  ENDMETHOD.
+
+  METHOD most_simple_valid_xml.
+    string = |<A/>|.
+    init_parser( ).
     rc = parser->parse( ).
     cl_abap_unit_assert=>assert_equals( act = rc
                                         exp = lcl_isxml=>ixml_mr-dom_ok ).
@@ -2358,16 +2632,9 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD normalization.
-*    xstring = cl_abap_codepage=>convert_to( '<A>  <B>  1  </B>  </A>' ).
-    ixml = cl_ixml=>create( ).
-    stream_factory = ixml->create_stream_factory( ).
-    xstring = cl_abap_codepage=>convert_to( |<A><B>  1  \n  2  </B></A>| ).
-    istream = stream_factory->create_istream_xstring( xstring ).
-    document = ixml->create_document( ).
-    parser = ixml->create_parser( stream_factory = stream_factory
-                                  istream        = istream
-                                  document       = document ).
-    parser->set_normalizing( abap_true ).
+    string = |<A><B>  1  \n  2  </B></A>|.
+    init_parser( ).
+    parser->set_normalizing( abap_true ). " default = abap_true
     rc = parser->parse( ).
     element = document->get_root_element( ).
     cl_abap_unit_assert=>assert_equals( act = element->get_name( )
@@ -2378,6 +2645,22 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
     text ?= element->get_first_child( ).
     cl_abap_unit_assert=>assert_equals( act = text->get_value( )
                                         exp = |1  \n  2| ).
+  ENDMETHOD.
+
+  METHOD set_validating_on.
+    string = '<A></B>'.
+    init_parser( ).
+    parser->set_validating( if_ixml_parser=>co_validate ).
+    rc = parser->parse( ).
+    cl_abap_unit_assert=>assert_equals( act = rc
+                                        exp = lcl_isxml=>ixml_mr-parser_error ).
+    num_errors = parser->num_errors( ).
+    cl_abap_unit_assert=>assert_equals( act = num_errors
+                                        exp = 1 ).
+    error = parser->get_error( index = 0 ).
+    reason = error->get_reason( ).
+    cl_abap_unit_assert=>assert_equals( act = reason
+                                        exp = `no DTD specified, can't validate` ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -3181,7 +3464,6 @@ CLASS lth_ixml_isxml IMPLEMENTATION.
 
   METHOD parse.
     DATA lv_xstring TYPE xstring.
-    DATA lo_istream TYPE REF TO zif_excel_xml_istream.
     DATA lo_parser  TYPE REF TO zif_excel_xml_parser.
 
     " code inspired from the method GET_IXML_FROM_ZIP_ARCHIVE of ZCL_EXCEL_READER_2007.
@@ -3189,12 +3471,17 @@ CLASS lth_ixml_isxml IMPLEMENTATION.
     stream_factory = io_ixml_or_isxml->create_stream_factory( ).
 
     lv_xstring = cl_abap_codepage=>convert_to( iv_xml_string ).
-    lo_istream = stream_factory->create_istream_xstring( lv_xstring ).
+    istream = stream_factory->create_istream_xstring( lv_xstring ).
     lo_parser = io_ixml_or_isxml->create_parser( stream_factory = stream_factory
-                                                 istream        = lo_istream
+                                                 istream        = istream
                                                  document       = document ).
     lo_parser->set_normalizing( iv_normalizing ).
-    lo_parser->set_validating( mode = zif_excel_xml_parser=>co_no_validation ).
+    IF iv_preserve_space_element = abap_false.
+      lo_parser->add_strip_space_element( ).
+    ENDIF.
+    IF iv_validating <> zif_excel_xml_parser=>co_no_validation.
+      lo_parser->set_validating( mode = iv_validating ).
+    ENDIF.
     lo_parser->parse( ).
     ro_result = document.
   ENDMETHOD.
@@ -3225,7 +3512,7 @@ ENDCLASS.
 CLASS lth_wrap_ixml IMPLEMENTATION.
   METHOD create.
     IF singleton IS NOT BOUND.
-      CREATE OBJECT singleton.
+      singleton = NEW #( ).
       singleton->ixml = cl_ixml=>create( ).
     ENDIF.
     ro_result = singleton.
@@ -3257,41 +3544,41 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
       lv_class_name = cl_abap_typedescr=>describe_by_object_ref( io_ixml_unknown )->get_relative_name( ).
       CASE lv_class_name.
         WHEN 'CL_IXML_ATTRIBUTE'.
-          CREATE OBJECT lo_wrap_ixml_attribute.
+          lo_wrap_ixml_attribute = NEW #( ).
           lo_wrap_ixml_attribute->ixml_attribute ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_attribute.
           lo_wrap_ixml_node ?= lo_wrap_ixml_attribute.
           lo_wrap_ixml_node->ixml_node ?= io_ixml_unknown.
         WHEN 'CL_IXML_DOCUMENT'.
-          CREATE OBJECT lo_wrap_ixml_document.
+          lo_wrap_ixml_document = NEW #( ).
           lo_wrap_ixml_document->ixml_document ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_document.
           lo_wrap_ixml_node ?= lo_wrap_ixml_document.
           lo_wrap_ixml_node->ixml_node ?= io_ixml_unknown.
         WHEN 'CL_IXML_ELEMENT'.
-          CREATE OBJECT lo_wrap_ixml_element.
+          lo_wrap_ixml_element = NEW #( ).
           lo_wrap_ixml_element->ixml_element ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_element.
           lo_wrap_ixml_node ?= lo_wrap_ixml_element.
           lo_wrap_ixml_node->ixml_node ?= io_ixml_unknown.
         WHEN 'CL_IXML_NAMED_NODE_MAP'.
-          CREATE OBJECT lo_wrap_ixml_named_node_map.
+          lo_wrap_ixml_named_node_map = NEW #( ).
           lo_wrap_ixml_named_node_map->ixml_named_node_map ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_named_node_map.
         WHEN 'CL_IXML_NODE_COLLECTION'.
-          CREATE OBJECT lo_wrap_ixml_node_collection.
+          lo_wrap_ixml_node_collection = NEW #( ).
           lo_wrap_ixml_node_collection->ixml_node_collection ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_node_collection.
         WHEN 'CL_IXML_NODE_ITERATOR'.
-          CREATE OBJECT lo_wrap_ixml_node_iterator.
+          lo_wrap_ixml_node_iterator = NEW #( ).
           lo_wrap_ixml_node_iterator->ixml_node_iterator ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_node_iterator.
         WHEN 'CL_IXML_NODE_LIST'.
-          CREATE OBJECT lo_wrap_ixml_node_list.
+          lo_wrap_ixml_node_list = NEW #( ).
           lo_wrap_ixml_node_list->ixml_node_list ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_node_list.
         WHEN 'CL_IXML_TEXT'.
-          CREATE OBJECT lo_wrap_ixml_text.
+          lo_wrap_ixml_text = NEW #( ).
           lo_wrap_ixml_text->ixml_text ?= io_ixml_unknown.
           ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_text.
           lo_wrap_ixml_node ?= lo_wrap_ixml_text.
@@ -3313,7 +3600,7 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
   METHOD zif_excel_xml~create_encoding.
     DATA lo_encoding TYPE REF TO lth_wrap_ixml_encoding.
 
-    CREATE OBJECT lo_encoding.
+    lo_encoding = NEW #( ).
     lo_encoding->ixml_encoding = ixml->create_encoding( byte_order    = byte_order
                                                         character_set = character_set ).
     rval = lo_encoding.
@@ -3325,7 +3612,7 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
     DATA wrap_ixml_istream        TYPE REF TO lif_wrap_ixml_istream.
     DATA wrap_ixml_stream_factory TYPE REF TO lth_wrap_ixml_stream_factory.
 
-    CREATE OBJECT parser.
+    parser = NEW #( ).
     wrap_ixml_document ?= document.
     wrap_ixml_istream ?= istream.
     wrap_ixml_stream_factory ?= stream_factory.
@@ -3340,7 +3627,7 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
     DATA wrap_ixml_document TYPE REF TO lth_wrap_ixml_document.
     DATA wrap_ixml_ostream  TYPE REF TO lif_wrap_ixml_ostream.
 
-    CREATE OBJECT lo_renderer.
+    lo_renderer = NEW #( ).
     wrap_ixml_document ?= document.
     wrap_ixml_ostream ?= ostream.
     lo_renderer->ixml_renderer ?= ixml->create_renderer( document = wrap_ixml_document->ixml_document
@@ -3351,7 +3638,7 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
   METHOD zif_excel_xml~create_stream_factory.
     DATA lo_stream_factory TYPE REF TO lth_wrap_ixml_stream_factory.
 
-    CREATE OBJECT lo_stream_factory.
+    lo_stream_factory = NEW #( ).
     lo_stream_factory->ixml_stream_factory = ixml->create_stream_factory( ).
     rval = lo_stream_factory.
   ENDMETHOD.
@@ -3680,6 +3967,17 @@ ENDCLASS.
 
 CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
   METHOD zif_excel_xml_stream_factory~create_istream_string.
+* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
+*    li_ixml = cl_ixml=>create( ).
+*    li_document = li_ixml->create_document( ).
+*    li_factory = li_ixml->create_stream_factory( ).
+*    li_istream = li_factory->create_istream_string( iv_string ).
+
+    DATA lo_wrap_ixml_istream_string TYPE REF TO lth_wrap_ixml_istream_string.
+
+    lo_wrap_ixml_istream_string = NEW #( ).
+    lo_wrap_ixml_istream_string->lif_wrap_ixml_istream~ixml_istream = ixml_stream_factory->create_istream_string( string ).
+    rval = lo_wrap_ixml_istream_string.
   ENDMETHOD.
 
   METHOD zif_excel_xml_stream_factory~create_istream_xstring.
@@ -3688,25 +3986,39 @@ CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
 
     DATA lo_wrap_ixml_istream_string TYPE REF TO lth_wrap_ixml_istream_string.
 
-    CREATE OBJECT lo_wrap_ixml_istream_string.
+    lo_wrap_ixml_istream_string = NEW #( ).
     lo_wrap_ixml_istream_string->lif_wrap_ixml_istream~ixml_istream = ixml_stream_factory->create_istream_xstring(
                                                                           string ).
     rval = lo_wrap_ixml_istream_string.
   ENDMETHOD.
 
   METHOD zif_excel_xml_stream_factory~create_ostream_cstring.
+* Method RENDER_XML_DOCUMENT of class ZCL_EXCEL_WRITER_2007:
+*    lo_streamfactory = me->ixml->create_stream_factory( ).
+*    lo_ostream = lo_streamfactory->create_ostream_cstring( string = lv_string ).
+*    lo_renderer = me->ixml->create_renderer( ostream  = lo_ostream document = io_document ).
+*    lo_renderer->render( ).
+
     DATA lo_wrap_ixml_ostream_string TYPE REF TO lth_wrap_ixml_ostream_string.
 
-    CREATE OBJECT lo_wrap_ixml_ostream_string.
+    lo_wrap_ixml_ostream_string = NEW #( ).
     lo_wrap_ixml_ostream_string->lif_wrap_ixml_ostream~ixml_ostream = ixml_stream_factory->create_ostream_cstring(
                                                                           string->* ).
     rval = lo_wrap_ixml_ostream_string.
   ENDMETHOD.
 
   METHOD zif_excel_xml_stream_factory~create_ostream_xstring.
+* Method CREATE_CONTENT_TYPES of class ZCL_EXCEL_WRITER_XLSM:
+*    CLEAR ep_content.
+*    lo_ixml = cl_ixml=>create( ).
+*    lo_streamfactory = lo_ixml->create_stream_factory( ).
+*    lo_ostream = lo_streamfactory->create_ostream_xstring( string = ep_content ).
+*    lo_renderer = lo_ixml->create_renderer( ostream  = lo_ostream document = lo_document ).
+*    lo_renderer->render( ).
+
     DATA lo_wrap_ixml_ostream_xstring TYPE REF TO lth_wrap_ixml_ostream_xstring.
 
-    CREATE OBJECT lo_wrap_ixml_ostream_xstring.
+    lo_wrap_ixml_ostream_xstring = NEW #( ).
     lo_wrap_ixml_ostream_xstring->lif_wrap_ixml_ostream~ixml_ostream = ixml_stream_factory->create_ostream_xstring(
                                                                            string->* ).
     rval = lo_wrap_ixml_ostream_xstring.

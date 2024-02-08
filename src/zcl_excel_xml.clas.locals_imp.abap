@@ -394,9 +394,11 @@ CLASS lcl_isxml_parser DEFINITION
 
   PRIVATE SECTION.
 
-    DATA document       TYPE REF TO lcl_isxml_document.
-    DATA istream        TYPE REF TO lif_isxml_istream.
-    DATA stream_factory TYPE REF TO zif_excel_xml_stream_factory.
+    DATA document                TYPE REF TO lcl_isxml_document.
+    DATA istream                 TYPE REF TO lif_isxml_istream.
+    DATA stream_factory          TYPE REF TO zif_excel_xml_stream_factory.
+    DATA add_strip_space_element TYPE abap_bool                           VALUE abap_false.
+    DATA normalizing             TYPE abap_bool                           VALUE abap_true.
 
 ENDCLASS.
 
@@ -551,7 +553,7 @@ CLASS lcl_isxml IMPLEMENTATION.
   METHOD zif_excel_xml~create_document.
     DATA lo_document TYPE REF TO lcl_isxml_document.
 
-    CREATE OBJECT lo_document.
+    lo_document = NEW #( ).
     lo_document->type     = zif_excel_xml_node=>co_node_document.
     lo_document->document = lo_document.
     rval = lo_document.
@@ -560,7 +562,7 @@ CLASS lcl_isxml IMPLEMENTATION.
   METHOD zif_excel_xml~create_encoding.
     DATA lo_encoding TYPE REF TO lcl_isxml_encoding.
 
-    CREATE OBJECT lo_encoding.
+    lo_encoding = NEW #( ).
     lo_encoding->byte_order    = byte_order.
     lo_encoding->character_set = character_set.
     rval = lo_encoding.
@@ -569,7 +571,7 @@ CLASS lcl_isxml IMPLEMENTATION.
   METHOD zif_excel_xml~create_parser.
     DATA lo_parser TYPE REF TO lcl_isxml_parser.
 
-    CREATE OBJECT lo_parser.
+    lo_parser = NEW #( ).
     lo_parser->document       ?= document.
     lo_parser->istream        ?= istream.
     lo_parser->stream_factory  = stream_factory.
@@ -579,7 +581,7 @@ CLASS lcl_isxml IMPLEMENTATION.
   METHOD zif_excel_xml~create_renderer.
     DATA lo_renderer TYPE REF TO lcl_isxml_renderer.
 
-    CREATE OBJECT lo_renderer.
+    lo_renderer = NEW #( ).
     lo_renderer->document ?= document.
     lo_renderer->ostream  ?= ostream.
     rval = lo_renderer.
@@ -588,13 +590,13 @@ CLASS lcl_isxml IMPLEMENTATION.
   METHOD zif_excel_xml~create_stream_factory.
     DATA lo_isxml_stream_factory TYPE REF TO lcl_isxml_stream_factory.
 
-    CREATE OBJECT lo_isxml_stream_factory.
+    lo_isxml_stream_factory = NEW #( ).
     rval = lo_isxml_stream_factory.
   ENDMETHOD.
 
   METHOD get_singleton.
     IF singleton IS NOT BOUND.
-      CREATE OBJECT singleton.
+      singleton = NEW #( ).
     ENDIF.
     rval = singleton.
   ENDMETHOD.
@@ -658,7 +660,7 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   METHOD zif_excel_xml_document~create_element.
     DATA lo_element TYPE REF TO lcl_isxml_element.
 
-    CREATE OBJECT lo_element.
+    lo_element = NEW #( ).
     lo_element->type = zif_excel_xml_node=>co_node_element.
     lo_element->name = name.
     rval = lo_element.
@@ -667,7 +669,7 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   METHOD zif_excel_xml_document~create_simple_element.
     DATA lo_element TYPE REF TO lcl_isxml_element.
 
-    CREATE OBJECT lo_element.
+    lo_element = NEW #( ).
     lo_element->type = zif_excel_xml_node=>co_node_element.
     lo_element->name = name.
 
@@ -679,7 +681,7 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   METHOD zif_excel_xml_document~create_simple_element_ns.
     DATA lo_element TYPE REF TO lcl_isxml_element.
 
-    CREATE OBJECT lo_element.
+    lo_element = NEW #( ).
     lo_element->type   = zif_excel_xml_node=>co_node_element.
     lo_element->name   = name.
     lo_element->prefix = prefix.
@@ -710,7 +712,7 @@ CLASS lcl_isxml_document IMPLEMENTATION.
 
     lo_isxml_element ?= first_child.
     lt_element = lo_isxml_element->get_elements_by_tag_name_ns( iv_name = name ).
-    CREATE OBJECT lo_isxml_node_collection.
+    lo_isxml_node_collection = NEW #( ).
     LOOP AT lt_element INTO lo_element.
       INSERT lo_element INTO TABLE lo_isxml_node_collection->table_nodes.
     ENDLOOP.
@@ -743,7 +745,7 @@ CLASS lcl_isxml_element IMPLEMENTATION.
   METHOD clone.
     DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
 
-    CREATE OBJECT lo_isxml_element.
+    lo_isxml_element = NEW #( ).
     lo_isxml_element->attributes = attributes.
     lo_isxml_element->name       = name.
     lo_isxml_element->namespace  = namespace.
@@ -983,7 +985,7 @@ CLASS lcl_isxml_element IMPLEMENTATION.
 
     lt_element = get_elements_by_tag_name_ns( iv_name  = name
                                               iv_nsuri = uri ).
-    CREATE OBJECT lo_isxml_node_collection.
+    lo_isxml_node_collection = NEW #( ).
     LOOP AT lt_element INTO lo_element.
       INSERT lo_element INTO TABLE lo_isxml_node_collection->table_nodes.
     ENDLOOP.
@@ -1007,7 +1009,7 @@ CLASS lcl_isxml_element IMPLEMENTATION.
     IF namespace = 'xml'.
       ls_isxml_attribute-namespace = 'http://www.w3.org/XML/1998/namespace'.
     ENDIF.
-    CREATE OBJECT ls_isxml_attribute-object.
+    ls_isxml_attribute-object = NEW #( ).
     ls_isxml_attribute-object->type      = zif_excel_xml_node=>co_node_attribute.
     ls_isxml_attribute-object->prefix    = namespace.
     ls_isxml_attribute-object->name      = name.
@@ -1054,7 +1056,7 @@ CLASS lcl_isxml_istream_string IMPLEMENTATION.
   METHOD create.
     DATA xstring TYPE xstring.
 
-    CREATE OBJECT rval.
+    rval = NEW #( ).
     xstring = cl_abap_codepage=>convert_to( string ).
     rval->lif_isxml_istream~sxml_reader = cl_sxml_string_reader=>create( input = xstring ).
   ENDMETHOD.
@@ -1066,7 +1068,7 @@ ENDCLASS.
 
 CLASS lcl_isxml_istream_xstring IMPLEMENTATION.
   METHOD create.
-    CREATE OBJECT rval.
+    rval = NEW #( ).
     rval->lif_isxml_istream~sxml_reader = cl_sxml_string_reader=>create( input = string ).
   ENDMETHOD.
 
@@ -1079,7 +1081,7 @@ CLASS lcl_isxml_named_node_map IMPLEMENTATION.
   METHOD zif_excel_xml_named_node_map~create_iterator.
     DATA lo_isxml_node_iterator TYPE REF TO lcl_isxml_node_iterator.
 
-    CREATE OBJECT lo_isxml_node_iterator.
+    lo_isxml_node_iterator = NEW #( ).
     lo_isxml_node_iterator->named_node_map = me.
 
     rval = lo_isxml_node_iterator.
@@ -1125,7 +1127,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
   METHOD zif_excel_xml_node~create_iterator.
     DATA lo_isxml_node_iterator TYPE REF TO lcl_isxml_node_iterator.
 
-    CREATE OBJECT lo_isxml_node_iterator.
+    lo_isxml_node_iterator = NEW #( ).
     lo_isxml_node_iterator->node = me.
 
     rval = lo_isxml_node_iterator.
@@ -1136,7 +1138,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
 
     CHECK type = zif_excel_xml_node=>co_node_element.
 
-    CREATE OBJECT lo_isxml_named_node_map.
+    lo_isxml_named_node_map = NEW #( ).
     lo_isxml_named_node_map->element ?= me.
     rval = lo_isxml_named_node_map.
   ENDMETHOD.
@@ -1145,7 +1147,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
     DATA lo_isxml_node_list TYPE REF TO lcl_isxml_node_list.
     DATA lo_child           TYPE REF TO lcl_isxml_node.
 
-    CREATE OBJECT lo_isxml_node_list.
+    lo_isxml_node_list = NEW #( ).
 
     lo_child = first_child.
     WHILE lo_child IS BOUND.
@@ -1267,7 +1269,7 @@ CLASS lcl_isxml_node IMPLEMENTATION.
         lo_isxml_attribute->value = value.
       WHEN zif_excel_xml_node=>co_node_element.
         lo_isxml_element ?= me.
-        CREATE OBJECT lo_isxml_text.
+        lo_isxml_text = NEW #( ).
         lo_isxml_text->type  = zif_excel_xml_node=>co_node_text.
         lo_isxml_text->value = value.
         lo_isxml_element->append_child( new_child = lo_isxml_text ).
@@ -1283,7 +1285,7 @@ CLASS lcl_isxml_node_collection IMPLEMENTATION.
   METHOD zif_excel_xml_node_collection~create_iterator.
     DATA lo_isxml_node_iterator TYPE REF TO lcl_isxml_node_iterator.
 
-    CREATE OBJECT lo_isxml_node_iterator.
+    lo_isxml_node_iterator = NEW #( ).
     lo_isxml_node_iterator->node_collection = me.
 
     rval = lo_isxml_node_iterator.
@@ -1352,7 +1354,7 @@ CLASS lcl_isxml_node_list IMPLEMENTATION.
   METHOD zif_excel_xml_node_list~create_iterator.
     DATA lo_isxml_node_iterator TYPE REF TO lcl_isxml_node_iterator.
 
-    CREATE OBJECT lo_isxml_node_iterator.
+    lo_isxml_node_iterator = NEW #( ).
     lo_isxml_node_iterator->node_list = me.
 
     rval = lo_isxml_node_iterator.
@@ -1362,7 +1364,7 @@ ENDCLASS.
 
 CLASS lcl_isxml_ostream_string IMPLEMENTATION.
   METHOD create.
-    CREATE OBJECT rval TYPE lcl_isxml_ostream_string.
+    rval = NEW lcl_isxml_ostream_string( ).
     rval->ref_string                    = string.
     rval->lif_isxml_ostream~type        = 'C'.
     rval->lif_isxml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
@@ -1372,7 +1374,7 @@ ENDCLASS.
 
 CLASS lcl_isxml_ostream_xstring IMPLEMENTATION.
   METHOD create.
-    CREATE OBJECT rval TYPE lcl_isxml_ostream_xstring.
+    rval = NEW lcl_isxml_ostream_xstring( ).
     rval->ref_xstring                   = xstring.
     rval->lif_isxml_ostream~type        = 'X'.
     rval->lif_isxml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
@@ -1382,7 +1384,7 @@ ENDCLASS.
 
 CLASS lcl_isxml_parser IMPLEMENTATION.
   METHOD zif_excel_xml_parser~add_strip_space_element.
-    RAISE EXCEPTION TYPE lcx_unexpected.
+    add_strip_space_element = abap_true.
   ENDMETHOD.
 
   METHOD zif_excel_xml_parser~parse.
@@ -1400,8 +1402,10 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
     DATA lo_sxml_node           TYPE REF TO if_sxml_node.
     DATA lo_sxml_parse_error    TYPE REF TO cx_sxml_parse_error.
     DATA lo_sxml_node_close     TYPE REF TO if_sxml_close_element.
-    DATA lo_sxml_node_open      TYPE REF TO if_sxml_open_element.
     DATA lo_isxml_element       TYPE REF TO lcl_isxml_element.
+    DATA lo_isxml_text          TYPE REF TO lcl_isxml_text.
+    DATA lv_value               TYPE string.
+    DATA lo_sxml_node_open      TYPE REF TO if_sxml_open_element.
     DATA lt_nsbinding           TYPE if_sxml_named=>nsbindings.
     DATA lr_nsbinding           TYPE REF TO if_sxml_named=>nsbinding.
     DATA lv_add_xmlns_attribute TYPE abap_bool.
@@ -1410,7 +1414,6 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
     DATA lt_sxml_attribute      TYPE if_sxml_attribute=>attributes.
     DATA lo_sxml_attribute      TYPE REF TO if_sxml_attribute.
     DATA lo_sxml_node_value     TYPE REF TO if_sxml_value_node.
-    DATA lo_isxml_text          TYPE REF TO lcl_isxml_text.
 
     FIELD-SYMBOLS <ls_level> TYPE ts_level.
 
@@ -1440,13 +1443,35 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
         WHEN lo_sxml_node->co_nt_element_close.
           lo_sxml_node_close ?= lo_sxml_node.
 
+          IF    add_strip_space_element = abap_true
+             OR normalizing             = abap_true.
+            lo_isxml_element ?= <ls_level>-isxml_node.
+            IF     lo_isxml_element->first_child       IS BOUND
+               AND lo_isxml_element->first_child        = lo_isxml_element->first_child
+               AND lo_isxml_element->first_child->type  = zif_excel_xml_node=>co_node_text.
+              lo_isxml_text ?= lo_isxml_element->first_child.
+              lv_value = lo_isxml_text->value.
+              SHIFT lv_value RIGHT DELETING TRAILING space.
+              SHIFT lv_value LEFT DELETING LEADING space.
+              IF     add_strip_space_element = abap_false
+                 AND normalizing             = abap_true.
+                IF lv_value IS NOT INITIAL.
+                  lo_isxml_text->value = lv_value.
+                ENDIF.
+              ELSEIF lv_value IS INITIAL.
+                CLEAR lo_isxml_element->first_child.
+                CLEAR lo_isxml_element->last_child.
+              ENDIF.
+            ENDIF.
+          ENDIF.
+
           DELETE lt_level INDEX lv_current_level.
           lv_current_level = lv_current_level - 1.
           READ TABLE lt_level INDEX lv_current_level ASSIGNING <ls_level>.
 
         WHEN lo_sxml_node->co_nt_element_open.
           lo_sxml_node_open ?= lo_sxml_node.
-          CREATE OBJECT lo_isxml_element.
+          lo_isxml_element = NEW #( ).
           lo_isxml_element->type      = zif_excel_xml_node=>co_node_element.
           " case  input                 name  namespace  prefix
           " 1     <A xmlns="nsuri">     A     nsuri      (empty)
@@ -1479,7 +1504,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
                 ls_isxml_attribute-namespace = lr_nsbinding->nsuri.
                 ls_isxml_attribute-prefix    = 'xmlns'.
               ENDIF.
-              CREATE OBJECT ls_isxml_attribute-object.
+              ls_isxml_attribute-object = NEW #( ).
               ls_isxml_attribute-object->type      = zif_excel_xml_node=>co_node_attribute.
               ls_isxml_attribute-object->prefix    = ls_isxml_attribute-prefix.
               ls_isxml_attribute-object->name      = ls_isxml_attribute-name.
@@ -1506,7 +1531,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
             ls_isxml_attribute-name      = lo_sxml_attribute->qname-name.
             ls_isxml_attribute-namespace = lo_sxml_attribute->qname-namespace.
             ls_isxml_attribute-prefix    = lo_sxml_attribute->prefix.
-            CREATE OBJECT ls_isxml_attribute-object.
+            ls_isxml_attribute-object    = NEW #( ).
             ls_isxml_attribute-object->type      = zif_excel_xml_node=>co_node_attribute.
             ls_isxml_attribute-object->prefix    = ls_isxml_attribute-prefix.
             ls_isxml_attribute-object->name      = ls_isxml_attribute-name.
@@ -1525,7 +1550,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
 
         WHEN lo_sxml_node->co_nt_value.
           lo_sxml_node_value ?= lo_sxml_node.
-          CREATE OBJECT lo_isxml_text.
+          lo_isxml_text = NEW #( ).
           lo_isxml_text->type  = zif_excel_xml_node=>co_node_text.
           lo_isxml_text->value = lo_sxml_node_value->get_value( ).
 
@@ -1537,6 +1562,7 @@ CLASS lcl_isxml_parser IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml_parser~set_normalizing.
+    normalizing = is_normalizing.
     IF is_normalizing = abap_true.
       istream->sxml_reader->set_option( if_sxml_reader=>co_opt_normalizing ).
     ELSE.
