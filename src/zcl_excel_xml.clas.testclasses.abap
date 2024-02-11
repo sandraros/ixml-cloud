@@ -87,7 +87,7 @@ CLASS ltc_ixml_node DEFINITION
 ENDCLASS.
 
 
-CLASS ltc_isxml DEFINITION
+CLASS ltc_isxmlixml DEFINITION
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -142,8 +142,8 @@ ENDCLASS.
 
 
 "! Test of ZIF_EXCEL_IXML_DOCUMENT methods
-CLASS ltc_isxml_document DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_document DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -156,6 +156,7 @@ CLASS ltc_isxml_document DEFINITION
     METHODS find_from_name FOR TESTING RAISING cx_static_check.
     METHODS find_from_name_ns FOR TESTING RAISING cx_static_check.
     METHODS get_elements_by_tag_name FOR TESTING RAISING cx_static_check.
+    METHODS get_elements_by_tag_name_ns FOR TESTING RAISING cx_static_check.
     METHODS get_root_element FOR TESTING RAISING cx_static_check.
     METHODS set_encoding FOR TESTING RAISING cx_static_check.
     METHODS set_standalone FOR TESTING RAISING cx_static_check.
@@ -166,8 +167,8 @@ ENDCLASS.
 
 
 "! Test of ZIF_EXCEL_IXML_ELEMENT methods
-CLASS ltc_isxml_element DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_element DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -198,8 +199,8 @@ CLASS ltc_isxml_element DEFINITION
 ENDCLASS.
 
 
-CLASS ltc_isxml_named_node_map DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_named_node_map DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -214,8 +215,8 @@ ENDCLASS.
 
 
 "! Test of ZIF_EXCEL_IXML_NODE methods
-CLASS ltc_isxml_node DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_node DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -240,8 +241,8 @@ CLASS ltc_isxml_node DEFINITION
 ENDCLASS.
 
 
-CLASS ltc_isxml_node_collection DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_node_collection DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -255,7 +256,7 @@ ENDCLASS.
 
 
 CLASS ltc_xml_node_iterator DEFINITION
-      INHERITING FROM ltc_isxml
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -267,8 +268,8 @@ CLASS ltc_xml_node_iterator DEFINITION
 ENDCLASS.
 
 
-CLASS ltc_isxml_node_list DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_node_list DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -280,18 +281,40 @@ CLASS ltc_isxml_node_list DEFINITION
 ENDCLASS.
 
 
-CLASS ltc_isxml_parser DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_parse_and_render DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
 
+    METHODS create_docprops_app FOR TESTING RAISING cx_static_check.
     METHODS namespace FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_left_right FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_off FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_on FOR TESTING RAISING cx_static_check.
+    METHODS space_normalizing_on_strip_on FOR TESTING RAISING cx_static_check.
+
+    METHODS setup.
+
+ENDCLASS.
+
+
+CLASS ltc_isxmlixml_parser DEFINITION
+      INHERITING FROM ltc_isxmlixml
+      FOR TESTING
+      DURATION SHORT
+      RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+
+    INTERFACES lif_isxml_all_friends.
+
+  PRIVATE SECTION.
+
     METHODS set_validating FOR TESTING RAISING cx_static_check.
     METHODS several_children FOR TESTING RAISING cx_static_check.
-    METHODS space_normalizing_left_right FOR TESTING RAISING cx_static_check.
     METHODS space_normalizing_off FOR TESTING RAISING cx_static_check.
     METHODS space_normalizing_on FOR TESTING RAISING cx_static_check.
     METHODS space_normalizing_on_strip_on FOR TESTING RAISING cx_static_check.
@@ -301,16 +324,13 @@ CLASS ltc_isxml_parser DEFINITION
     METHODS two_ixml_encodings FOR TESTING RAISING cx_static_check.
 *    METHODS two_parsers FOR TESTING RAISING cx_static_check.
 
-*    METHODS init_parser
-*      IMPORTING
-*        ixml_or_isxml type ref to zif_excel_xml.
     METHODS setup.
 
 ENDCLASS.
 
 
-CLASS ltc_isxml_render DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_render DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -319,13 +339,15 @@ CLASS ltc_isxml_render DEFINITION
 
     METHODS most_simple_valid_xml FOR TESTING RAISING cx_static_check.
     METHODS namespace FOR TESTING RAISING cx_static_check.
+    METHODS namespace_2 FOR TESTING RAISING cx_static_check.
+    METHODS namespace_3 FOR TESTING RAISING cx_static_check.
 
     METHODS setup.
 ENDCLASS.
 
 
-CLASS ltc_isxml_stream DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_stream DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -339,8 +361,8 @@ CLASS ltc_isxml_stream DEFINITION
 ENDCLASS.
 
 
-CLASS ltc_isxml_stream_factory DEFINITION
-      INHERITING FROM ltc_isxml
+CLASS ltc_isxmlixml_stream_factory DEFINITION
+      INHERITING FROM ltc_isxmlixml
       FOR TESTING
       DURATION SHORT
       RISK LEVEL HARMLESS.
@@ -366,6 +388,25 @@ CLASS ltc_isxml_stream_factory DEFINITION
       IMPORTING
         io_ixml_or_isxml TYPE REF TO zif_excel_xml
         io_ostream       TYPE REF TO zif_excel_xml_ostream.
+
+ENDCLASS.
+
+
+CLASS ltc_isxmlonly_parser DEFINITION
+      INHERITING FROM ltc_isxmlixml
+      FOR TESTING
+      DURATION SHORT
+      RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+
+    INTERFACES lif_isxml_all_friends.
+
+  PRIVATE SECTION.
+
+    METHODS namespace FOR TESTING RAISING cx_static_check.
+
+    METHODS setup.
 
 ENDCLASS.
 
@@ -542,365 +583,7 @@ CLASS ltc_sxml_writer DEFINITION
 ENDCLASS.
 
 
-INTERFACE lif_wrap_ixml_all_friends.
-ENDINTERFACE.
-
-
-INTERFACE lif_wrap_ixml_istream.
-  INTERFACES zif_excel_xml_istream.
-  DATA ixml_istream TYPE REF TO if_ixml_istream.
-ENDINTERFACE.
-
-
-INTERFACE lif_wrap_ixml_ostream.
-  INTERFACES zif_excel_xml_ostream.
-  DATA ixml_ostream TYPE REF TO if_ixml_ostream.
-ENDINTERFACE.
-
-
-CLASS lth_wrap_ixml_unknown DEFINITION
-    FOR TESTING
-    CREATE PROTECTED.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_unknown.
-    INTERFACES lif_wrap_ixml_all_friends.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PROTECTED
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_node.
-
-  PRIVATE SECTION.
-
-    DATA ixml_node TYPE REF TO if_ixml_node.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml.
-
-    TYPES:
-      BEGIN OF ts_wrapped_ixml_object,
-        ixml_object         TYPE REF TO object,
-        ixml_object_wrapper TYPE REF TO object,
-      END OF ts_wrapped_ixml_object.
-    TYPES tt_wrapped_ixml_object TYPE HASHED TABLE OF ts_wrapped_ixml_object WITH UNIQUE KEY ixml_object.
-
-    CLASS-DATA wrapped_ixml_objects TYPE tt_wrapped_ixml_object.
-
-    CLASS-METHODS create
-      RETURNING
-        VALUE(ro_result) TYPE REF TO zif_excel_xml.
-
-    CLASS-METHODS wrap_ixml
-      IMPORTING
-        io_ixml_unknown TYPE REF TO if_ixml_unknown
-      RETURNING
-        VALUE(ro_result) TYPE REF TO object.
-
-  PRIVATE SECTION.
-
-    CLASS-DATA singleton TYPE REF TO lth_wrap_ixml.
-    DATA ixml TYPE REF TO if_ixml.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_attribute DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_attribute.
-
-  PRIVATE SECTION.
-
-    DATA ixml_attribute TYPE REF TO if_ixml_attribute.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_character_data DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-    FOR TESTING
-    CREATE PROTECTED
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_character_data.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_document DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_document.
-
-  PRIVATE SECTION.
-
-    DATA ixml_document TYPE REF TO if_ixml_document.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_element DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends
-            ltc_isxml_element.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_element.
-
-  PRIVATE SECTION.
-
-    DATA ixml_element TYPE REF TO if_ixml_element.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_encoding DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_encoding.
-
-  PRIVATE SECTION.
-
-    DATA ixml_encoding TYPE REF TO if_ixml_encoding.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_istream_string DEFINITION
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES lif_wrap_ixml_istream.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_istream_xstring DEFINITION
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES lif_wrap_ixml_istream.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_named_node_map DEFINITION
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_named_node_map.
-
-  PRIVATE SECTION.
-
-    DATA ixml_named_node_map TYPE REF TO if_ixml_named_node_map.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node_collection DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_node_collection.
-
-  PRIVATE SECTION.
-
-    DATA ixml_node_collection TYPE REF TO if_ixml_node_collection.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node_iterator DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_node_iterator.
-
-  PRIVATE SECTION.
-
-    DATA ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node_list DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_node_list.
-
-  PRIVATE SECTION.
-
-    DATA ixml_node_list TYPE REF TO if_ixml_node_list.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_ostream_string DEFINITION
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES lif_wrap_ixml_ostream.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_ostream_xstring DEFINITION
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES lif_wrap_ixml_ostream.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_parser DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_parser.
-
-  PRIVATE SECTION.
-
-    DATA ixml_parser TYPE REF TO if_ixml_parser.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_renderer DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_renderer.
-
-  PRIVATE SECTION.
-
-    DATA ixml_renderer TYPE REF TO if_ixml_renderer.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_stream DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_stream.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_stream_factory DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_stream_factory.
-
-  PRIVATE SECTION.
-
-    DATA ixml_stream_factory TYPE REF TO if_ixml_stream_factory.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_text DEFINITION
-    INHERITING FROM lth_wrap_ixml_character_data
-    FOR TESTING
-    CREATE PRIVATE
-    FRIENDS lif_wrap_ixml_all_friends.
-
-  PUBLIC SECTION.
-
-    INTERFACES zif_excel_xml_text.
-
-  PRIVATE SECTION.
-
-    DATA ixml_text TYPE REF TO if_ixml_text.
-
-ENDCLASS.
-
-
-CLASS lth_ixml_isxml DEFINITION.
+CLASS lth_isxmlixml DEFINITION.
 
   PUBLIC SECTION.
 
@@ -1064,7 +747,7 @@ CLASS ltc_ixml_node IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml IMPLEMENTATION.
+CLASS ltc_isxmlixml IMPLEMENTATION.
   METHOD create_encoding.
 *ZCL_EXCEL_THEME
 *    lo_encoding = lo_ixml->create_encoding( byte_order = if_ixml_encoding=>co_platform_endian
@@ -1092,8 +775,14 @@ CLASS ltc_isxml IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_ixml_and_isxml.
-    ixml = lth_wrap_ixml=>create( ).
-    INSERT ixml INTO TABLE rt_result.
+    TRY.
+        ixml = lth_wrap_ixml=>create( ).
+      CATCH cx_sy_dyn_call_illegal_class ##NO_HANDLER.
+        " CL_IXML does not exist = ABAP Cloud
+    ENDTRY.
+    IF ixml IS BOUND.
+      INSERT ixml INTO TABLE rt_result.
+    ENDIF.
     isxml = zcl_excel_xml=>create( ).
     INSERT isxml INTO TABLE rt_result.
   ENDMETHOD.
@@ -1125,7 +814,7 @@ CLASS ltc_isxml IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_document IMPLEMENTATION.
+CLASS ltc_isxmlixml_document IMPLEMENTATION.
   METHOD create_element.
 * (only at 2 places in test classes)
 * Method SET_CELL of local class LTC_COLUMN_FORMULA of class ZCL_EXCEL_WRITER_2007.
@@ -1190,8 +879,8 @@ CLASS ltc_isxml_document IMPLEMENTATION.
 *Method LOAD_WORKSHEET_TABLES of ZCL_EXCEL_READER_2007
 *    lo_ixml_table_style ?= lo_ixml_table->find_from_name( 'tableStyleInfo' ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = |<A><B/></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><B/></A>| ).
       element = document->find_from_name( name = 'B' ).
       cl_abap_unit_assert=>assert_equals( act = element->get_name( )
                                           exp = 'B' ).
@@ -1206,8 +895,8 @@ CLASS ltc_isxml_document IMPLEMENTATION.
 *     node ?= ip_chart->if_ixml_node~get_first_child( ).
 *     node2 ?= node->find_from_name_ns( name = 'date1904' uri = namespace-c ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B></A>| ).
       element = document->find_from_name_ns( name = 'B'
                                              uri  = 'a' ).
       cl_abap_unit_assert=>assert_equals( act = element->get_name( )
@@ -1226,8 +915,8 @@ CLASS ltc_isxml_document IMPLEMENTATION.
     DATA lo_isxml_node            TYPE REF TO zif_excel_xml_node.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
       lo_isxml_node_collection = document->get_elements_by_tag_name( 'B' ).
       lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).
       lo_isxml_node = lo_isxml_node_iterator->get_next( ).
@@ -1241,12 +930,34 @@ CLASS ltc_isxml_document IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
+  METHOD get_elements_by_tag_name_ns.
+* Method LOAD_WORKSHEET of class ZCL_EXCEL_READER_2007
+*    lo_ixml_rows = lo_ixml_worksheet->get_elements_by_tag_name_ns( name = 'row' uri = namespace-main ).
+
+    DATA lo_isxml_node_collection TYPE REF TO zif_excel_xml_node_collection.
+    DATA lo_isxml_node_iterator   TYPE REF TO zif_excel_xml_node_iterator.
+    DATA lo_isxml_node            TYPE REF TO zif_excel_xml_node.
+
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A xmlns:a="nsuri"><B>B1</B><a:B>B2</a:B><B>B3</B></A>| ).
+      lo_isxml_node_collection = document->get_elements_by_tag_name_ns( name = 'B'
+                                                                        uri  = 'nsuri' ).
+      lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_isxml_node->get_value( )
+                                          exp = 'B2' ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_not_bound( act = lo_isxml_node ).
+    ENDLOOP.
+  ENDMETHOD.
+
   METHOD get_root_element.
 * Method READ_THEME of class ZCL_EXCEL_THEME:
 *    lo_node_theme  = io_theme_xml->get_root_element( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = |<A><B>B1</B></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><B>B1</B></A>| ).
       element = document->get_root_element( ).
       cl_abap_unit_assert=>assert_equals( act = element->get_name( )
                                           exp = 'A' ).
@@ -1316,7 +1027,7 @@ CLASS ltc_isxml_document IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_element IMPLEMENTATION.
+CLASS ltc_isxmlixml_element IMPLEMENTATION.
   METHOD find_from_name_level_1.
 * Method LOAD_WORKSHEET_TABLES of class ZCL_EXCEL_READER_2007:
 *    DATA lo_ixml_table TYPE REF TO if_ixml_element.
@@ -1325,9 +1036,8 @@ CLASS ltc_isxml_element IMPLEMENTATION.
     DATA lo_element TYPE REF TO zif_excel_xml_element.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
-                     io_ixml_or_isxml = ixml_or_isxml
-                     iv_xml_string    = |<A xmlns:a="a"><C>C1</C><B><a:C>C2</a:C><C>C3</C></B></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A xmlns:a="a"><C>C1</C><B><a:C>C2</a:C><C>C3</C></B></A>| ).
       lo_element = document->get_root_element( ).
       lo_element ?= lo_element->get_first_child( ).
       lo_element ?= lo_element->get_next( ).
@@ -1347,7 +1057,7 @@ CLASS ltc_isxml_element IMPLEMENTATION.
     DATA lo_element TYPE REF TO zif_excel_xml_element.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
                      io_ixml_or_isxml = ixml_or_isxml
                      iv_xml_string    = |<A xmlns:a="a"><C>C1</C><B><a:C>C2</a:C><D><C>C3</C></D></B></A>| ).
       lo_element = document->get_root_element( ).
@@ -1370,7 +1080,7 @@ CLASS ltc_isxml_element IMPLEMENTATION.
     DATA lo_element TYPE REF TO zif_excel_xml_element.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
                      io_ixml_or_isxml = ixml_or_isxml
                      iv_xml_string    = |<A xmlns:pc="uc"><B><C>C1</C><D><C>C2</C><pc:C>C3</pc:C></D></B></A>| ).
       lo_element = document->get_root_element( ).
@@ -1415,7 +1125,7 @@ CLASS ltc_isxml_element IMPLEMENTATION.
     " NB: above GET_ATTRIBUTE with NAME = 'xmlns:XXXX' always returns no attribute found, it's also not used
     "     so cleanup done -> https://github.com/abap2xlsx/abap2xlsx/pull/1183.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
                      io_ixml_or_isxml = ixml_or_isxml
                      iv_xml_string    = `<A xmlns="default" xmlns:nsprefix="nsuri" nsprefix:attr="A1" attr="A2"/>` ).
       element = document->get_root_element( ).
@@ -1436,8 +1146,8 @@ CLASS ltc_isxml_element IMPLEMENTATION.
 *      lo_attr = lo_node_comment->get_attribute_node_ns( name = 'ref' ).
 *      lv_attr_value  = lo_attr->get_value( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A xmlns:nsprefix="nsuri" nsprefix:attr="A1" attr="A2"/>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A xmlns:nsprefix="nsuri" nsprefix:attr="A1" attr="A2"/>` ).
       element = document->get_root_element( ).
       attribute = element->get_attribute_node_ns( name = 'attr'
                                                   uri  = 'nsuri' ).
@@ -1455,11 +1165,11 @@ CLASS ltc_isxml_element IMPLEMENTATION.
 *     ls_hyperlink-r_id     = lo_ixml_hyperlink->get_attribute_ns( name = 'id' uri = namespace-r ).
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A xmlns:nsprefix="nsuri" nsprefix:attr="A1" attr="A2"/>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A xmlns:nsprefix="nsuri" nsprefix:attr="A1" attr="A2"/>` ).
       element = document->get_root_element( ).
       string = element->get_attribute_ns( name = 'nsprefix'
-                                          uri  = 'xmlns' ).
+                                          uri  = 'nsuri' ).
       cl_abap_unit_assert=>assert_equals( act = string
                                           exp = '' ).
       string = element->get_attribute_ns( name = 'attr'
@@ -1481,7 +1191,7 @@ CLASS ltc_isxml_element IMPLEMENTATION.
     DATA lo_isxml_node            TYPE REF TO zif_excel_xml_node.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
           io_ixml_or_isxml = ixml_or_isxml
           iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B><C><B>B4</B><a:B xmlns:a="a">B5</a:B><B>B6</B></C></A>| ).
       element = document->find_from_name( name = 'C' ).
@@ -1507,7 +1217,7 @@ CLASS ltc_isxml_element IMPLEMENTATION.
     DATA lo_isxml_node            TYPE REF TO zif_excel_xml_node.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
                      io_ixml_or_isxml = ixml_or_isxml
                      iv_xml_string    = |<A xmlns:a="nsa"><B>B1</B><a:B>B2</a:B><B>B3</B><a:B>B4</a:B></A>| ).
       element = document->get_root_element( ).
@@ -1529,7 +1239,7 @@ CLASS ltc_isxml_element IMPLEMENTATION.
 * Method CREATE_CONTENT_TYPES of class ZCL_EXCEL_WRITER_XLSM:
 *        lo_element->remove_attribute_ns( lc_xml_attr_contenttype ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
                      io_ixml_or_isxml = ixml_or_isxml
                      iv_xml_string    = `<A xmlns="nsuri" xmlns:nsprefix="nsuri2" nsprefix:attr="A1" attr="A2"/>` ).
       element = document->get_root_element( ).
@@ -1593,7 +1303,7 @@ CLASS ltc_isxml_element IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_named_node_map IMPLEMENTATION.
+CLASS ltc_isxmlixml_named_node_map IMPLEMENTATION.
   METHOD create_iterator.
 * Method FILL_STRUCT_FROM_ATTRIBUTES of class ZCL_EXCEL_READER_2007:
 *    lo_attributes  = ip_element->get_attributes( ).
@@ -1603,8 +1313,8 @@ CLASS ltc_isxml_named_node_map IMPLEMENTATION.
 *      lo_attribute ?= lo_iterator->get_next( ).
 *    ENDWHILE.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A a="1" b="2"/>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A a="1" b="2"/>` ).
       element ?= document->get_root_element( ).
       named_node_map = element->get_attributes( ).
       node_iterator = named_node_map->create_iterator( ).
@@ -1631,7 +1341,7 @@ CLASS ltc_isxml_named_node_map IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_node IMPLEMENTATION.
+CLASS ltc_isxmlixml_node IMPLEMENTATION.
   METHOD append_child.
 * Method ADD_1_VAL_CHILD_NODE of class ZCL_EXCEL_WRITER_2007:
 *    io_parent->append_child( new_child = lo_child ).
@@ -1639,12 +1349,12 @@ CLASS ltc_isxml_node IMPLEMENTATION.
     DATA lo_element TYPE REF TO zif_excel_xml_element.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<ROOT/>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<ROOT/>' ).
       element = document->get_root_element( ).
       lo_element = document->create_element( name = 'A' ).
       element->append_child( lo_element ).
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
       cl_abap_unit_assert=>assert_equals( act = string
                                           exp = `<ROOT><A/></ROOT>` ).
     ENDLOOP.
@@ -1657,12 +1367,12 @@ CLASS ltc_isxml_node IMPLEMENTATION.
     DATA lo_element TYPE REF TO zif_excel_xml_element.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<ROOT><A/></ROOT>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<ROOT><A/></ROOT>` ).
       element ?= document->get_root_element( ).
       lo_element ?= element->get_first_child( )->clone( ).
       element->append_child( lo_element ).
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
       cl_abap_unit_assert=>assert_equals( act = string
                                           exp = `<ROOT><A/><A/></ROOT>` ).
     ENDLOOP.
@@ -1676,8 +1386,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      node = iterator->get_next( ).
 *    ENDWHILE.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A><B><C/></B><D/></A>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A><B><C/></B><D/></A>` ).
       element ?= document->get_root_element( ).
       node_iterator = element->create_iterator( ).
       element ?= node_iterator->get_next( ).
@@ -1708,8 +1418,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      lo_attribute ?= lo_iterator->get_next( ).
 *    ENDWHILE.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A a="1" b="2"/>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A a="1" b="2"/>` ).
       element ?= document->get_root_element( ).
       named_node_map = element->get_attributes( ).
       node_iterator = named_node_map->create_iterator( ).
@@ -1735,8 +1445,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      lo_theme_children = lo_node_theme->get_children( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<A><B><C/></B><D/></A>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A><B><C/></B><D/></A>' ).
       " WHEN
       element = document->get_root_element( ).
       node_list = element->get_children( ).
@@ -1760,8 +1470,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      lo_node_comment_child ?= lo_node_comment->get_first_child( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<A><B/></A>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A><B/></A>' ).
       " WHEN
       element ?= document->get_first_child( ).
       " THEN
@@ -1784,8 +1494,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      lv_name = lo_attribute->get_name( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<A a="1"/>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A a="1"/>' ).
       element ?= document->get_root_element( ).
       node = element->get_attribute_node_ns( name = 'a' ).
       " WHEN
@@ -1801,8 +1511,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      xmlns-name = node->get_namespace_prefix( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<a:A xmlns:a="nsuri"/>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<a:A xmlns:a="nsuri"/>' ).
       node = document->get_root_element( ).
       " WHEN
       string = node->get_namespace_prefix( ).
@@ -1817,8 +1527,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      xmlns-value = node->get_namespace_uri( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<a:A xmlns:a="nsuri"/>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<a:A xmlns:a="nsuri"/>' ).
       node = document->get_root_element( ).
       " WHEN
       string = node->get_namespace_uri( ).
@@ -1833,8 +1543,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *      lo_node ?= lo_node->get_next( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<A><B><C/></B><D><E/></D><F/></A>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A><B><C/></B><D><E/></D><F/></A>' ).
       node = document->get_root_element( )->get_first_child( ).
       " WHEN
       node = node->get_next( ).
@@ -1858,8 +1568,8 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 *        <component> = lo_attribute->get_value( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<A>1<B>2</B>3</A>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A>1<B>2</B>3</A>' ).
       " WHEN
       node = document.
       value = node->get_value( ).
@@ -1897,7 +1607,7 @@ CLASS ltc_isxml_node IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_node_collection IMPLEMENTATION.
+CLASS ltc_isxmlixml_node_collection IMPLEMENTATION.
   METHOD create_iterator.
 * Method LOAD_WORKSHEET_DRAWING of class ZCL_EXCEL_READER_2007:
 *    coll_length = anchors->get_length( ).
@@ -1906,8 +1616,8 @@ CLASS ltc_isxml_node_collection IMPLEMENTATION.
 *      anchor_elem ?= iterator->get_next( ).
 *    ENDDO.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
       node_collection = document->get_elements_by_tag_name( 'B' ).
       length = node_collection->get_length( ).
       cl_abap_unit_assert=>assert_equals( act = length
@@ -1928,8 +1638,8 @@ CLASS ltc_isxml_node_collection IMPLEMENTATION.
 * Method CREATE_CONTENT_TYPES of class ZCL_EXCEL_WRITER_XLSM
 *    lo_collection = lo_document->get_elements_by_tag_name( 'Override' ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
       node_collection = document->get_elements_by_tag_name( 'B' ).
       length = node_collection->get_length( ).
       cl_abap_unit_assert=>assert_equals( act = length
@@ -1953,8 +1663,8 @@ CLASS ltc_xml_node_iterator IMPLEMENTATION.
 * Method CREATE_CONTENT_TYPES of class ZCL_EXCEL_WRITER_XLSM
 *    lo_collection = lo_document->get_elements_by_tag_name( 'Override' ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
       node_collection = document->get_elements_by_tag_name( 'B' ).
       node_iterator = node_collection->create_iterator( ).
       node = node_iterator->get_next( ).
@@ -1970,14 +1680,14 @@ CLASS ltc_xml_node_iterator IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_node_list IMPLEMENTATION.
+CLASS ltc_isxmlixml_node_list IMPLEMENTATION.
   METHOD create_iterator.
 * Method READ_THEME of class ZCL_EXCEL_THEME:
 *      lo_theme_children = lo_node_theme->get_children( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<A><B><C/></B><D/></A>' ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A><B><C/></B><D/></A>' ).
       " WHEN
       element = document->get_root_element( ).
       node_list = element->get_children( ).
@@ -1998,15 +1708,36 @@ CLASS ltc_isxml_node_list IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_parser IMPLEMENTATION.
+CLASS ltc_isxmlixml_parse_and_render IMPLEMENTATION.
+  METHOD create_docprops_app.
+    DATA lv_xml_string TYPE string.
+
+    " XML generated by method CREATE_DOCPROPS_APP of class ZCL_EXCEL_WRITER_2007
+    " GIVEN
+    lv_xml_string = ``
+&& `<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes"><Application>Microsoft Ex`
+&& `cel</Application><DocSecurity>0</DocSecurity><ScaleCrop>false</ScaleCrop><HeadingPairs><vt:vector size="2" baseType="variant"><vt:variant><vt:lpstr>Worksheets</vt:lpstr></vt:variant><vt:variant><vt:i4>1</vt:i4></vt:variant></vt:vector></HeadingPair`
+&& `s><TitlesOfParts><vt:vector size="1" baseType="lpstr"><vt:lpstr>Sheet1</vt:lpstr></vt:vector></TitlesOfParts><LinksUpToDate>false</LinksUpToDate><SharedDoc>false</SharedDoc><HyperlinksChanged>false</HyperlinksChanged><AppVersion>12.0000</AppVersion`
+&& `></Properties>`.
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = lv_xml_string ).
+      " WHEN
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = lv_xml_string ).
+    ENDLOOP.
+  ENDMETHOD.
+
   METHOD namespace.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
           io_ixml_or_isxml = ixml_or_isxml
           iv_xml_string    = `<nsprefix:A xmlns="dnsuri" xmlns:nsprefix="nsuri" nsprefix:attr="1" attr="2"><B attr="3"/></nsprefix:A>` ).
       " WHEN
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
       " THEN
       cl_abap_unit_assert=>assert_equals(
           act = string
@@ -2041,11 +1772,11 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 *                                                           is_normalizing = space ).  " NO!!! normalizing - otherwise leading blanks will be omitted and that is not really desired for the stringtable
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A>  <B>  1  </B>  </A>`
-                                        iv_normalizing   = abap_true ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A>  <B>  1  </B>  </A>`
+                                       iv_normalizing   = abap_true ).
       " WHEN
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
       " THEN
       cl_abap_unit_assert=>assert_equals( act = string
                                           exp = `<A><B>1</B></A>` ).
@@ -2053,11 +1784,11 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A>  <B>  1  </B>  </A>`
-                                        iv_normalizing   = abap_false ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A>  <B>  1  </B>  </A>`
+                                       iv_normalizing   = abap_false ).
       " WHEN
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
       " THEN
       cl_abap_unit_assert=>assert_equals( act = string
                                           exp = `<A><B>  1  </B></A>` ).
@@ -2081,15 +1812,164 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 *                                                           is_normalizing = space ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml          = ixml_or_isxml
-                                        iv_xml_string             = `<A>  <B>  </B>  </A>`
-                                        iv_normalizing            = abap_false
-                                        iv_preserve_space_element = abap_true ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                       iv_normalizing            = abap_false
+                                       iv_preserve_space_element = abap_true ).
       " WHEN
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
       " THEN
       cl_abap_unit_assert=>assert_equals( act = string
                                           exp = `<A><B>  </B></A>` ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD space_normalizing_on.
+* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
+*    lo_ixml           = cl_ixml=>create( ).
+*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
+*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
+*    r_ixml            = lo_ixml->create_document( ).
+*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
+*                                                istream        = lo_istream
+*                                                document       = r_ixml ).
+*    lo_parser->set_normalizing( is_normalizing ).
+*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+*    lo_parser->parse( ).
+* ALL CALLS ARE DONE WITH is_normalizing = 'X' except this one in method LOAD_SHARED_STRINGS of ZCL_EXCEL_READER_2007:
+*    lo_shared_strings_xml = me->get_ixml_from_zip_archive( i_filename     = ip_path
+*                                                           is_normalizing = space ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      " GIVEN
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                       iv_normalizing            = abap_true
+                                       iv_preserve_space_element = abap_true ).
+      " WHEN
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = `<A><B>  </B></A>` ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD space_normalizing_on_strip_on.
+* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
+*    li_ixml = cl_ixml=>create( ).
+*    li_document = li_ixml->create_document( ).
+*    li_factory = li_ixml->create_stream_factory( ).
+*    li_istream = li_factory->create_istream_string( iv_string ).
+*    li_parser = li_ixml->create_parser(
+*      stream_factory = li_factory
+*      istream        = li_istream
+*      document       = li_document ).
+*    li_parser->add_strip_space_element( ).
+*    li_parser->parse( ).
+*    li_istream->close( ).
+*    ri_node = li_document->get_first_child( ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      " GIVEN
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                       iv_normalizing            = abap_true
+                                       iv_preserve_space_element = abap_false ).
+      " WHEN
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
+      " THEN
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = `<A><B/></A>` ).
+    ENDLOOP.
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS ltc_isxmlixml_parser IMPLEMENTATION.
+  METHOD setup.
+    ixml_and_isxml = get_ixml_and_isxml( ).
+  ENDMETHOD.
+
+  METHOD set_validating.
+* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
+*    lo_ixml           = cl_ixml=>create( ).
+*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
+*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
+*    r_ixml            = lo_ixml->create_document( ).
+*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
+*                                                istream        = lo_istream
+*                                                document       = r_ixml ).
+*    lo_parser->set_normalizing( is_normalizing ).
+*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+*    lo_parser->parse( ).
+* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
+*    li_ixml = cl_ixml=>create( ).
+*    li_document = li_ixml->create_document( ).
+*    li_factory = li_ixml->create_stream_factory( ).
+*    li_istream = li_factory->create_istream_string( iv_string ).
+*    li_parser = li_ixml->create_parser(
+*      stream_factory = li_factory
+*      istream        = li_istream
+*      document       = li_document ).
+*    li_parser->add_strip_space_element( ).
+*    li_parser->parse( ).
+*    li_istream->close( ).
+*    ri_node = li_document->get_first_child( ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A/>`
+                                       iv_validating    = zif_excel_xml_parser=>co_no_validation ).
+      element = document->get_root_element( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD several_children.
+    DATA lo_element TYPE REF TO zif_excel_xml_element.
+
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A>T<B>U</B><C/></A>` ).
+      cl_abap_unit_assert=>assert_equals( act = rc
+                                          exp = lcl_isxml=>ixml_mr-dom_ok ).
+      element = document->get_root_element( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = 'A' ).
+      text ?= element->get_first_child( ).
+      cl_abap_unit_assert=>assert_equals( act = text->get_value( )
+                                          exp = 'T' ).
+      lo_element ?= text->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_element->get_name( )
+                                          exp = 'B' ).
+      text ?= lo_element->get_first_child( ).
+      cl_abap_unit_assert=>assert_equals( act = text->get_value( )
+                                          exp = 'U' ).
+      lo_element ?= lo_element->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_element->get_name( )
+                                          exp = 'C' ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD space_normalizing_off.
+* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
+*    lo_ixml           = cl_ixml=>create( ).
+*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
+*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
+*    r_ixml            = lo_ixml->create_document( ).
+*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
+*                                                istream        = lo_istream
+*                                                document       = r_ixml ).
+*    lo_parser->set_normalizing( is_normalizing ).
+*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+*    lo_parser->parse( ).
+* ALL CALLS ARE DONE WITH is_normalizing = 'X' except this one in method LOAD_SHARED_STRINGS of ZCL_EXCEL_READER_2007:
+*    lo_shared_strings_xml = me->get_ixml_from_zip_archive( i_filename     = ip_path
+*                                                           is_normalizing = space ).
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      " GIVEN
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                       iv_normalizing            = abap_false
+                                       iv_preserve_space_element = abap_true ).
       " WHEN
       element = document->get_root_element( ).
       " THEN
@@ -2121,16 +2001,10 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 *                                                           is_normalizing = space ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml          = ixml_or_isxml
-                                        iv_xml_string             = `<A>  <B>  </B>  </A>`
-                                        iv_normalizing            = abap_true
-                                        iv_preserve_space_element = abap_true ).
-      " WHEN
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
-      " THEN
-*      cl_abap_unit_assert=>assert_equals(
-*          act = string
-*          exp = `<A><B>  </B></A>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                       iv_normalizing            = abap_true
+                                       iv_preserve_space_element = abap_true ).
       " WHEN
       element = document->get_root_element( ).
       " THEN
@@ -2165,15 +2039,10 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 *    ri_node = li_document->get_first_child( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       " GIVEN
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml          = ixml_or_isxml
-                                        iv_xml_string             = `<A>  <B>  </B>  </A>`
-                                        iv_normalizing            = abap_true
-                                        iv_preserve_space_element = abap_false ).
-      " WHEN
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
-      " THEN
-      cl_abap_unit_assert=>assert_equals( act = string
-                                          exp = `<A><B/></A>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
+                                       iv_normalizing            = abap_true
+                                       iv_preserve_space_element = abap_false ).
       " WHEN
       element = document->get_root_element( ).
       " THEN
@@ -2191,71 +2060,10 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
     ENDLOOP.
   ENDMETHOD.
 
-  METHOD set_validating.
-* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
-*    lo_ixml           = cl_ixml=>create( ).
-*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
-*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
-*    r_ixml            = lo_ixml->create_document( ).
-*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
-*                                                istream        = lo_istream
-*                                                document       = r_ixml ).
-*    lo_parser->set_normalizing( is_normalizing ).
-*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
-*    lo_parser->parse( ).
-* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
-*    li_ixml = cl_ixml=>create( ).
-*    li_document = li_ixml->create_document( ).
-*    li_factory = li_ixml->create_stream_factory( ).
-*    li_istream = li_factory->create_istream_string( iv_string ).
-*    li_parser = li_ixml->create_parser(
-*      stream_factory = li_factory
-*      istream        = li_istream
-*      document       = li_document ).
-*    li_parser->add_strip_space_element( ).
-*    li_parser->parse( ).
-*    li_istream->close( ).
-*    ri_node = li_document->get_first_child( ).
-    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A/>`
-                                        iv_validating    = zif_excel_xml_parser=>co_no_validation ).
-      element = document->get_root_element( ).
-      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
-                                          exp = 'A' ).
-    ENDLOOP.
-  ENDMETHOD.
-
-  METHOD several_children.
-    DATA lo_element TYPE REF TO zif_excel_xml_element.
-
-    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A>T<B>U</B><C/></A>` ).
-      cl_abap_unit_assert=>assert_equals( act = rc
-                                          exp = lcl_isxml=>ixml_mr-dom_ok ).
-      element = document->get_root_element( ).
-      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
-                                          exp = 'A' ).
-      text ?= element->get_first_child( ).
-      cl_abap_unit_assert=>assert_equals( act = text->get_value( )
-                                          exp = 'T' ).
-      lo_element ?= text->get_next( ).
-      cl_abap_unit_assert=>assert_equals( act = lo_element->get_name( )
-                                          exp = 'B' ).
-      text ?= lo_element->get_first_child( ).
-      cl_abap_unit_assert=>assert_equals( act = text->get_value( )
-                                          exp = 'U' ).
-      lo_element ?= lo_element->get_next( ).
-      cl_abap_unit_assert=>assert_equals( act = lo_element->get_name( )
-                                          exp = 'C' ).
-    ENDLOOP.
-  ENDMETHOD.
-
   METHOD text_node.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = `<A>B</A>` ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A>B</A>` ).
       cl_abap_unit_assert=>assert_equals( act = rc
                                           exp = lcl_isxml=>ixml_mr-dom_ok ).
       element = document->get_root_element( ).
@@ -2341,7 +2149,7 @@ CLASS ltc_isxml_parser IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_render IMPLEMENTATION.
+CLASS ltc_isxmlixml_render IMPLEMENTATION.
   METHOD most_simple_valid_xml.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       document = ixml_or_isxml->create_document( ).
@@ -2362,13 +2170,33 @@ CLASS ltc_isxml_render IMPLEMENTATION.
 
   METHOD namespace.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse(
+      document = lth_isxmlixml=>parse(
           io_ixml_or_isxml = ixml_or_isxml
           iv_xml_string    = `<nsprefix:A xmlns="dnsuri" xmlns:nsprefix="nsuri" nsprefix:attr="1" attr="2"><B attr="3"/></nsprefix:A>` ).
-      string = lth_ixml_isxml=>render( ixml_or_isxml ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
       cl_abap_unit_assert=>assert_equals(
           act = string
           exp = `<nsprefix:A nsprefix:attr="1" attr="2" xmlns="dnsuri" xmlns:nsprefix="nsuri"><B attr="3"/></nsprefix:A>` ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD namespace_2.
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A xmlns:a="nsuri"><a:B/></A>` ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = `<A xmlns:a="nsuri"><a:B/></A>` ).
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD namespace_3.
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = `<A xmlns:a="nsuri"><B a:a=""/></A>` ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = `<A xmlns:a="nsuri"><B a:a=""/></A>` ).
     ENDLOOP.
   ENDMETHOD.
 
@@ -2378,7 +2206,7 @@ CLASS ltc_isxml_render IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_stream IMPLEMENTATION.
+CLASS ltc_isxmlixml_stream IMPLEMENTATION.
   METHOD close.
 * Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
 *    li_ixml = cl_ixml=>create( ).
@@ -2394,9 +2222,9 @@ CLASS ltc_isxml_stream IMPLEMENTATION.
 *    li_istream->close( ).
 *    ri_node = li_document->get_first_child( ).
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      document = lth_ixml_isxml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                        iv_xml_string    = '<A/>' ).
-      lth_ixml_isxml=>istream->close( ).
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A/>' ).
+      lth_isxmlixml=>istream->close( ).
       element = document->get_root_element( ).
       cl_abap_unit_assert=>assert_equals( act = element->get_name( )
                                           exp = `A` ).
@@ -2409,7 +2237,7 @@ CLASS ltc_isxml_stream IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS ltc_isxml_stream_factory IMPLEMENTATION.
+CLASS ltc_isxmlixml_stream_factory IMPLEMENTATION.
   METHOD create_istream_string.
 * Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
 *    li_ixml = cl_ixml=>create( ).
@@ -2532,6 +2360,37 @@ CLASS ltc_isxml_stream_factory IMPLEMENTATION.
 *    " Normalize XML according to SXML limitations in order to compare IXML
 *    " and SXML results by simple string comparison.
 *    rv_result = lcl_rewrite_xml_via_sxml=>execute( rv_result ).
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS ltc_isxmlonly_parser IMPLEMENTATION.
+  METHOD namespace.
+    DATA lo_isxml_attribute TYPE REF TO lcl_isxml_attribute.
+
+    " GIVEN
+    document = lth_isxmlixml=>parse( io_ixml_or_isxml = isxml
+                                     iv_xml_string    = `<A xmlns:a="nsuri"><B a:a=""/></A>` ).
+    " WHEN
+    lo_isxml_attribute ?= document->get_root_element( )->get_first_child( )->get_attributes( )->create_iterator( )->get_next( ). "->get_next( ).
+    " THEN
+    cl_abap_unit_assert=>assert_bound( act = lo_isxml_attribute ).
+    cl_abap_unit_assert=>assert_equals( act  = lo_isxml_attribute->prefix
+                                        exp  = 'a'
+                                        msg  = 'prefix'
+                                        quit = if_aunit_constants=>no ).
+    cl_abap_unit_assert=>assert_equals( act  = lo_isxml_attribute->name
+                                        exp  = 'a'
+                                        msg  = 'name'
+                                        quit = if_aunit_constants=>no ).
+*    cl_abap_unit_assert=>assert_equals( act  = lo_isxml_attribute->nsuri
+*                                        exp  = 'nsuri'
+*                                        msg  = 'namespace'
+*                                        quit = if_aunit_constants=>no ).
+  ENDMETHOD.
+
+  METHOD setup.
+    ixml_and_isxml = get_ixml_and_isxml( ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -3456,7 +3315,7 @@ CLASS lth_ixml IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_ixml_isxml IMPLEMENTATION.
+CLASS lth_isxmlixml IMPLEMENTATION.
   METHOD create_document.
     ixml = zcl_excel_xml=>create( ).
     document = ixml->create_document( ).
@@ -3496,6 +3355,7 @@ CLASS lth_ixml_isxml IMPLEMENTATION.
     lo_ostream = stream_factory->create_ostream_cstring( lr_string ).
     lo_renderer = ixml_or_isxml->create_renderer( ostream  = lo_ostream
                                                   document = document ).
+    " remove the XML declaration
     document->set_declaration( abap_false ).
     " Fills RV_RESULT
     lo_renderer->render( ).
@@ -3505,534 +3365,5 @@ CLASS lth_ixml_isxml IMPLEMENTATION.
     " Normalize XML according to SXML limitations in order to compare IXML
     " and SXML results by simple string comparison.
     rv_result = lcl_rewrite_xml_via_sxml=>execute( rv_result ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml IMPLEMENTATION.
-  METHOD create.
-    IF singleton IS NOT BOUND.
-      singleton = NEW #( ).
-      singleton->ixml = cl_ixml=>create( ).
-    ENDIF.
-    ro_result = singleton.
-  ENDMETHOD.
-
-  METHOD wrap_ixml.
-    DATA lr_wrapped_ixml_object       TYPE REF TO ts_wrapped_ixml_object.
-    DATA ls_wrapped_ixml_object       TYPE ts_wrapped_ixml_object.
-    DATA lv_class_name                TYPE string.
-    DATA lo_wrap_ixml_attribute       TYPE REF TO lth_wrap_ixml_attribute.
-    DATA lo_wrap_ixml_node            TYPE REF TO lth_wrap_ixml_node.
-    DATA lo_wrap_ixml_document        TYPE REF TO lth_wrap_ixml_document.
-    DATA lo_wrap_ixml_element         TYPE REF TO lth_wrap_ixml_element.
-    DATA lo_wrap_ixml_named_node_map  TYPE REF TO lth_wrap_ixml_named_node_map.
-    DATA lo_wrap_ixml_node_collection TYPE REF TO lth_wrap_ixml_node_collection.
-    DATA lo_wrap_ixml_node_iterator   TYPE REF TO lth_wrap_ixml_node_iterator.
-    DATA lo_wrap_ixml_node_list       TYPE REF TO lth_wrap_ixml_node_list.
-    DATA lo_wrap_ixml_text            TYPE REF TO lth_wrap_ixml_text.
-
-    IF io_ixml_unknown IS NOT BOUND.
-      RETURN.
-    ENDIF.
-
-    READ TABLE wrapped_ixml_objects WITH TABLE KEY ixml_object = io_ixml_unknown
-         REFERENCE INTO lr_wrapped_ixml_object.
-    IF sy-subrc <> 0.
-      CLEAR ls_wrapped_ixml_object.
-      ls_wrapped_ixml_object-ixml_object = io_ixml_unknown.
-      lv_class_name = cl_abap_typedescr=>describe_by_object_ref( io_ixml_unknown )->get_relative_name( ).
-      CASE lv_class_name.
-        WHEN 'CL_IXML_ATTRIBUTE'.
-          lo_wrap_ixml_attribute = NEW #( ).
-          lo_wrap_ixml_attribute->ixml_attribute ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_attribute.
-          lo_wrap_ixml_node ?= lo_wrap_ixml_attribute.
-          lo_wrap_ixml_node->ixml_node ?= io_ixml_unknown.
-        WHEN 'CL_IXML_DOCUMENT'.
-          lo_wrap_ixml_document = NEW #( ).
-          lo_wrap_ixml_document->ixml_document ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_document.
-          lo_wrap_ixml_node ?= lo_wrap_ixml_document.
-          lo_wrap_ixml_node->ixml_node ?= io_ixml_unknown.
-        WHEN 'CL_IXML_ELEMENT'.
-          lo_wrap_ixml_element = NEW #( ).
-          lo_wrap_ixml_element->ixml_element ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_element.
-          lo_wrap_ixml_node ?= lo_wrap_ixml_element.
-          lo_wrap_ixml_node->ixml_node ?= io_ixml_unknown.
-        WHEN 'CL_IXML_NAMED_NODE_MAP'.
-          lo_wrap_ixml_named_node_map = NEW #( ).
-          lo_wrap_ixml_named_node_map->ixml_named_node_map ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_named_node_map.
-        WHEN 'CL_IXML_NODE_COLLECTION'.
-          lo_wrap_ixml_node_collection = NEW #( ).
-          lo_wrap_ixml_node_collection->ixml_node_collection ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_node_collection.
-        WHEN 'CL_IXML_NODE_ITERATOR'.
-          lo_wrap_ixml_node_iterator = NEW #( ).
-          lo_wrap_ixml_node_iterator->ixml_node_iterator ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_node_iterator.
-        WHEN 'CL_IXML_NODE_LIST'.
-          lo_wrap_ixml_node_list = NEW #( ).
-          lo_wrap_ixml_node_list->ixml_node_list ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_node_list.
-        WHEN 'CL_IXML_TEXT'.
-          lo_wrap_ixml_text = NEW #( ).
-          lo_wrap_ixml_text->ixml_text ?= io_ixml_unknown.
-          ls_wrapped_ixml_object-ixml_object_wrapper = lo_wrap_ixml_text.
-          lo_wrap_ixml_node ?= lo_wrap_ixml_text.
-          lo_wrap_ixml_node->ixml_node ?= io_ixml_unknown.
-      ENDCASE.
-      INSERT ls_wrapped_ixml_object INTO TABLE wrapped_ixml_objects REFERENCE INTO lr_wrapped_ixml_object.
-    ENDIF.
-
-    ro_result = lr_wrapped_ixml_object->ixml_object_wrapper.
-  ENDMETHOD.
-
-  METHOD zif_excel_xml~create_document.
-    DATA lo_ixml_document TYPE REF TO if_ixml_document.
-
-    lo_ixml_document = ixml->create_document( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_document ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml~create_encoding.
-    DATA lo_encoding TYPE REF TO lth_wrap_ixml_encoding.
-
-    lo_encoding = NEW #( ).
-    lo_encoding->ixml_encoding = ixml->create_encoding( byte_order    = byte_order
-                                                        character_set = character_set ).
-    rval = lo_encoding.
-  ENDMETHOD.
-
-  METHOD zif_excel_xml~create_parser.
-    DATA parser                   TYPE REF TO lth_wrap_ixml_parser.
-    DATA wrap_ixml_document       TYPE REF TO lth_wrap_ixml_document.
-    DATA wrap_ixml_istream        TYPE REF TO lif_wrap_ixml_istream.
-    DATA wrap_ixml_stream_factory TYPE REF TO lth_wrap_ixml_stream_factory.
-
-    parser = NEW #( ).
-    wrap_ixml_document ?= document.
-    wrap_ixml_istream ?= istream.
-    wrap_ixml_stream_factory ?= stream_factory.
-    parser->ixml_parser = ixml->create_parser( document       = wrap_ixml_document->ixml_document
-                                               istream        = wrap_ixml_istream->ixml_istream
-                                               stream_factory = wrap_ixml_stream_factory->ixml_stream_factory ).
-    rval = parser.
-  ENDMETHOD.
-
-  METHOD zif_excel_xml~create_renderer.
-    DATA lo_renderer        TYPE REF TO lth_wrap_ixml_renderer.
-    DATA wrap_ixml_document TYPE REF TO lth_wrap_ixml_document.
-    DATA wrap_ixml_ostream  TYPE REF TO lif_wrap_ixml_ostream.
-
-    lo_renderer = NEW #( ).
-    wrap_ixml_document ?= document.
-    wrap_ixml_ostream ?= ostream.
-    lo_renderer->ixml_renderer ?= ixml->create_renderer( document = wrap_ixml_document->ixml_document
-                                                         ostream  = wrap_ixml_ostream->ixml_ostream ).
-    rval = lo_renderer.
-  ENDMETHOD.
-
-  METHOD zif_excel_xml~create_stream_factory.
-    DATA lo_stream_factory TYPE REF TO lth_wrap_ixml_stream_factory.
-
-    lo_stream_factory = NEW #( ).
-    lo_stream_factory->ixml_stream_factory = ixml->create_stream_factory( ).
-    rval = lo_stream_factory.
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_attribute IMPLEMENTATION.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_character_data IMPLEMENTATION.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_document IMPLEMENTATION.
-  METHOD zif_excel_xml_document~create_element.
-    DATA lo_ixml_element TYPE REF TO if_ixml_element.
-
-    lo_ixml_element = ixml_document->create_element( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~create_simple_element.
-    DATA lo_wrap_ixml_parent TYPE REF TO lth_wrap_ixml_node.
-    DATA lo_ixml_element     TYPE REF TO if_ixml_element.
-
-    lo_wrap_ixml_parent ?= parent.
-    lo_ixml_element = ixml_document->create_simple_element( name   = name
-                                                            parent = lo_wrap_ixml_parent->ixml_node ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~create_simple_element_ns.
-    DATA lo_wrap_ixml_parent TYPE REF TO lth_wrap_ixml_node.
-    DATA lo_ixml_element     TYPE REF TO if_ixml_element.
-
-    lo_wrap_ixml_parent ?= parent.
-    lo_ixml_element = ixml_document->create_simple_element_ns( name   = name
-                                                               parent = lo_wrap_ixml_parent->ixml_node
-                                                               prefix = prefix ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~find_from_name.
-    DATA lo_ixml_element TYPE REF TO if_ixml_element.
-
-    lo_ixml_element = ixml_document->find_from_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~find_from_name_ns.
-    DATA lo_ixml_element TYPE REF TO if_ixml_element.
-
-    lo_ixml_element = ixml_document->find_from_name_ns( name = name
-                                                        uri  = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~get_elements_by_tag_name.
-    DATA lo_ixml_node_collection TYPE REF TO if_ixml_node_collection.
-
-    lo_ixml_node_collection = ixml_document->get_elements_by_tag_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~get_root_element.
-    DATA lo_ixml_element TYPE REF TO if_ixml_element.
-
-    lo_ixml_element = ixml_document->get_root_element( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~set_declaration.
-    ixml_document->set_declaration( declaration = declaration ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~set_encoding.
-    DATA wrap_ixml_encoding TYPE REF TO lth_wrap_ixml_encoding.
-
-    wrap_ixml_encoding ?= encoding.
-    ixml_document->set_encoding( encoding = wrap_ixml_encoding->ixml_encoding ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_document~set_standalone.
-    ixml_document->set_standalone( standalone ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_element IMPLEMENTATION.
-  METHOD zif_excel_xml_element~find_from_name.
-    DATA lo_ixml_element TYPE REF TO if_ixml_element.
-
-    lo_ixml_element = ixml_element->find_from_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~find_from_name_ns.
-    DATA lo_ixml_element TYPE REF TO if_ixml_element.
-
-    lo_ixml_element = ixml_element->find_from_name_ns( depth = depth
-                                                       name  = name
-                                                       uri   = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~get_attribute.
-    rval = ixml_element->get_attribute( name = name ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~get_attribute_node_ns.
-    DATA lo_ixml_attribute TYPE REF TO if_ixml_attribute.
-
-    lo_ixml_attribute = ixml_element->get_attribute_node_ns( name = name
-                                                             uri  = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_attribute ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~get_attribute_ns.
-    rval = ixml_element->get_attribute_ns( name = name
-                                           uri  = uri ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~get_elements_by_tag_name.
-    DATA lo_ixml_node_collection TYPE REF TO if_ixml_node_collection.
-
-    lo_ixml_node_collection = ixml_element->get_elements_by_tag_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~get_elements_by_tag_name_ns.
-    DATA lo_ixml_node_collection TYPE REF TO if_ixml_node_collection.
-
-    lo_ixml_node_collection = ixml_element->get_elements_by_tag_name_ns( name = name
-                                                                         uri  = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~remove_attribute_ns.
-    ixml_element->remove_attribute_ns( name = name ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~set_attribute.
-    ixml_element->set_attribute( name      = name
-                                 namespace = namespace
-                                 value     = value ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_element~set_attribute_ns.
-    ixml_element->set_attribute_ns( name   = name
-                                    prefix = prefix
-                                    value  = value ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_istream_string IMPLEMENTATION.
-  METHOD zif_excel_xml_stream~close.
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_istream_xstring IMPLEMENTATION.
-  METHOD zif_excel_xml_stream~close.
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_named_node_map IMPLEMENTATION.
-  METHOD zif_excel_xml_named_node_map~create_iterator.
-    DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
-
-    lo_ixml_node_iterator = ixml_named_node_map->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node IMPLEMENTATION.
-  METHOD zif_excel_xml_node~append_child.
-    DATA lo_wrap_ixml_node TYPE REF TO lth_wrap_ixml_node.
-
-    lo_wrap_ixml_node ?= new_child.
-    ixml_node->append_child( lo_wrap_ixml_node->ixml_node ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~clone.
-    DATA lo_ixml_node TYPE REF TO if_ixml_node.
-
-    lo_ixml_node = ixml_node->clone( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~create_iterator.
-    DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
-
-    lo_ixml_node_iterator = ixml_node->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_attributes.
-    DATA lo_ixml_named_node_map TYPE REF TO if_ixml_named_node_map.
-
-    lo_ixml_named_node_map = ixml_node->get_attributes( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_named_node_map ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_children.
-    DATA lo_ixml_node_list TYPE REF TO if_ixml_node_list.
-
-    lo_ixml_node_list = ixml_node->get_children( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_list ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_first_child.
-    DATA lo_ixml_node TYPE REF TO if_ixml_node.
-
-    lo_ixml_node = ixml_node->get_first_child( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_name.
-    rval = ixml_node->get_name( ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_namespace_prefix.
-    rval = ixml_node->get_namespace_prefix( ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_namespace_uri.
-    rval = ixml_node->get_namespace_uri( ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_next.
-    DATA lo_ixml_node TYPE REF TO if_ixml_node.
-
-    lo_ixml_node = ixml_node->get_next( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~get_value.
-    rval = ixml_node->get_value( ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node~set_value.
-    ixml_node->set_value( value ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node_collection IMPLEMENTATION.
-  METHOD zif_excel_xml_node_collection~create_iterator.
-    DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
-
-    lo_ixml_node_iterator = ixml_node_collection->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_node_collection~get_length.
-    rval = ixml_node_collection->get_length( ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node_iterator IMPLEMENTATION.
-  METHOD zif_excel_xml_node_iterator~get_next.
-    DATA lo_ixml_node TYPE REF TO if_ixml_node.
-
-    lo_ixml_node = ixml_node_iterator->get_next( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_node_list IMPLEMENTATION.
-  METHOD zif_excel_xml_node_list~create_iterator.
-    DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
-
-    lo_ixml_node_iterator = ixml_node_list->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_ostream_string IMPLEMENTATION.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_parser IMPLEMENTATION.
-  METHOD zif_excel_xml_parser~add_strip_space_element.
-* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME
-*    li_parser->add_strip_space_element( ).
-    ixml_parser->add_strip_space_element( ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_parser~parse.
-    ixml_parser->parse( ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_parser~set_normalizing.
-    rval = ixml_parser->set_normalizing( is_normalizing ).
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_parser~set_validating.
-    rval = ixml_parser->set_validating( mode ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_renderer IMPLEMENTATION.
-  METHOD zif_excel_xml_renderer~render.
-    ixml_renderer->render( ).
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_stream IMPLEMENTATION.
-  METHOD zif_excel_xml_stream~close.
-    RAISE EXCEPTION TYPE lcx_unexpected.
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
-  METHOD zif_excel_xml_stream_factory~create_istream_string.
-* Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
-*    li_ixml = cl_ixml=>create( ).
-*    li_document = li_ixml->create_document( ).
-*    li_factory = li_ixml->create_stream_factory( ).
-*    li_istream = li_factory->create_istream_string( iv_string ).
-
-    DATA lo_wrap_ixml_istream_string TYPE REF TO lth_wrap_ixml_istream_string.
-
-    lo_wrap_ixml_istream_string = NEW #( ).
-    lo_wrap_ixml_istream_string->lif_wrap_ixml_istream~ixml_istream = ixml_stream_factory->create_istream_string( string ).
-    rval = lo_wrap_ixml_istream_string.
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_stream_factory~create_istream_xstring.
-* Method GET_IXML_FROM_ZIP_ARCHIVE of ZCL_EXCEL_READER_2007
-*     lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
-
-    DATA lo_wrap_ixml_istream_string TYPE REF TO lth_wrap_ixml_istream_string.
-
-    lo_wrap_ixml_istream_string = NEW #( ).
-    lo_wrap_ixml_istream_string->lif_wrap_ixml_istream~ixml_istream = ixml_stream_factory->create_istream_xstring(
-                                                                          string ).
-    rval = lo_wrap_ixml_istream_string.
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_stream_factory~create_ostream_cstring.
-* Method RENDER_XML_DOCUMENT of class ZCL_EXCEL_WRITER_2007:
-*    lo_streamfactory = me->ixml->create_stream_factory( ).
-*    lo_ostream = lo_streamfactory->create_ostream_cstring( string = lv_string ).
-*    lo_renderer = me->ixml->create_renderer( ostream  = lo_ostream document = io_document ).
-*    lo_renderer->render( ).
-
-    DATA lo_wrap_ixml_ostream_string TYPE REF TO lth_wrap_ixml_ostream_string.
-
-    lo_wrap_ixml_ostream_string = NEW #( ).
-    lo_wrap_ixml_ostream_string->lif_wrap_ixml_ostream~ixml_ostream = ixml_stream_factory->create_ostream_cstring(
-                                                                          string->* ).
-    rval = lo_wrap_ixml_ostream_string.
-  ENDMETHOD.
-
-  METHOD zif_excel_xml_stream_factory~create_ostream_xstring.
-* Method CREATE_CONTENT_TYPES of class ZCL_EXCEL_WRITER_XLSM:
-*    CLEAR ep_content.
-*    lo_ixml = cl_ixml=>create( ).
-*    lo_streamfactory = lo_ixml->create_stream_factory( ).
-*    lo_ostream = lo_streamfactory->create_ostream_xstring( string = ep_content ).
-*    lo_renderer = lo_ixml->create_renderer( ostream  = lo_ostream document = lo_document ).
-*    lo_renderer->render( ).
-
-    DATA lo_wrap_ixml_ostream_xstring TYPE REF TO lth_wrap_ixml_ostream_xstring.
-
-    lo_wrap_ixml_ostream_xstring = NEW #( ).
-    lo_wrap_ixml_ostream_xstring->lif_wrap_ixml_ostream~ixml_ostream = ixml_stream_factory->create_ostream_xstring(
-                                                                           string->* ).
-    rval = lo_wrap_ixml_ostream_xstring.
-  ENDMETHOD.
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_text IMPLEMENTATION.
-
-ENDCLASS.
-
-
-CLASS lth_wrap_ixml_unknown IMPLEMENTATION.
-  METHOD zif_excel_xml_unknown~query_interface.
-    RAISE EXCEPTION TYPE lcx_unexpected.
   ENDMETHOD.
 ENDCLASS.

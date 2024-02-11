@@ -58,13 +58,13 @@ INTERFACE zif_excel_xml_document
     RETURNING
       VALUE(rval) TYPE REF TO zif_excel_xml_node_collection.
 
-*  METHODS get_elements_by_tag_name_ns
-*    IMPORTING
-**      !depth TYPE i DEFAULT 0
-*      !name TYPE string
-*      !uri TYPE string DEFAULT ''
-*    RETURNING
-*      VALUE(rval) TYPE REF TO zif_excel_ixml_node_collection.
+  METHODS get_elements_by_tag_name_ns
+    IMPORTING
+*      !depth TYPE i DEFAULT 0
+      !name TYPE string
+      !uri TYPE string DEFAULT ''
+    RETURNING
+      VALUE(rval) TYPE REF TO zif_excel_xml_node_collection.
 
   METHODS get_root_element
     RETURNING

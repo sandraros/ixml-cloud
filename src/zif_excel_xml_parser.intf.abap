@@ -1,6 +1,7 @@
 INTERFACE zif_excel_xml_parser
   PUBLIC.
 
+  "! Mode for SET_VALIDATING
   CONSTANTS co_no_validation TYPE i VALUE 0 ##NO_TEXT.
 
   METHODS add_strip_space_element.
@@ -16,14 +17,14 @@ INTERFACE zif_excel_xml_parser
 
   METHODS set_normalizing
     IMPORTING
-      !is_normalizing TYPE boolean DEFAULT 'X'
-    RETURNING
-      VALUE(rval) TYPE boolean.
+      !is_normalizing TYPE boolean DEFAULT 'X'.
+*    RETURNING
+*      VALUE(rval) TYPE boolean.
 
   METHODS set_validating
     IMPORTING
-      !mode TYPE i DEFAULT '1'
-    RETURNING
-      VALUE(rval) TYPE boolean.
+      !mode TYPE i DEFAULT '1'.
+*    RETURNING
+*      VALUE(rval) TYPE boolean.
 
 ENDINTERFACE.

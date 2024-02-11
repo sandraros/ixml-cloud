@@ -3,6 +3,9 @@ INTERFACE zif_excel_xml_node
 
   INTERFACES zif_excel_xml_unknown.
 
+  ALIASES query_interface
+    FOR zif_excel_xml_unknown~query_interface.
+
   CONSTANTS co_node_attribute         TYPE i VALUE 8 ##NO_TEXT.
   CONSTANTS co_node_attribute_decl    TYPE i VALUE 2097152 ##NO_TEXT.
   CONSTANTS co_node_att_list_decl     TYPE i VALUE 1048576 ##NO_TEXT.
