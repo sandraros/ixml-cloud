@@ -195,7 +195,7 @@ CLASS lcl_isxml DEFINITION
 
     CLASS-METHODS get_singleton
       RETURNING
-        VALUE(rval) TYPE REF TO zif_excel_xml."lcl_isxml.
+        VALUE(rval) TYPE REF TO zif_excel_xml.
 
     CLASS-DATA singleton TYPE REF TO zif_excel_xml."lcl_isxml.
     CLASS-DATA no_node   TYPE REF TO lcl_isxml_node.

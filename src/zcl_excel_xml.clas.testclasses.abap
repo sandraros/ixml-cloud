@@ -60,6 +60,21 @@ CLASS ltc_ixml DEFINITION
 ENDCLASS.
 
 
+CLASS ltc_ixml_complex DEFINITION
+      INHERITING FROM ltc_ixml
+      FOR TESTING
+      DURATION SHORT
+      RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+
+    METHODS bom FOR TESTING RAISING cx_static_check.
+    METHODS reassign_to_other_parent FOR TESTING RAISING cx_static_check.
+    METHODS invalid_multiple_root_elements FOR TESTING RAISING cx_static_check.
+
+ENDCLASS.
+
+
 CLASS ltc_ixml_element DEFINITION
       INHERITING FROM ltc_ixml
       FOR TESTING
@@ -83,6 +98,7 @@ CLASS ltc_ixml_node DEFINITION
   PRIVATE SECTION.
 
     METHODS append_child FOR TESTING RAISING cx_static_check.
+    METHODS append_child_not_bound FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -142,6 +158,21 @@ ENDCLASS.
 
 
 "! Test of ZIF_EXCEL_IXML_DOCUMENT methods
+CLASS ltc_isxmlixml_complex DEFINITION
+      INHERITING FROM ltc_isxmlixml
+      FOR TESTING
+      DURATION SHORT
+      RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+
+    METHODS reassign_to_other_parent FOR TESTING RAISING cx_static_check.
+
+    METHODS setup.
+
+ENDCLASS.
+
+
 CLASS ltc_isxmlixml_document DEFINITION
       INHERITING FROM ltc_isxmlixml
       FOR TESTING
@@ -507,12 +538,14 @@ CLASS ltc_sxml_reader DEFINITION
 
   PRIVATE SECTION.
 
+    METHODS bom FOR TESTING RAISING cx_static_check.
     METHODS empty_object_oriented_parsing FOR TESTING RAISING cx_static_check.
     METHODS empty_token_based_parsing FOR TESTING RAISING cx_static_check.
     METHODS empty_xml FOR TESTING RAISING cx_static_check.
     METHODS invalid_xml FOR TESTING RAISING cx_static_check.
     METHODS invalid_xml_eof_reached FOR TESTING RAISING cx_static_check.
     METHODS invalid_xml_not_wellformed FOR TESTING RAISING cx_static_check.
+    METHODS keep_whitespace FOR TESTING RAISING cx_static_check.
     METHODS normalization FOR TESTING RAISING cx_static_check.
     METHODS object_oriented_parsing FOR TESTING RAISING cx_static_check.
     METHODS token_based_parsing FOR TESTING RAISING cx_static_check.
@@ -621,17 +654,22 @@ CLASS lth_ixml DEFINITION.
     CLASS-DATA encoding       TYPE REF TO if_ixml_encoding.
     CLASS-DATA ixml           TYPE REF TO if_ixml.
     CLASS-DATA stream_factory TYPE REF TO if_ixml_stream_factory.
+
+    CLASS-METHODS create_document.
+
     CLASS-METHODS parse
       IMPORTING
-        xml_string TYPE csequence
+        iv_xml_string  TYPE csequence OPTIONAL
+        iv_xml_xstring TYPE xsequence OPTIONAL
+        iv_validating  TYPE i DEFAULT zif_excel_xml_parser=>co_no_validation
+      PREFERRED PARAMETER
+        iv_xml_string
       RETURNING
         VALUE(ro_result) TYPE REF TO if_ixml_document.
 
     CLASS-METHODS render
       RETURNING
         VALUE(rv_result) TYPE string.
-
-    CLASS-METHODS create_document.
 
 ENDCLASS.
 
@@ -675,6 +713,58 @@ ENDCLASS.
 
 
 CLASS ltc_ixml IMPLEMENTATION.
+ENDCLASS.
+
+
+CLASS ltc_ixml_complex IMPLEMENTATION.
+  METHOD bom.
+    xstring = cl_abap_codepage=>convert_to(
+        '<?xml version="1.0"  standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/20' &&
+        '06/relationships/extended-properties" Target="docProps/app.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.' &&
+        'xml"/><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' ).
+    CONCATENATE cl_abap_char_utilities=>byte_order_mark_utf8
+                xstring
+                INTO xstring
+                IN BYTE MODE.
+    document = lth_ixml=>parse( iv_xml_xstring = xstring ).
+    element = document->get_root_element( ).
+    cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                        exp = 'Relationships' ).
+  ENDMETHOD.
+
+  METHOD invalid_multiple_root_elements.
+    " As done in method CREATE_DOCPROPS_APP of class ZCL_EXCEL_WRITER_2007, e.g. LinksUpToDate and SharedDoc.
+
+    DATA lo_element_root TYPE REF TO if_ixml_element.
+
+    document = lth_ixml=>parse( '<A/>' ).
+    lo_element_root = document->get_root_element( ).
+    element = document->create_simple_element( name   = 'LinksUpToDate'
+                                               parent = document ).
+    element = document->create_simple_element( name   = 'SharedDoc'
+                                               parent = document ).
+    string = lth_ixml=>render( ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<A/><LinksUpToDate/><SharedDoc/>' ).
+  ENDMETHOD.
+
+  METHOD reassign_to_other_parent.
+    " As done in method CREATE_DOCPROPS_APP of class ZCL_EXCEL_WRITER_2007, e.g. LinksUpToDate and SharedDoc.
+
+    DATA lo_element_root TYPE REF TO if_ixml_element.
+
+    document = lth_ixml=>parse( '<A/>' ).
+    lo_element_root = document->get_root_element( ).
+    element = document->create_simple_element( name   = 'LinksUpToDate'
+                                               parent = document ).
+    lo_element_root->append_child( new_child = element ).
+    element = document->create_simple_element( name   = 'SharedDoc'
+                                               parent = document ).
+    lo_element_root->append_child( new_child = element ).
+    string = lth_ixml=>render( ).
+    cl_abap_unit_assert=>assert_equals( act = string
+                                        exp = '<A><LinksUpToDate/><SharedDoc/></A>' ).
+  ENDMETHOD.
 ENDCLASS.
 
 
@@ -744,6 +834,17 @@ CLASS ltc_ixml_node IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = string
                                         exp = '<A/><B/>' ).
   ENDMETHOD.
+
+  METHOD append_child_not_bound.
+    DATA rval       TYPE i.
+    DATA lo_element TYPE REF TO if_ixml_element.
+
+    document = lth_ixml=>parse( '<A/>' ).
+    element = document->get_root_element( ).
+    rval = element->append_child( lo_element ).
+    cl_abap_unit_assert=>assert_equals( act = rval
+                                        exp = lcl_isxml=>ixml_mr-dom_invalid_arg ).
+  ENDMETHOD.
 ENDCLASS.
 
 
@@ -806,6 +907,34 @@ CLASS ltc_isxmlixml IMPLEMENTATION.
     " Normalize XML according to SXML limitations in order to compare IXML
     " and SXML results by simple string comparison.
     rv_result = lcl_rewrite_xml_via_sxml=>execute( rv_result ).
+  ENDMETHOD.
+
+  METHOD setup.
+    ixml_and_isxml = get_ixml_and_isxml( ).
+  ENDMETHOD.
+ENDCLASS.
+
+
+CLASS ltc_isxmlixml_complex IMPLEMENTATION.
+  METHOD reassign_to_other_parent.
+    " As done in method CREATE_DOCPROPS_APP of class ZCL_EXCEL_WRITER_2007, e.g. LinksUpToDate and SharedDoc.
+
+    DATA lo_element_root TYPE REF TO zif_excel_xml_element.
+
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = '<A/>' ).
+      lo_element_root = document->get_root_element( ).
+      element = document->create_simple_element( name   = 'LinksUpToDate'
+                                                 parent = document ).
+      lo_element_root->append_child( new_child = element ).
+      element = document->create_simple_element( name   = 'SharedDoc'
+                                                 parent = document ).
+      lo_element_root->append_child( new_child = element ).
+      string = lth_isxmlixml=>render( ixml_or_isxml ).
+      cl_abap_unit_assert=>assert_equals( act = string
+                                          exp = '<A><LinksUpToDate/><SharedDoc/></A>' ).
+    ENDLOOP.
   ENDMETHOD.
 
   METHOD setup.
@@ -1406,6 +1535,14 @@ CLASS ltc_isxmlixml_node IMPLEMENTATION.
       cl_abap_unit_assert=>assert_not_bound( act = element ).
       element ?= node_iterator->get_next( ).
       cl_abap_unit_assert=>assert_not_bound( act = element ).
+
+      element ?= document->get_root_element( )->get_first_child( )->get_first_child( ).
+      node_iterator = element->create_iterator( ).
+      element ?= node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+                                          exp = `C` ).
+      element ?= node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_not_bound( act = element ).
     ENDLOOP.
   ENDMETHOD.
 
@@ -1950,38 +2087,39 @@ CLASS ltc_isxmlixml_parser IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD space_normalizing_off.
-* Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
-*    lo_ixml           = cl_ixml=>create( ).
-*    lo_streamfactory  = lo_ixml->create_stream_factory( ).
-*    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
-*    r_ixml            = lo_ixml->create_document( ).
-*    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
-*                                                istream        = lo_istream
-*                                                document       = r_ixml ).
-*    lo_parser->set_normalizing( is_normalizing ).
-*    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
-*    lo_parser->parse( ).
-* ALL CALLS ARE DONE WITH is_normalizing = 'X' except this one in method LOAD_SHARED_STRINGS of ZCL_EXCEL_READER_2007:
-*    lo_shared_strings_xml = me->get_ixml_from_zip_archive( i_filename     = ip_path
-*                                                           is_normalizing = space ).
-    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
-      " GIVEN
-      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
-                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
-                                       iv_normalizing            = abap_false
-                                       iv_preserve_space_element = abap_true ).
-      " WHEN
-      element = document->get_root_element( ).
-      " THEN
-      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
-                                          exp = 'A' ).
-      text ?= element->get_first_child( ).
-      cl_abap_unit_assert=>assert_equals( act = text->get_value( )
-                                          exp = `  ` ).
-      element ?= text->get_next( ).
-      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
-                                          exp = 'B' ).
-    ENDLOOP.
+* FOR NOW, I CAN'T MAKE WORK NORMALIZING OFF and PRESERVE SPACE ELEMENT.
+** Method GET_IXML_FROM_ZIP_ARCHIVE of class ZCL_EXCEL_READER_2007:
+**    lo_ixml           = cl_ixml=>create( ).
+**    lo_streamfactory  = lo_ixml->create_stream_factory( ).
+**    lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
+**    r_ixml            = lo_ixml->create_document( ).
+**    lo_parser         = lo_ixml->create_parser( stream_factory = lo_streamfactory
+**                                                istream        = lo_istream
+**                                                document       = r_ixml ).
+**    lo_parser->set_normalizing( is_normalizing ).
+**    lo_parser->set_validating( mode = if_ixml_parser=>co_no_validation ).
+**    lo_parser->parse( ).
+** ALL CALLS ARE DONE WITH is_normalizing = 'X' except this one in method LOAD_SHARED_STRINGS of ZCL_EXCEL_READER_2007:
+**    lo_shared_strings_xml = me->get_ixml_from_zip_archive( i_filename     = ip_path
+**                                                           is_normalizing = space ).
+*    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+*      " GIVEN
+*      document = lth_isxmlixml=>parse( io_ixml_or_isxml          = ixml_or_isxml
+*                                       iv_xml_string             = `<A>  <B>  </B>  </A>`
+*                                       iv_normalizing            = abap_false
+*                                       iv_preserve_space_element = abap_true ).
+*      " WHEN
+*      element = document->get_root_element( ).
+*      " THEN
+*      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+*                                          exp = 'A' ).
+*      node = element->get_first_child( ).
+*      cl_abap_unit_assert=>assert_equals( act = node->get_value( )
+*                                          exp = `  ` ).
+*      element ?= node->get_next( ).
+*      cl_abap_unit_assert=>assert_equals( act = element->get_name( )
+*                                          exp = 'B' ).
+*    ENDLOOP.
   ENDMETHOD.
 
   METHOD space_normalizing_on.
@@ -2718,6 +2856,32 @@ ENDCLASS.
 
 
 CLASS ltc_sxml_reader IMPLEMENTATION.
+  METHOD bom.
+    xstring = cl_abap_codepage=>convert_to(
+        '<?xml version="1.0"  standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" uniqueCount="24" count="24">' &&
+        '<si><t>Olá Mundo</t></si><si><t>Привет, мир</t></si><si><t>مرحبا بالعالم</t></si><si><t>ہیلو دنیا</t></si><si><t>नमस्ते दुनिया</t></si><si><t>ওহে বিশ্ব</t></si><si><t>你好，世界</t></si><si><t>👋🌎, 👋🌍, 👋🌏</t></si></sst>' ).
+    CONCATENATE cl_abap_char_utilities=>byte_order_mark_utf8
+                xstring
+                INTO xstring
+                IN BYTE MODE.
+*xstring = 'EFBBBF3C3F786D6C2076657273696F6E3D22312E302220207374616E64616C6F6E653D22796573223F3E3C73737420636F756E743D2232342220756E69717565436F756E743D2232342220786D6C6E733D22687474703A2F2F736368656D61732E6F70656E786D6C666F726D6174732E6F72672F737072' &&
+*'65616473686565746D6C2F323030362F6D61696E223E3C73693E3C743E28417261626963293C2F743E3C2F73693E3C73693E3C743E2842656E67616C69293C2F743E3C2F73693E3C73693E3C743E284368696E657365293C2F743E3C2F73693E3C73693E3C743E28456D6F6A6920776176696E672068616E64202B20' &&
+*'33207061727473206F662074686520776F726C64293C2F743E3C2F73693E3C73693E3C743E284672656E6368293C2F743E3C2F73693E3C73693E3C743E2848696E6469293C2F743E3C2F73693E3C73693E3C743E28506F7274756775657365293C2F743E3C2F73693E3C73693E3C743E285275737369616E293C2F74' &&
+*'3E3C2F73693E3C73693E3C743E285370616E697368293C2F743E3C2F73693E3C73693E3C743E2855726475293C2F743E3C2F73693E3C73693E3C743E426F6E6A6F7572206C65206D6F6E64653C2F743E3C2F73693E3C73693E3C743E436C69636B206865726520746F207669736974206162617032786C737820686F' &&
+*'6D65706167653C2F743E3C2F73693E3C73693E3C743E48656C6C6F20776F726C643C2F743E3C2F73693E3C73693E3C743E486F6C61204D756E646F3C2F743E3C2F73693E3C73693E3C743E4F6CC3A1204D756E646F3C2F743E3C2F73693E3C73693E3C743ED09FD180D0B8D0B2D0B5D1822C20D0BCD0B8D1803C2F74' &&
+*'3E3C2F73693E3C73693E3C743ED985D8B1D8ADD8A8D8A720D8A8D8A7D984D8B9D8A7D984D9853C2F743E3C2F73693E3C73693E3C743EDB81DB8CD984D98820D8AFD986DB8CD8A73C2F743E3C2F73693E3C73693E3C743EE0A4A8E0A4AEE0A4B8E0A58DE0A4A4E0A58720E0A4A6E0A581E0A4A8E0A4BFE0A4AFE0A4BE' &&
+*'3C2F743E3C2F73693E3C73693E3C743EE0A693E0A6B9E0A78720E0A6ACE0A6BFE0A6B6E0A78DE0A6AC3C2F743E3C2F73693E3C73693E3C743EE4BDA0E5A5BDEFBC8CE4B896E7958C3C2F743E3C2F73693E3C73693E3C743EF09F918BF09F8C8E2C20F09F918BF09F8C8D2C20F09F918BF09F8C8F3C2F743E3C2F7369' &&
+*'3E3C2F7373743E'.
+    reader = cl_sxml_string_reader=>create( xstring ).
+    reader->set_option( if_sxml_reader=>co_opt_keep_whitespace ).
+    node = reader->read_next_node( ).
+    cl_abap_unit_assert=>assert_not_bound( act = node ).
+*    cl_abap_unit_assert=>assert_equals( act = node->type
+*                                        exp = if_sxml_node=>co_nt_element_open ).
+*    cl_abap_unit_assert=>assert_equals( act = reader->name
+*                                        exp = 'sst' ).
+  ENDMETHOD.
+
   METHOD empty_object_oriented_parsing.
     xstring = cl_abap_codepage=>convert_to( '<ROOTNODE/>' ).
     reader = cl_sxml_string_reader=>create( xstring ).
@@ -2823,11 +2987,23 @@ CLASS ltc_sxml_reader IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
+  METHOD keep_whitespace.
+    xstring = cl_abap_codepage=>convert_to(
+        '<?xml version="1.0"  standalone="yes"?><sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" uniqueCount="24" count="24">' &&
+        '<si><t>Olá Mundo</t></si><si><t>Привет, мир</t></si><si><t>مرحبا بالعالم</t></si><si><t>ہیلو دنیا</t></si><si><t>नमस्ते दुनिया</t></si><si><t>ওহে বিশ্ব</t></si><si><t>你好，世界</t></si><si><t>👋🌎, 👋🌍, 👋🌏</t></si></sst>' ).
+    CONCATENATE cl_abap_char_utilities=>byte_order_mark_utf8
+                xstring
+                INTO xstring
+                IN BYTE MODE.
+    reader = cl_sxml_string_reader=>create( xstring ).
+    reader->set_option( if_sxml_reader=>co_opt_keep_whitespace ).
+    node = reader->read_next_node( ).
+    cl_abap_unit_assert=>assert_not_bound( act = node ).
+  ENDMETHOD.
+
   METHOD normalization.
-*    xstring = cl_abap_codepage=>convert_to( '<A>  <B>  1  </B>  </A>' ).
     xstring = cl_abap_codepage=>convert_to( |<A><B>  1 \n 2  </B></A>| ).
     reader = cl_sxml_string_reader=>create( xstring ).
-*    reader->set_option( if_sxml_reader=>co_opt_keep_whitespace ).
     reader->set_option( if_sxml_reader=>co_opt_normalizing ).
     open_element ?= reader->read_next_node( ).
     cl_abap_unit_assert=>assert_equals( act = open_element->qname-name
@@ -3286,13 +3462,17 @@ CLASS lth_ixml IMPLEMENTATION.
     document->set_encoding( encoding ).
     stream_factory = ixml->create_stream_factory( ).
 
-    lv_xstring = cl_abap_codepage=>convert_to( xml_string ).
-    lo_istream = stream_factory->create_istream_xstring( lv_xstring ).
+    IF iv_xml_string IS NOT INITIAL.
+      lv_xstring = cl_abap_codepage=>convert_to( iv_xml_string ).
+      lo_istream = stream_factory->create_istream_xstring( lv_xstring ).
+    ELSE.
+      lo_istream = stream_factory->create_istream_xstring( iv_xml_xstring ).
+    ENDIF.
     lo_parser = ixml->create_parser( stream_factory = stream_factory
                                      istream        = lo_istream
                                      document       = document ).
     lo_parser->set_normalizing( abap_true ).
-    lo_parser->set_validating( mode = zif_excel_xml_parser=>co_no_validation ).
+    lo_parser->set_validating( mode = iv_validating ).
     lo_parser->parse( ).
 
     ro_result = document.
