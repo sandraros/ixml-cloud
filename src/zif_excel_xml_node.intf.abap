@@ -34,14 +34,14 @@ INTERFACE zif_excel_xml_node
 *      VALUE(rval) TYPE i.
 
   METHODS clone
-    IMPORTING
-      !depth TYPE i DEFAULT -1
+*    IMPORTING
+*      !depth TYPE i DEFAULT -1
     RETURNING
       VALUE(rval) TYPE REF TO zif_excel_xml_node.
 
   METHODS create_iterator
-    IMPORTING
-      !depth TYPE i DEFAULT 0
+*    IMPORTING
+*      !depth TYPE i DEFAULT 0
     RETURNING
       VALUE(rval) TYPE REF TO zif_excel_xml_node_iterator.
 

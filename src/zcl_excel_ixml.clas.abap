@@ -1,7 +1,7 @@
-CLASS zcl_excel_xml DEFINITION
+CLASS zcl_excel_ixml DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
@@ -13,28 +13,19 @@ CLASS zcl_excel_xml DEFINITION
       RETURNING
         VALUE(rval) TYPE REF TO zif_excel_xml.
 
-    CLASS-METHODS rewrite_xml_via_sxml
-      IMPORTING
-        iv_xml_string TYPE string
-      RETURNING
-        VALUE(rv_string) TYPE string.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA singleton TYPE REF TO zif_excel_xml.
 ENDCLASS.
 
 
-CLASS zcl_excel_xml IMPLEMENTATION.
+
+CLASS zcl_excel_ixml IMPLEMENTATION.
   METHOD create.
     IF singleton IS NOT BOUND.
-      singleton = lcl_isxml=>get_singleton( ).
+      singleton = lth_wrap_ixml=>get_singleton( ).
     ENDIF.
     rval = singleton.
-  ENDMETHOD.
-
-  METHOD rewrite_xml_via_sxml.
-    rv_string = lcl_rewrite_xml_via_sxml=>execute( iv_xml_string ).
   ENDMETHOD.
 
   METHOD zif_excel_xml~create_document.
