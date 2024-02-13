@@ -206,6 +206,7 @@ CLASS ltc_isxmlixml_element DEFINITION
 
   PRIVATE SECTION.
 
+    METHODS find_from_name_default_ns FOR TESTING RAISING cx_static_check.
     METHODS find_from_name_level_1      FOR TESTING RAISING cx_static_check.
     METHODS find_from_name_level_2      FOR TESTING RAISING cx_static_check.
     METHODS find_from_name_ns_depth_0   FOR TESTING RAISING cx_static_check.
@@ -1045,7 +1046,7 @@ CLASS ltc_isxmlixml_document IMPLEMENTATION.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                       iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
+                                       iv_xml_string    = |<A><B xmlns="dnsuri">B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B></A>| ).
       lo_isxml_node_collection = document->get_elements_by_tag_name( 'B' ).
       lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).
       lo_isxml_node = lo_isxml_node_iterator->get_next( ).
@@ -1069,7 +1070,16 @@ CLASS ltc_isxmlixml_document IMPLEMENTATION.
 
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
-                                       iv_xml_string    = |<A xmlns:a="nsuri"><B>B1</B><a:B>B2</a:B><B>B3</B></A>| ).
+                                       iv_xml_string    = |<A xmlns:a="nsuri"><B>B1</B><a:B>B2</a:B><C xmlns="dnsuri"><B>B3</B></C></A>| ).
+
+      lo_isxml_node_collection = document->get_elements_by_tag_name_ns( name = 'B' ).
+      lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_isxml_node->get_value( )
+                                          exp = 'B1' ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_not_bound( act = lo_isxml_node ).
+
       lo_isxml_node_collection = document->get_elements_by_tag_name_ns( name = 'B'
                                                                         uri  = 'nsuri' ).
       lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).
@@ -1078,6 +1088,16 @@ CLASS ltc_isxmlixml_document IMPLEMENTATION.
                                           exp = 'B2' ).
       lo_isxml_node = lo_isxml_node_iterator->get_next( ).
       cl_abap_unit_assert=>assert_not_bound( act = lo_isxml_node ).
+
+      lo_isxml_node_collection = document->get_elements_by_tag_name_ns( name = 'B'
+                                                                        uri  = 'dnsuri' ).
+      lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_isxml_node->get_value( )
+                                          exp = 'B3' ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_not_bound( act = lo_isxml_node ).
+
     ENDLOOP.
   ENDMETHOD.
 
@@ -1157,6 +1177,24 @@ ENDCLASS.
 
 
 CLASS ltc_isxmlixml_element IMPLEMENTATION.
+  METHOD find_from_name_default_ns.
+    LOOP AT ixml_and_isxml INTO ixml_or_isxml.
+      document = lth_isxmlixml=>parse( io_ixml_or_isxml = ixml_or_isxml
+                                       iv_xml_string    = |<A><C xmlns="dnsuri" xmlns:b="nsuri_b"><b:B>B1</b:B><B>B2</B></C><B>B3</B><B xmlns="dnsuri">B4</B></A>| ).
+      element = document->get_root_element( ).
+      element = element->find_from_name( name = 'B' ).
+      cl_abap_unit_assert=>assert_bound( act = element ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_value( )
+                                          exp = 'B2' ).
+
+      element = document->get_root_element( ).
+      element = element->find_from_name_ns( name = 'B' ).
+      cl_abap_unit_assert=>assert_bound( act = element ).
+      cl_abap_unit_assert=>assert_equals( act = element->get_value( )
+                                          exp = 'B3' ).
+    ENDLOOP.
+  ENDMETHOD.
+
   METHOD find_from_name_level_1.
 * Method LOAD_WORKSHEET_TABLES of class ZCL_EXCEL_READER_2007:
 *    DATA lo_ixml_table TYPE REF TO if_ixml_element.
@@ -1322,7 +1360,26 @@ CLASS ltc_isxmlixml_element IMPLEMENTATION.
     LOOP AT ixml_and_isxml INTO ixml_or_isxml.
       document = lth_isxmlixml=>parse(
           io_ixml_or_isxml = ixml_or_isxml
-          iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B><C><B>B4</B><a:B xmlns:a="a">B5</a:B><B>B6</B></C></A>| ).
+          iv_xml_string    = |<A><B>B1</B><a:B xmlns:a="a">B2</a:B><B>B3</B><C><B>B4</B><a:B xmlns:a="a">B5</a:B><B xmlns="dnsuri">B6</B></C></A>| ).
+
+      element = document->get_root_element( ).
+      lo_isxml_node_collection = element->get_elements_by_tag_name( 'B' ).
+      lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_isxml_node->get_value( )
+                                          exp = 'B1' ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_isxml_node->get_value( )
+                                          exp = 'B3' ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_isxml_node->get_value( )
+                                          exp = 'B4' ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_equals( act = lo_isxml_node->get_value( )
+                                          exp = 'B6' ).
+      lo_isxml_node = lo_isxml_node_iterator->get_next( ).
+      cl_abap_unit_assert=>assert_not_bound( act = lo_isxml_node ).
+
       element = document->find_from_name( name = 'C' ).
       lo_isxml_node_collection = element->get_elements_by_tag_name( 'B' ).
       lo_isxml_node_iterator = lo_isxml_node_collection->create_iterator( ).

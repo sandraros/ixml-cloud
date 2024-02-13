@@ -222,19 +222,29 @@ CLASS lcl_isxml_element DEFINITION
         iv_name   TYPE string
         iv_value  TYPE string.
 
+    "! @parameter iv_empty_prefix | <ul>
+    "! <li>abap_true = returns only an element with empty prefix (use of IXML FIND_FROM_NAME)</li>
+    "! <li>abap_false = returns only an element which refers to the mentioned URI (use of IXML FIND_FROM_NAME_NS)</li>
+    "! </ul>
     METHODS find_from_name_ns
       IMPORTING
         iv_depth         TYPE i DEFAULT 0
         iv_name          TYPE string
         iv_nsuri         TYPE string DEFAULT ''
+        iv_empty_prefix  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_result) TYPE REF TO lcl_isxml_element.
 
+    "! @parameter iv_empty_prefix | <ul>
+    "! <li>abap_true = returns only an element with empty prefix (use of IXML FIND_FROM_NAME)</li>
+    "! <li>abap_false = returns only an element which refers to the mentioned URI (use of IXML FIND_FROM_NAME_NS)</li>
+    "! </ul>
     METHODS find_from_name_ns_recursive
       IMPORTING
         iv_depth         TYPE i DEFAULT 0
         iv_name          TYPE string
         iv_nsuri         TYPE string DEFAULT ''
+        iv_empty_prefix  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_result) TYPE REF TO lcl_isxml_element.
 
@@ -242,6 +252,20 @@ CLASS lcl_isxml_element DEFINITION
       IMPORTING
         iv_name          TYPE string
         iv_nsuri         TYPE string DEFAULT ''
+        iv_empty_prefix  TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_result) TYPE REF TO lcl_isxml_node_collection.
+
+    "! Recursive execution of get_elements_by_tag_name
+    "! @parameter iv_empty_prefix | <ul>
+    "! <li>abap_true = returns only an element with empty prefix (use of IXML FIND_FROM_NAME)</li>
+    "! <li>abap_false = returns only an element which refers to the mentioned URI (use of IXML FIND_FROM_NAME_NS)</li>
+    "! </ul>
+    METHODS get_elements_by_tag_name_ns_re
+      IMPORTING
+        iv_name          TYPE string
+        iv_nsuri         TYPE string DEFAULT ''
+        iv_empty_prefix  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_result) TYPE tt_element.
 
@@ -1127,15 +1151,22 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~find_from_name.
-    rval = zif_excel_xml_document~find_from_name_ns( name = name ).
+    DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
+
+    IF first_child IS NOT BOUND.
+      RETURN.
+    ENDIF.
+    lo_isxml_element ?= first_child.
+    rval = lo_isxml_element->find_from_name_ns( iv_name         = name
+                                                iv_empty_prefix = abap_true ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~find_from_name_ns.
     DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
 
-    IF first_child is not bound.
+    IF first_child IS NOT BOUND.
       RETURN.
-    endif.
+    ENDIF.
     lo_isxml_element ?= first_child.
     rval = lo_isxml_element->find_from_name_ns( iv_depth = -1
                                                 iv_name  = name
@@ -1143,23 +1174,19 @@ CLASS lcl_isxml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~get_elements_by_tag_name.
-    rval = zif_excel_xml_document~get_elements_by_tag_name_ns( name = name ).
+    DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
+
+    lo_isxml_element ?= first_child.
+    rval = lo_isxml_element->get_elements_by_tag_name_ns( iv_name         = name
+                                                          iv_empty_prefix = abap_true ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~get_elements_by_tag_name_ns.
-    DATA lo_isxml_element         TYPE REF TO lcl_isxml_element.
-    DATA lt_element               TYPE lcl_isxml_element=>tt_element.
-    DATA lo_isxml_node_collection TYPE REF TO lcl_isxml_node_collection.
-    DATA lo_element               TYPE REF TO lcl_isxml_element.
+    DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
 
     lo_isxml_element ?= first_child.
-    lt_element = lo_isxml_element->get_elements_by_tag_name_ns( iv_name  = name
-                                                                iv_nsuri = uri ).
-    CREATE OBJECT lo_isxml_node_collection.
-    LOOP AT lt_element INTO lo_element.
-      INSERT lo_element INTO TABLE lo_isxml_node_collection->table_nodes.
-    ENDLOOP.
-    rval = lo_isxml_node_collection.
+    rval = lo_isxml_element->get_elements_by_tag_name_ns( iv_name  = name
+                                                          iv_nsuri = uri ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~get_root_element.
@@ -1199,15 +1226,18 @@ CLASS lcl_isxml_element IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD find_from_name_ns.
-    IF     name      = iv_name
-       AND namespace = iv_nsuri.
+    IF     name = iv_name
+       AND (    namespace = iv_nsuri
+             OR (     iv_empty_prefix  = abap_true
+                  AND prefix          IS INITIAL ) ).
       ro_result = me.
       RETURN.
     ENDIF.
 
-    ro_result = find_from_name_ns_recursive( iv_depth = iv_depth
-                                             iv_name  = iv_name
-                                             iv_nsuri = iv_nsuri ).
+    ro_result = find_from_name_ns_recursive( iv_depth        = iv_depth
+                                             iv_name         = iv_name
+                                             iv_nsuri        = iv_nsuri
+                                             iv_empty_prefix = iv_empty_prefix ).
   ENDMETHOD.
 
   METHOD find_from_name_ns_recursive.
@@ -1226,15 +1256,18 @@ CLASS lcl_isxml_element IMPLEMENTATION.
       IF lo_child->type = if_ixml_node=>co_node_element.
         lo_isxml_element ?= lo_child.
 
-        IF     lo_isxml_element->name      = iv_name
-           AND lo_isxml_element->namespace = iv_nsuri.
+        IF     lo_isxml_element->name = iv_name
+           AND (    lo_isxml_element->namespace = iv_nsuri
+                 OR (     iv_empty_prefix           = abap_true
+                      AND lo_isxml_element->prefix IS INITIAL ) ).
           ro_result = lo_isxml_element.
           RETURN.
         ENDIF.
         IF iv_depth <> 1.
-          lo_isxml_element = lo_isxml_element->find_from_name_ns_recursive( iv_depth = lv_depth
-                                                                            iv_name  = iv_name
-                                                                            iv_nsuri = iv_nsuri ).
+          lo_isxml_element = lo_isxml_element->find_from_name_ns_recursive( iv_depth        = lv_depth
+                                                                            iv_name         = iv_name
+                                                                            iv_nsuri        = iv_nsuri
+                                                                            iv_empty_prefix = iv_empty_prefix ).
           IF lo_isxml_element IS BOUND.
             ro_result = lo_isxml_element.
             RETURN.
@@ -1246,12 +1279,30 @@ CLASS lcl_isxml_element IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_elements_by_tag_name_ns.
+    DATA lt_element               TYPE lcl_isxml_element=>tt_element.
+    DATA lo_isxml_node_collection TYPE REF TO lcl_isxml_node_collection.
+    DATA lo_element               TYPE REF TO lcl_isxml_element.
+
+    lt_element = get_elements_by_tag_name_ns_re( iv_name         = iv_name
+                                                 iv_nsuri        = iv_nsuri
+                                                 iv_empty_prefix = iv_empty_prefix ).
+
+    CREATE OBJECT lo_isxml_node_collection.
+    LOOP AT lt_element INTO lo_element.
+      INSERT lo_element INTO TABLE lo_isxml_node_collection->table_nodes.
+    ENDLOOP.
+    ro_result = lo_isxml_node_collection.
+  ENDMETHOD.
+
+  METHOD get_elements_by_tag_name_ns_re.
     DATA lo_child         TYPE REF TO lcl_isxml_node.
     DATA lo_isxml_element TYPE REF TO lcl_isxml_element.
     DATA lt_element       TYPE tt_element.
 
-    IF     name      = iv_name
-       AND namespace = iv_nsuri.
+    IF     name = iv_name
+       AND (    namespace = iv_nsuri
+             OR (     iv_empty_prefix  = abap_true
+                  AND prefix          IS INITIAL ) ).
       INSERT me INTO TABLE rt_result.
     ENDIF.
 
@@ -1259,8 +1310,9 @@ CLASS lcl_isxml_element IMPLEMENTATION.
     WHILE lo_child IS BOUND.
       IF lo_child->type = if_ixml_node=>co_node_element.
         lo_isxml_element ?= lo_child.
-        lt_element = lo_isxml_element->get_elements_by_tag_name_ns( iv_name  = iv_name
-                                                                    iv_nsuri = iv_nsuri ).
+        lt_element = lo_isxml_element->get_elements_by_tag_name_ns_re( iv_name         = iv_name
+                                                                       iv_nsuri        = iv_nsuri
+                                                                       iv_empty_prefix = iv_empty_prefix ).
         INSERT LINES OF lt_element INTO TABLE rt_result.
       ENDIF.
       lo_child = lo_child->next_sibling.
@@ -1511,7 +1563,8 @@ CLASS lcl_isxml_element IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~find_from_name.
-    rval = zif_excel_xml_element~find_from_name_ns( name = name ).
+    rval = find_from_name_ns( iv_name         = name
+                              iv_empty_prefix = abap_true ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~find_from_name_ns.
@@ -1551,21 +1604,13 @@ CLASS lcl_isxml_element IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~get_elements_by_tag_name.
-    rval = zif_excel_xml_element~get_elements_by_tag_name_ns( name = name ).
+    rval = get_elements_by_tag_name_ns( iv_name         = name
+                                        iv_empty_prefix = abap_true ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~get_elements_by_tag_name_ns.
-    DATA lt_element               TYPE lcl_isxml_element=>tt_element.
-    DATA lo_isxml_node_collection TYPE REF TO lcl_isxml_node_collection.
-    DATA lo_element               TYPE REF TO lcl_isxml_element.
-
-    lt_element = get_elements_by_tag_name_ns( iv_name  = name
-                                              iv_nsuri = uri ).
-    CREATE OBJECT lo_isxml_node_collection.
-    LOOP AT lt_element INTO lo_element.
-      INSERT lo_element INTO TABLE lo_isxml_node_collection->table_nodes.
-    ENDLOOP.
-    rval = lo_isxml_node_collection.
+    rval = get_elements_by_tag_name_ns( iv_name  = name
+                                        iv_nsuri = uri ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~get_name.
