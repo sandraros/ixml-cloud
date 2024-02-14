@@ -1671,8 +1671,6 @@ ENDCLASS.
 CLASS lcl_isxml_ostream_string IMPLEMENTATION.
   METHOD create.
     CREATE OBJECT rval.
-    rval = NEW lcl_isxml_ostream_string( ).
-    rval = NEW lcl_isxml_ostream_string( ).
     rval->ref_string                    = string.
     rval->lif_isxml_ostream~type        = 'C'.
     rval->lif_isxml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
