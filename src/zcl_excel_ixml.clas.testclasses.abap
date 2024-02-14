@@ -173,9 +173,6 @@ CLASS ltc_diff_ixml_sxml_parser IMPLEMENTATION.
   METHOD parse_ixml.
     ixml = cl_ixml=>create( ).
     ixml_document = ixml->create_document( ).
-*    encoding = ixml->create_encoding( byte_order    = if_ixml_encoding=>co_none "co_platform_endian
-*                                      character_set = 'UTF-16' ).
-*    document->set_encoding( encoding ).
     ixml_stream_factory = ixml->create_stream_factory( ).
 
     xstring = cl_abap_codepage=>convert_to( string ).
@@ -292,8 +289,7 @@ ENDCLASS.
 
 CLASS ltc_ixml_node IMPLEMENTATION.
   METHOD append_child.
-    " Append to the root element is not the same as append to the document.
-
+    " NB: append to the root element is not the same as append to the document.
     DATA lo_element TYPE REF TO if_ixml_element.
 
     document = lth_ixml=>parse( '<A/>' ).
@@ -334,7 +330,6 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
     element = document->get_root_element( ).
     cl_abap_unit_assert=>assert_equals( act = element->get_name( )
                                         exp = `A` ).
-*    element ?= element->get_first_child( ).
     cl_abap_unit_assert=>assert_equals( act = element->get_value( )
                                         exp = `   ` ).
     element ?= element->get_first_child( ).
@@ -352,7 +347,6 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
     element = document->get_root_element( ).
     cl_abap_unit_assert=>assert_equals( act = element->get_name( )
                                         exp = `A` ).
-*    element ?= element->get_first_child( ).
     cl_abap_unit_assert=>assert_equals( act = element->get_value( )
                                         exp = `` ).
     element ?= element->get_first_child( ).
@@ -361,14 +355,6 @@ CLASS ltc_ixml_parser IMPLEMENTATION.
   METHOD empty_xml.
     CLEAR string.
     init_parser( ).
-*    ixml = cl_ixml=>create( ).
-*    stream_factory = ixml->create_stream_factory( ).
-*    CLEAR xstring.
-*    istream = stream_factory->create_istream_xstring( xstring ).
-*    document = ixml->create_document( ).
-*    parser = ixml->create_parser( stream_factory = stream_factory
-*                                  istream        = istream
-*                                  document       = document ).
     rc = parser->parse( ).
     cl_abap_unit_assert=>assert_equals( act = rc
                                         exp = zif_excel_xml_constants=>ixml_mr-parser_error ).

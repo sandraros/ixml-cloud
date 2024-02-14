@@ -682,8 +682,7 @@ CLASS lcl_isxml IMPLEMENTATION.
         " Debug helper to use IXML instead (NB: cannot work with ABAP Cloud)
         "singleton = zcl_excel_ixml=>create( ).
         CALL METHOD ('ZCL_EXCEL_IXML')=>create
-          RECEIVING
-            rval = singleton.
+          RECEIVING rval = singleton.
       ENDIF.
     ENDIF.
     rval = singleton.
@@ -1017,6 +1016,7 @@ CLASS lcl_isxml_element IMPLEMENTATION.
         nsuri    TYPE string,
       END OF ts_namespace_declaration.
 
+    DATA ls_element_traced    TYPE lcl_isxml_renderer=>ts_element_traced.
     DATA lv_previous_level    TYPE lcl_isxml_renderer=>ts_namespace-level.
     DATA ls_namespace         TYPE lcl_isxml_renderer=>ts_namespace.
     DATA lo_sxml_open_element TYPE REF TO if_sxml_open_element.
@@ -1036,10 +1036,11 @@ CLASS lcl_isxml_element IMPLEMENTATION.
         ASSERT 1 = 1. " debug helper
       ENDIF.
       INSERT me INTO TABLE io_isxml_renderer->elements_processed.
-      INSERT VALUE #( element = me
-                      name    = name
-                      level   = io_isxml_renderer->current_level )
-             INTO TABLE io_isxml_renderer->elements_traced.
+
+      ls_element_traced-element = me.
+      ls_element_traced-name    = name.
+      ls_element_traced-level   = io_isxml_renderer->current_level.
+      INSERT ls_element_traced INTO TABLE io_isxml_renderer->elements_traced.
     ENDIF.
 
     TRY.
@@ -1618,7 +1619,6 @@ CLASS lcl_isxml_node_iterator IMPLEMENTATION.
         ELSEIF position = 2 AND current_node->first_child IS NOT BOUND.
           CLEAR current_node.
           position = -1.
-          EXIT.
         ELSEIF current_node->first_child IS BOUND.
           current_node = current_node->first_child.
         ELSE.
@@ -1639,11 +1639,13 @@ CLASS lcl_isxml_node_iterator IMPLEMENTATION.
         ENDIF.
         rval = current_node.
       ENDIF.
+
     ELSEIF node_list IS BOUND.
       IF position < lines( node_list->table_nodes ).
         position = position + 1.
         READ TABLE node_list->table_nodes INDEX position INTO rval.
       ENDIF.
+
     ELSEIF node_collection IS BOUND.
       IF position < lines( node_collection->table_nodes ).
         position = position + 1.
@@ -1668,6 +1670,8 @@ ENDCLASS.
 
 CLASS lcl_isxml_ostream_string IMPLEMENTATION.
   METHOD create.
+    CREATE OBJECT rval.
+    rval = NEW lcl_isxml_ostream_string( ).
     rval = NEW lcl_isxml_ostream_string( ).
     rval->ref_string                    = string.
     rval->lif_isxml_ostream~type        = 'C'.
@@ -1678,7 +1682,7 @@ ENDCLASS.
 
 CLASS lcl_isxml_ostream_xstring IMPLEMENTATION.
   METHOD create.
-    rval = NEW lcl_isxml_ostream_xstring( ).
+    CREATE OBJECT rval.
     rval->ref_xstring                   = xstring.
     rval->lif_isxml_ostream~type        = 'X'.
     rval->lif_isxml_ostream~sxml_writer = cl_sxml_string_writer=>create( ).
@@ -1994,30 +1998,30 @@ CLASS lcl_rewrite_xml_via_sxml IMPLEMENTATION.
       BEGIN OF ts_attribute_sorting,
         prefix TYPE string,
         name   TYPE string,
-        object TYPE ref to if_sxml_attribute,
+        object TYPE REF TO if_sxml_attribute,
       END OF ts_attribute_sorting.
 
-    DATA lv_current_level    TYPE i.
-    DATA ls_level            TYPE ts_level.
-    DATA lt_level            TYPE STANDARD TABLE OF ts_level WITH DEFAULT KEY.
-    DATA lo_reader           TYPE REF TO if_sxml_reader.
-    DATA lo_string_writer    TYPE REF TO cl_sxml_string_writer.
-    DATA lo_writer           TYPE REF TO if_sxml_writer.
-    DATA lo_node             TYPE REF TO if_sxml_node.
-    DATA lo_close_element    TYPE REF TO if_sxml_close_element.
-    DATA lo_open_element     TYPE REF TO if_sxml_open_element.
-    DATA lt_nsbinding        TYPE if_sxml_named=>nsbindings.
-    DATA lt_attribute        TYPE if_sxml_attribute=>attributes.
-    DATA ls_complete_element TYPE ts_complete_element.
-    DATA lr_nsbinding        TYPE REF TO if_sxml_named=>nsbinding.
-    DATA ls_nsbinding        TYPE ts_nsbinding.
-    DATA lo_attribute        TYPE REF TO if_sxml_attribute.
-    DATA ls_attribute        TYPE ts_attribute.
-    DATA lt_new_nsbinding    TYPE if_sxml_named=>nsbindings.
-    DATA lo_value_node       TYPE REF TO if_sxml_value_node.
-    DATA lv_string           TYPE string.
-    DATA ls_attribute_sorting TYPE ts_attribute_sorting.
+    DATA lv_current_level     TYPE i.
+    DATA ls_level             TYPE ts_level.
+    DATA lt_level             TYPE STANDARD TABLE OF ts_level WITH DEFAULT KEY.
+    DATA lo_reader            TYPE REF TO if_sxml_reader.
+    DATA lo_string_writer     TYPE REF TO cl_sxml_string_writer.
+    DATA lo_writer            TYPE REF TO if_sxml_writer.
+    DATA lo_node              TYPE REF TO if_sxml_node.
+    DATA lo_close_element     TYPE REF TO if_sxml_close_element.
+    DATA lo_open_element      TYPE REF TO if_sxml_open_element.
+    DATA lt_nsbinding         TYPE if_sxml_named=>nsbindings.
+    DATA lt_attribute         TYPE if_sxml_attribute=>attributes.
+    DATA ls_complete_element  TYPE ts_complete_element.
+    DATA lr_nsbinding         TYPE REF TO if_sxml_named=>nsbinding.
+    DATA ls_nsbinding         TYPE ts_nsbinding.
+    DATA lo_attribute         TYPE REF TO if_sxml_attribute.
+    DATA ls_attribute         TYPE ts_attribute.
     DATA lt_attribute_sorting TYPE TABLE OF ts_attribute_sorting.
+    DATA ls_attribute_sorting TYPE ts_attribute_sorting.
+    DATA lt_new_nsbinding     TYPE if_sxml_named=>nsbindings.
+    DATA lo_value_node        TYPE REF TO if_sxml_value_node.
+    DATA lv_string            TYPE string.
 
     FIELD-SYMBOLS <ls_level> TYPE ts_level.
 
@@ -2086,7 +2090,7 @@ CLASS lcl_rewrite_xml_via_sxml IMPLEMENTATION.
           ENDIF.
 
           CLEAR lt_attribute_sorting.
-          LOOP AT lt_attribute into lo_attribute.
+          LOOP AT lt_attribute INTO lo_attribute.
             ls_attribute_sorting-prefix = lo_attribute->prefix.
             ls_attribute_sorting-name   = lo_attribute->qname-name.
             ls_attribute_sorting-object = lo_attribute.

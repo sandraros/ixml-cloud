@@ -22,8 +22,7 @@ INTERFACE lif_wrap_ixml_ostream.
 ENDINTERFACE.
 
 
-CLASS lth_wrap_ixml_unknown DEFINITION
-*    FOR TESTING
+CLASS lcl_wrap_ixml_unknown DEFINITION
     CREATE PROTECTED.
 
   PUBLIC SECTION.
@@ -34,9 +33,8 @@ CLASS lth_wrap_ixml_unknown DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_node DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PROTECTED
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -51,9 +49,8 @@ CLASS lth_wrap_ixml_node DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     FRIENDS lif_wrap_ixml_all_friends.
 
   PUBLIC SECTION.
@@ -73,12 +70,10 @@ CLASS lth_wrap_ixml DEFINITION
     CLASS-METHODS get_singleton
       RETURNING
         VALUE(ro_result) TYPE REF TO zif_excel_xml.
-*      RAISING
-*        cx_sy_dyn_call_illegal_class.
 
     CLASS-METHODS unwrap_ixml
       IMPORTING
-        io_wrap_ixml_unknown TYPE REF TO lth_wrap_ixml_unknown
+        io_wrap_ixml_unknown TYPE REF TO lcl_wrap_ixml_unknown
       RETURNING
         VALUE(ro_result)     TYPE REF TO object.
 
@@ -90,15 +85,14 @@ CLASS lth_wrap_ixml DEFINITION
 
   PRIVATE SECTION.
 
-    CLASS-DATA singleton TYPE REF TO lth_wrap_ixml.
+    CLASS-DATA singleton TYPE REF TO lcl_wrap_ixml.
     DATA ixml TYPE REF TO if_ixml.
 
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_attribute DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-*    FOR TESTING
+CLASS lcl_wrap_ixml_attribute DEFINITION
+    INHERITING FROM lcl_wrap_ixml_node
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -113,9 +107,8 @@ CLASS lth_wrap_ixml_attribute DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_character_data DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-*    FOR TESTING
+CLASS lcl_wrap_ixml_character_data DEFINITION
+    INHERITING FROM lcl_wrap_ixml_node
     CREATE PROTECTED
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -126,9 +119,8 @@ CLASS lth_wrap_ixml_character_data DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_document DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-*    FOR TESTING
+CLASS lcl_wrap_ixml_document DEFINITION
+    INHERITING FROM lcl_wrap_ixml_node
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -143,9 +135,8 @@ CLASS lth_wrap_ixml_document DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_element DEFINITION
-    INHERITING FROM lth_wrap_ixml_node
-*    FOR TESTING
+CLASS lcl_wrap_ixml_element DEFINITION
+    INHERITING FROM lcl_wrap_ixml_node
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -160,9 +151,8 @@ CLASS lth_wrap_ixml_element DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_encoding DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_encoding DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -177,8 +167,7 @@ CLASS lth_wrap_ixml_encoding DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_istream_string DEFINITION
-*    FOR TESTING
+CLASS lcl_wrap_ixml_istream_string DEFINITION
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -189,8 +178,7 @@ CLASS lth_wrap_ixml_istream_string DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_istream_xstring DEFINITION
-*    FOR TESTING
+CLASS lcl_wrap_ixml_istream_xstring DEFINITION
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -201,8 +189,7 @@ CLASS lth_wrap_ixml_istream_xstring DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_named_node_map DEFINITION
-*    FOR TESTING
+CLASS lcl_wrap_ixml_named_node_map DEFINITION
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -217,9 +204,8 @@ CLASS lth_wrap_ixml_named_node_map DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node_collection DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_node_collection DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -234,9 +220,8 @@ CLASS lth_wrap_ixml_node_collection DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node_iterator DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_node_iterator DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -251,9 +236,8 @@ CLASS lth_wrap_ixml_node_iterator DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node_list DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_node_list DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -268,8 +252,7 @@ CLASS lth_wrap_ixml_node_list DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_ostream_string DEFINITION
-*    FOR TESTING
+CLASS lcl_wrap_ixml_ostream_string DEFINITION
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -280,8 +263,7 @@ CLASS lth_wrap_ixml_ostream_string DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_ostream_xstring DEFINITION
-*    FOR TESTING
+CLASS lcl_wrap_ixml_ostream_xstring DEFINITION
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -292,9 +274,8 @@ CLASS lth_wrap_ixml_ostream_xstring DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_parser DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_parser DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -309,9 +290,8 @@ CLASS lth_wrap_ixml_parser DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_renderer DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_renderer DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -326,9 +306,8 @@ CLASS lth_wrap_ixml_renderer DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_stream DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_stream DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE.
 
   PUBLIC SECTION.
@@ -338,9 +317,8 @@ CLASS lth_wrap_ixml_stream DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_stream_factory DEFINITION
-    INHERITING FROM lth_wrap_ixml_unknown
-*    FOR TESTING
+CLASS lcl_wrap_ixml_stream_factory DEFINITION
+    INHERITING FROM lcl_wrap_ixml_unknown
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -355,9 +333,8 @@ CLASS lth_wrap_ixml_stream_factory DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_text DEFINITION
-    INHERITING FROM lth_wrap_ixml_character_data
-*    FOR TESTING
+CLASS lcl_wrap_ixml_text DEFINITION
+    INHERITING FROM lcl_wrap_ixml_character_data
     CREATE PRIVATE
     FRIENDS lif_wrap_ixml_all_friends.
 
@@ -372,7 +349,7 @@ CLASS lth_wrap_ixml_text DEFINITION
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml IMPLEMENTATION.
+CLASS lcl_wrap_ixml IMPLEMENTATION.
   METHOD get_singleton.
     IF singleton IS NOT BOUND.
       CREATE OBJECT singleton.
@@ -399,15 +376,15 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
     DATA lr_wrapped_ixml_object       TYPE REF TO ts_wrapped_ixml_object.
     DATA ls_wrapped_ixml_object       TYPE ts_wrapped_ixml_object.
     DATA lv_class_name                TYPE string.
-    DATA lo_wrap_ixml_attribute       TYPE REF TO lth_wrap_ixml_attribute.
-    DATA lo_wrap_ixml_node            TYPE REF TO lth_wrap_ixml_node.
-    DATA lo_wrap_ixml_document        TYPE REF TO lth_wrap_ixml_document.
-    DATA lo_wrap_ixml_element         TYPE REF TO lth_wrap_ixml_element.
-    DATA lo_wrap_ixml_named_node_map  TYPE REF TO lth_wrap_ixml_named_node_map.
-    DATA lo_wrap_ixml_node_collection TYPE REF TO lth_wrap_ixml_node_collection.
-    DATA lo_wrap_ixml_node_iterator   TYPE REF TO lth_wrap_ixml_node_iterator.
-    DATA lo_wrap_ixml_node_list       TYPE REF TO lth_wrap_ixml_node_list.
-    DATA lo_wrap_ixml_text            TYPE REF TO lth_wrap_ixml_text.
+    DATA lo_wrap_ixml_attribute       TYPE REF TO lcl_wrap_ixml_attribute.
+    DATA lo_wrap_ixml_node            TYPE REF TO lcl_wrap_ixml_node.
+    DATA lo_wrap_ixml_document        TYPE REF TO lcl_wrap_ixml_document.
+    DATA lo_wrap_ixml_element         TYPE REF TO lcl_wrap_ixml_element.
+    DATA lo_wrap_ixml_named_node_map  TYPE REF TO lcl_wrap_ixml_named_node_map.
+    DATA lo_wrap_ixml_node_collection TYPE REF TO lcl_wrap_ixml_node_collection.
+    DATA lo_wrap_ixml_node_iterator   TYPE REF TO lcl_wrap_ixml_node_iterator.
+    DATA lo_wrap_ixml_node_list       TYPE REF TO lcl_wrap_ixml_node_list.
+    DATA lo_wrap_ixml_text            TYPE REF TO lcl_wrap_ixml_text.
 
     IF io_ixml_unknown IS NOT BOUND.
       RETURN.
@@ -471,11 +448,11 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
     DATA lo_ixml_document TYPE REF TO if_ixml_document.
 
     lo_ixml_document = ixml->create_document( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_document ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_document ).
   ENDMETHOD.
 
   METHOD zif_excel_xml~create_encoding.
-    DATA lo_encoding TYPE REF TO lth_wrap_ixml_encoding.
+    DATA lo_encoding TYPE REF TO lcl_wrap_ixml_encoding.
 
     CREATE OBJECT lo_encoding.
     lo_encoding->ixml_encoding = ixml->create_encoding( byte_order    = byte_order
@@ -484,10 +461,10 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml~create_parser.
-    DATA parser                   TYPE REF TO lth_wrap_ixml_parser.
-    DATA wrap_ixml_document       TYPE REF TO lth_wrap_ixml_document.
+    DATA parser                   TYPE REF TO lcl_wrap_ixml_parser.
+    DATA wrap_ixml_document       TYPE REF TO lcl_wrap_ixml_document.
     DATA wrap_ixml_istream        TYPE REF TO lif_wrap_ixml_istream.
-    DATA wrap_ixml_stream_factory TYPE REF TO lth_wrap_ixml_stream_factory.
+    DATA wrap_ixml_stream_factory TYPE REF TO lcl_wrap_ixml_stream_factory.
 
     CREATE OBJECT parser.
     wrap_ixml_document ?= document.
@@ -500,8 +477,8 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml~create_renderer.
-    DATA lo_renderer        TYPE REF TO lth_wrap_ixml_renderer.
-    DATA wrap_ixml_document TYPE REF TO lth_wrap_ixml_document.
+    DATA lo_renderer        TYPE REF TO lcl_wrap_ixml_renderer.
+    DATA wrap_ixml_document TYPE REF TO lcl_wrap_ixml_document.
     DATA wrap_ixml_ostream  TYPE REF TO lif_wrap_ixml_ostream.
 
     CREATE OBJECT lo_renderer.
@@ -513,7 +490,7 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml~create_stream_factory.
-    DATA lo_stream_factory TYPE REF TO lth_wrap_ixml_stream_factory.
+    DATA lo_stream_factory TYPE REF TO lcl_wrap_ixml_stream_factory.
 
     CREATE OBJECT lo_stream_factory.
     lo_stream_factory->ixml_stream_factory = ixml->create_stream_factory( ).
@@ -522,50 +499,50 @@ CLASS lth_wrap_ixml IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_attribute IMPLEMENTATION.
+CLASS lcl_wrap_ixml_attribute IMPLEMENTATION.
 
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_character_data IMPLEMENTATION.
+CLASS lcl_wrap_ixml_character_data IMPLEMENTATION.
 
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_document IMPLEMENTATION.
+CLASS lcl_wrap_ixml_document IMPLEMENTATION.
   METHOD zif_excel_xml_document~create_element.
     DATA lo_ixml_element TYPE REF TO if_ixml_element.
 
     lo_ixml_element = ixml_document->create_element( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~create_simple_element.
-    DATA lo_wrap_ixml_parent TYPE REF TO lth_wrap_ixml_node.
+    DATA lo_wrap_ixml_parent TYPE REF TO lcl_wrap_ixml_node.
     DATA lo_ixml_element     TYPE REF TO if_ixml_element.
 
     lo_wrap_ixml_parent ?= parent.
     lo_ixml_element = ixml_document->create_simple_element( name   = name
                                                             parent = lo_wrap_ixml_parent->ixml_node ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~create_simple_element_ns.
-    DATA lo_wrap_ixml_parent TYPE REF TO lth_wrap_ixml_node.
+    DATA lo_wrap_ixml_parent TYPE REF TO lcl_wrap_ixml_node.
     DATA lo_ixml_element     TYPE REF TO if_ixml_element.
 
     lo_wrap_ixml_parent ?= parent.
     lo_ixml_element = ixml_document->create_simple_element_ns( name   = name
                                                                parent = lo_wrap_ixml_parent->ixml_node
                                                                prefix = prefix ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~find_from_name.
     DATA lo_ixml_element TYPE REF TO if_ixml_element.
 
     lo_ixml_element = ixml_document->find_from_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~find_from_name_ns.
@@ -573,14 +550,14 @@ CLASS lth_wrap_ixml_document IMPLEMENTATION.
 
     lo_ixml_element = ixml_document->find_from_name_ns( name = name
                                                         uri  = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~get_elements_by_tag_name.
     DATA lo_ixml_node_collection TYPE REF TO if_ixml_node_collection.
 
     lo_ixml_node_collection = ixml_document->get_elements_by_tag_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~get_elements_by_tag_name_ns.
@@ -588,14 +565,14 @@ CLASS lth_wrap_ixml_document IMPLEMENTATION.
 
     lo_ixml_node_collection = ixml_document->get_elements_by_tag_name_ns( name = name
                                                                           uri  = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~get_root_element.
     DATA lo_ixml_element TYPE REF TO if_ixml_element.
 
     lo_ixml_element = ixml_document->get_root_element( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~set_declaration.
@@ -603,7 +580,7 @@ CLASS lth_wrap_ixml_document IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_excel_xml_document~set_encoding.
-    DATA wrap_ixml_encoding TYPE REF TO lth_wrap_ixml_encoding.
+    DATA wrap_ixml_encoding TYPE REF TO lcl_wrap_ixml_encoding.
 
     wrap_ixml_encoding ?= encoding.
     ixml_document->set_encoding( encoding = wrap_ixml_encoding->ixml_encoding ).
@@ -615,12 +592,12 @@ CLASS lth_wrap_ixml_document IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_element IMPLEMENTATION.
+CLASS lcl_wrap_ixml_element IMPLEMENTATION.
   METHOD zif_excel_xml_element~find_from_name.
     DATA lo_ixml_element TYPE REF TO if_ixml_element.
 
     lo_ixml_element = ixml_element->find_from_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~find_from_name_ns.
@@ -629,7 +606,7 @@ CLASS lth_wrap_ixml_element IMPLEMENTATION.
     lo_ixml_element = ixml_element->find_from_name_ns( depth = depth
                                                        name  = name
                                                        uri   = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_element ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_element ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~get_attribute.
@@ -641,7 +618,7 @@ CLASS lth_wrap_ixml_element IMPLEMENTATION.
 
     lo_ixml_attribute = ixml_element->get_attribute_node_ns( name = name
                                                              uri  = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_attribute ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_attribute ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~get_attribute_ns.
@@ -653,7 +630,7 @@ CLASS lth_wrap_ixml_element IMPLEMENTATION.
     DATA lo_ixml_node_collection TYPE REF TO if_ixml_node_collection.
 
     lo_ixml_node_collection = ixml_element->get_elements_by_tag_name( name = name ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~get_elements_by_tag_name_ns.
@@ -661,7 +638,7 @@ CLASS lth_wrap_ixml_element IMPLEMENTATION.
 
     lo_ixml_node_collection = ixml_element->get_elements_by_tag_name_ns( name = name
                                                                          uri  = uri ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_collection ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_element~remove_attribute_ns.
@@ -682,74 +659,73 @@ CLASS lth_wrap_ixml_element IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_istream_string IMPLEMENTATION.
+CLASS lcl_wrap_ixml_istream_string IMPLEMENTATION.
   METHOD zif_excel_xml_stream~close.
     lif_wrap_ixml_istream~ixml_istream->close( ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_istream_xstring IMPLEMENTATION.
+CLASS lcl_wrap_ixml_istream_xstring IMPLEMENTATION.
   METHOD zif_excel_xml_stream~close.
     lif_wrap_ixml_istream~ixml_istream->close( ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_named_node_map IMPLEMENTATION.
+CLASS lcl_wrap_ixml_named_node_map IMPLEMENTATION.
   METHOD zif_excel_xml_named_node_map~create_iterator.
     DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
 
     lo_ixml_node_iterator = ixml_named_node_map->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node IMPLEMENTATION.
+CLASS lcl_wrap_ixml_node IMPLEMENTATION.
   METHOD zif_excel_xml_node~append_child.
-    DATA lo_wrap_ixml_node TYPE REF TO lth_wrap_ixml_node.
+    DATA lo_wrap_ixml_node TYPE REF TO lcl_wrap_ixml_node.
     DATA lo_ixml_node      TYPE REF TO if_ixml_node.
 
     lo_wrap_ixml_node ?= new_child.
-    lo_ixml_node ?= lth_wrap_ixml=>unwrap_ixml( lo_wrap_ixml_node ).
+    lo_ixml_node ?= lcl_wrap_ixml=>unwrap_ixml( lo_wrap_ixml_node ).
     ixml_node->append_child( lo_ixml_node ).
-*    ixml_node->append_child( lo_wrap_ixml_node->ixml_node ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node~clone.
     DATA lo_ixml_node TYPE REF TO if_ixml_node.
 
     lo_ixml_node = ixml_node->clone( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node~create_iterator.
     DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
 
     lo_ixml_node_iterator = ixml_node->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node~get_attributes.
     DATA lo_ixml_named_node_map TYPE REF TO if_ixml_named_node_map.
 
     lo_ixml_named_node_map = ixml_node->get_attributes( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_named_node_map ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_named_node_map ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node~get_children.
     DATA lo_ixml_node_list TYPE REF TO if_ixml_node_list.
 
     lo_ixml_node_list = ixml_node->get_children( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_list ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_list ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node~get_first_child.
     DATA lo_ixml_node TYPE REF TO if_ixml_node.
 
     lo_ixml_node = ixml_node->get_first_child( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node~get_name.
@@ -768,7 +744,7 @@ CLASS lth_wrap_ixml_node IMPLEMENTATION.
     DATA lo_ixml_node TYPE REF TO if_ixml_node.
 
     lo_ixml_node = ixml_node->get_next( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node~get_value.
@@ -781,12 +757,12 @@ CLASS lth_wrap_ixml_node IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node_collection IMPLEMENTATION.
+CLASS lcl_wrap_ixml_node_collection IMPLEMENTATION.
   METHOD zif_excel_xml_node_collection~create_iterator.
     DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
 
     lo_ixml_node_iterator = ixml_node_collection->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
   ENDMETHOD.
 
   METHOD zif_excel_xml_node_collection~get_length.
@@ -795,32 +771,32 @@ CLASS lth_wrap_ixml_node_collection IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node_iterator IMPLEMENTATION.
+CLASS lcl_wrap_ixml_node_iterator IMPLEMENTATION.
   METHOD zif_excel_xml_node_iterator~get_next.
     DATA lo_ixml_node TYPE REF TO if_ixml_node.
 
     lo_ixml_node = ixml_node_iterator->get_next( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_node_list IMPLEMENTATION.
+CLASS lcl_wrap_ixml_node_list IMPLEMENTATION.
   METHOD zif_excel_xml_node_list~create_iterator.
     DATA lo_ixml_node_iterator TYPE REF TO if_ixml_node_iterator.
 
     lo_ixml_node_iterator = ixml_node_list->create_iterator( ).
-    rval ?= lth_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
+    rval ?= lcl_wrap_ixml=>wrap_ixml( lo_ixml_node_iterator ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_ostream_string IMPLEMENTATION.
+CLASS lcl_wrap_ixml_ostream_string IMPLEMENTATION.
 
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_parser IMPLEMENTATION.
+CLASS lcl_wrap_ixml_parser IMPLEMENTATION.
   METHOD zif_excel_xml_parser~add_strip_space_element.
 * Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME
 *    li_parser->add_strip_space_element( ).
@@ -841,21 +817,21 @@ CLASS lth_wrap_ixml_parser IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_renderer IMPLEMENTATION.
+CLASS lcl_wrap_ixml_renderer IMPLEMENTATION.
   METHOD zif_excel_xml_renderer~render.
     ixml_renderer->render( ).
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_stream IMPLEMENTATION.
+CLASS lcl_wrap_ixml_stream IMPLEMENTATION.
   METHOD zif_excel_xml_stream~close.
     RAISE EXCEPTION TYPE lcx_unexpected.
   ENDMETHOD.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
+CLASS lcl_wrap_ixml_stream_factory IMPLEMENTATION.
   METHOD zif_excel_xml_stream_factory~create_istream_string.
 * Method PARSE_STRING of class ZCL_EXCEL_THEME_FMT_SCHEME:
 *    li_ixml = cl_ixml=>create( ).
@@ -863,7 +839,7 @@ CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
 *    li_factory = li_ixml->create_stream_factory( ).
 *    li_istream = li_factory->create_istream_string( iv_string ).
 
-    DATA lo_wrap_ixml_istream_string TYPE REF TO lth_wrap_ixml_istream_string.
+    DATA lo_wrap_ixml_istream_string TYPE REF TO lcl_wrap_ixml_istream_string.
 
     CREATE OBJECT lo_wrap_ixml_istream_string.
     lo_wrap_ixml_istream_string->lif_wrap_ixml_istream~ixml_istream = ixml_stream_factory->create_istream_string( string ).
@@ -874,7 +850,7 @@ CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
 * Method GET_IXML_FROM_ZIP_ARCHIVE of ZCL_EXCEL_READER_2007
 *     lo_istream        = lo_streamfactory->create_istream_xstring( lv_content ).
 
-    DATA lo_wrap_ixml_istream_xstring TYPE REF TO lth_wrap_ixml_istream_xstring.
+    DATA lo_wrap_ixml_istream_xstring TYPE REF TO lcl_wrap_ixml_istream_xstring.
 
     CREATE OBJECT lo_wrap_ixml_istream_xstring.
     lo_wrap_ixml_istream_xstring->lif_wrap_ixml_istream~ixml_istream = ixml_stream_factory->create_istream_xstring(
@@ -889,7 +865,7 @@ CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
 *    lo_renderer = me->ixml->create_renderer( ostream  = lo_ostream document = io_document ).
 *    lo_renderer->render( ).
 
-    DATA lo_wrap_ixml_ostream_string TYPE REF TO lth_wrap_ixml_ostream_string.
+    DATA lo_wrap_ixml_ostream_string TYPE REF TO lcl_wrap_ixml_ostream_string.
 
     CREATE OBJECT lo_wrap_ixml_ostream_string.
     lo_wrap_ixml_ostream_string->lif_wrap_ixml_ostream~ixml_ostream = ixml_stream_factory->create_ostream_cstring(
@@ -906,7 +882,7 @@ CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
 *    lo_renderer = lo_ixml->create_renderer( ostream  = lo_ostream document = lo_document ).
 *    lo_renderer->render( ).
 
-    DATA lo_wrap_ixml_ostream_xstring TYPE REF TO lth_wrap_ixml_ostream_xstring.
+    DATA lo_wrap_ixml_ostream_xstring TYPE REF TO lcl_wrap_ixml_ostream_xstring.
 
     CREATE OBJECT lo_wrap_ixml_ostream_xstring.
     lo_wrap_ixml_ostream_xstring->lif_wrap_ixml_ostream~ixml_ostream = ixml_stream_factory->create_ostream_xstring(
@@ -916,12 +892,11 @@ CLASS lth_wrap_ixml_stream_factory IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_text IMPLEMENTATION.
-
+CLASS lcl_wrap_ixml_text IMPLEMENTATION.
 ENDCLASS.
 
 
-CLASS lth_wrap_ixml_unknown IMPLEMENTATION.
+CLASS lcl_wrap_ixml_unknown IMPLEMENTATION.
   METHOD zif_excel_xml_unknown~query_interface.
     RAISE EXCEPTION TYPE lcx_unexpected.
   ENDMETHOD.

@@ -8,8 +8,6 @@ CLASS zcl_excel_ixml DEFINITION
     INTERFACES zif_excel_xml.
 
     CLASS-METHODS create
-*      IMPORTING
-*        !type TYPE i DEFAULT 0
       RETURNING
         VALUE(rval) TYPE REF TO zif_excel_xml.
 
@@ -23,7 +21,7 @@ ENDCLASS.
 CLASS zcl_excel_ixml IMPLEMENTATION.
   METHOD create.
     IF singleton IS NOT BOUND.
-      singleton = lth_wrap_ixml=>get_singleton( ).
+      singleton = lcl_wrap_ixml=>get_singleton( ).
     ENDIF.
     rval = singleton.
   ENDMETHOD.
